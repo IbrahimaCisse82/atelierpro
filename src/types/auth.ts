@@ -33,6 +33,7 @@ export interface AuthState {
   user: User | null;
   company: Company | null;
   loading: boolean;
+  error: string;
 }
 
 export interface CompanyRegistrationData {

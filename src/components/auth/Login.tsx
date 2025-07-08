@@ -46,9 +46,18 @@ export function Login({ onSwitchToRegister }: LoginProps) {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-elegant">
+    <div className="min-h-screen flex items-center justify-center relative p-4">
+      {/* Image de fond */}
+      <img 
+        src="/login-bg.jpg" 
+        alt="Atelier couture" 
+        className="absolute inset-0 w-full h-full object-cover z-0" 
+        style={{ filter: 'brightness(0.5)' }}
+      />
+      {/* Overlay pour lisibilité */}
+      <div className="absolute inset-0 bg-black/40 z-10" />
+      <div className="w-full max-w-md relative z-20">
+        <Card className="shadow-elegant bg-white/20 backdrop-blur-md border-none">
           <CardHeader className="text-center">
             <Logo className="mx-auto mb-4" size="lg" />
             <CardTitle className="text-2xl">Connexion</CardTitle>

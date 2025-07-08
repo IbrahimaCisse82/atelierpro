@@ -8,14 +8,16 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'LOGIN_SUCCESS'; payload: { user: User; company: Company } }
   | { type: 'LOGOUT' }
-  | { type: 'REGISTER_COMPANY_SUCCESS'; payload: { user: User; company: Company } };
+  | { type: 'REGISTER_COMPANY_SUCCESS'; payload: { user: User; company: Company } }
+  | { type: 'SET_ERROR'; payload: string };
 
 // State initial
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
   company: null,
-  loading: true
+  loading: true,
+  error: ''
 };
 
 // Reducer
@@ -47,6 +49,8 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         company: null,
         loading: false
       };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, loading: false };
     default:
       return state;
   }
@@ -68,6 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialisation avec Supabase Auth
   useEffect(() => {
+    const start = Date.now();
+    let timeoutId: NodeJS.Timeout | null = null;
+    // Affiche un message si le chargement dure plus de 3 secondes
+    timeoutId = setTimeout(() => {
+      dispatch({ type: 'SET_ERROR', payload: 'Chargement long, merci de patienter...' });
+    }, 3000);
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -78,32 +88,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     );
-
     // Vérifier la session existante
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Chargement session terminé en', Date.now() - start, 'ms');
       if (session?.user) {
         loadUserData(session);
       } else {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
+      if (timeoutId) clearTimeout(timeoutId);
     });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   // Charger les données utilisateur depuis Supabase
   const loadUserData = async (session: Session) => {
+    const start = Date.now();
     try {
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          companies (*)
-        `)
+        .select(`user_id, email, first_name, last_name, role, company_id, is_active, created_at, last_login, companies(id, name, email, created_at, is_active)`)
         .eq('user_id', session.user.id)
         .single();
-
-      if (error) throw error;
+      console.log('Chargement profil terminé en', Date.now() - start, 'ms');
+      if (error || !profileData) {
+        dispatch({ type: 'SET_ERROR', payload: "Profil utilisateur introuvable. Veuillez contacter l'administrateur." });
+        return;
+      }
 
       const user: User = {
         id: profileData.user_id,
@@ -127,8 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
     } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: "Erreur lors du chargement du profil utilisateur." });
       console.error('Erreur lors du chargement des données utilisateur:', error);
-      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
