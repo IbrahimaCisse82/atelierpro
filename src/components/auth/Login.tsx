@@ -1,0 +1,191 @@
+import React, { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Logo } from '@/components/ui/logo';
+import { Loader2, Mail, Lock } from 'lucide-react';
+
+interface LoginProps {
+  onSwitchToRegister: () => void;
+}
+
+export function Login({ onSwitchToRegister }: LoginProps) {
+  const { login, loading } = useAuth();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+    setError('');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Veuillez remplir tous les champs');
+      return;
+    }
+
+    try {
+      await login(formData.email.trim(), formData.password);
+    } catch (err) {
+      setError('Email ou mot de passe incorrect');
+    }
+  };
+
+  // Comptes de démonstration
+  const demoAccounts = [
+    { role: 'Propriétaire', email: 'proprietaire@demo.fr', password: 'demo123' },
+    { role: 'Gérant', email: 'gerant@demo.fr', password: 'demo123' },
+    { role: 'Couturier', email: 'couturier@demo.fr', password: 'demo123' },
+    { role: 'Resp. Commandes', email: 'commandes@demo.fr', password: 'demo123' }
+  ];
+
+  const handleDemoLogin = async (email: string, password: string) => {
+    setFormData({ email, password });
+    try {
+      await login(email, password);
+    } catch (err) {
+      setError('Erreur lors de la connexion démo');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+      <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8">
+        
+        {/* Formulaire de connexion */}
+        <Card className="shadow-elegant">
+          <CardHeader className="text-center">
+            <Logo className="mx-auto mb-4" size="lg" />
+            <CardTitle className="text-2xl">Connexion</CardTitle>
+            <CardDescription>
+              Accédez à votre espace de gestion d'atelier
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div>
+                <Label htmlFor="email">Adresse email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="votre@email.fr"
+                    className="pl-10"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="password">Mot de passe</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="Votre mot de passe"
+                    className="pl-10"
+                    disabled={loading}
+                    required
+                  />
+                </div>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary shadow-button" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connexion...
+                  </>
+                ) : (
+                  'Se connecter'
+                )}
+              </Button>
+
+              <div className="text-center text-sm text-muted-foreground">
+                Pas encore d'atelier ?{' '}
+                <button
+                  type="button"
+                  onClick={onSwitchToRegister}
+                  className="text-primary hover:text-primary-dark underline"
+                  disabled={loading}
+                >
+                  Créer votre entreprise
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Comptes de démonstration */}
+        <Card className="shadow-elegant">
+          <CardHeader>
+            <CardTitle className="text-accent">Démonstration</CardTitle>
+            <CardDescription>
+              Testez l'application avec différents rôles utilisateur
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-3">
+            {demoAccounts.map((account, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                className="w-full justify-start text-left h-auto p-4"
+                onClick={() => handleDemoLogin(account.email, account.password)}
+                disabled={loading}
+              >
+                <div className="flex flex-col items-start">
+                  <span className="font-semibold">{account.role}</span>
+                  <span className="text-xs text-muted-foreground">{account.email}</span>
+                </div>
+              </Button>
+            ))}
+            
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <p className="text-xs text-muted-foreground">
+                <strong>Mot de passe pour tous :</strong> demo123
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Chaque rôle affiche un dashboard adapté à ses permissions.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+      </div>
+    </div>
+  );
+}
