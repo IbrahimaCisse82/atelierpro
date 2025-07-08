@@ -44,28 +44,10 @@ export function Login({ onSwitchToRegister }: LoginProps) {
     }
   };
 
-  // Comptes de démonstration
-  const demoAccounts = [
-    { role: 'Propriétaire', email: 'proprietaire@demo.fr', password: 'demo123' },
-    { role: 'Gérant', email: 'gerant@demo.fr', password: 'demo123' },
-    { role: 'Couturier', email: 'couturier@demo.fr', password: 'demo123' },
-    { role: 'Resp. Commandes', email: 'commandes@demo.fr', password: 'demo123' }
-  ];
-
-  const handleDemoLogin = async (email: string, password: string) => {
-    setFormData({ email, password });
-    try {
-      await login(email, password);
-    } catch (err) {
-      setError('Erreur lors de la connexion démo');
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
-      <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8">
-        
-        {/* Formulaire de connexion */}
+      <div className="w-full max-w-md">
         <Card className="shadow-elegant">
           <CardHeader className="text-center">
             <Logo className="mx-auto mb-4" size="lg" />
@@ -148,43 +130,6 @@ export function Login({ onSwitchToRegister }: LoginProps) {
             </form>
           </CardContent>
         </Card>
-
-        {/* Comptes de démonstration */}
-        <Card className="shadow-elegant">
-          <CardHeader>
-            <CardTitle className="text-accent">Démonstration</CardTitle>
-            <CardDescription>
-              Testez l'application avec différents rôles utilisateur
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="space-y-3">
-            {demoAccounts.map((account, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                className="w-full justify-start text-left h-auto p-4"
-                onClick={() => handleDemoLogin(account.email, account.password)}
-                disabled={loading}
-              >
-                <div className="flex flex-col items-start">
-                  <span className="font-semibold">{account.role}</span>
-                  <span className="text-xs text-muted-foreground">{account.email}</span>
-                </div>
-              </Button>
-            ))}
-            
-            <div className="mt-4 p-3 bg-muted rounded-lg">
-              <p className="text-xs text-muted-foreground">
-                <strong>Mot de passe pour tous :</strong> demo123
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Chaque rôle affiche un dashboard adapté à ses permissions.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
       </div>
     </div>
   );

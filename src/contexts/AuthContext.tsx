@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { AuthState, User, Company, CompanyRegistrationData, UserRole } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 // Actions pour le reducer
 type AuthAction = 
@@ -53,7 +55,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 // Context
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   registerCompany: (data: CompanyRegistrationData) => Promise<void>;
   switchRole: (role: UserRole) => void; // Pour le prototype
 }
@@ -64,103 +66,153 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Simulation d'initialisation (vérification session stockée)
+  // Initialisation avec Supabase Auth
   useEffect(() => {
-    const savedAuth = localStorage.getItem('atelier_auth');
-    if (savedAuth) {
-      try {
-        const { user, company } = JSON.parse(savedAuth);
-        dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
-      } catch {
-        localStorage.removeItem('atelier_auth');
+    // Écouter les changements d'état d'authentification
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          await loadUserData(session);
+        } else {
+          dispatch({ type: 'LOGOUT' });
+        }
+      }
+    );
+
+    // Vérifier la session existante
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadUserData(session);
+      } else {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
-    } else {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Simulation de connexion
+  // Charger les données utilisateur depuis Supabase
+  const loadUserData = async (session: Session) => {
+    try {
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          companies (*)
+        `)
+        .eq('user_id', session.user.id)
+        .single();
+
+      if (error) throw error;
+
+      const user: User = {
+        id: profileData.user_id,
+        email: profileData.email,
+        firstName: profileData.first_name,
+        lastName: profileData.last_name,
+        role: profileData.role as UserRole,
+        companyId: profileData.company_id,
+        isActive: profileData.is_active,
+        createdAt: new Date(profileData.created_at),
+        lastLogin: profileData.last_login ? new Date(profileData.last_login) : undefined
+      };
+
+      const company: Company = {
+        id: profileData.companies.id,
+        name: profileData.companies.name,
+        email: profileData.companies.email,
+        createdAt: new Date(profileData.companies.created_at),
+        isActive: profileData.companies.is_active
+      };
+
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
+    } catch (error) {
+      console.error('Erreur lors du chargement des données utilisateur:', error);
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  // Connexion avec Supabase
   const login = async (email: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulation d'appel API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Données simulées - en réalité viendrait de l'API
-    const user: User = {
-      id: '1',
-      email,
-      firstName: 'Demo',
-      lastName: 'User',
-      role: 'owner',
-      companyId: 'company-1',
-      isActive: true,
-      createdAt: new Date(),
-      lastLogin: new Date()
-    };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-    const company: Company = {
-      id: 'company-1',
-      name: 'Atelier Demo',
-      email: 'contact@atelier-demo.fr',
-      createdAt: new Date(),
-      isActive: true
-    };
-
-    localStorage.setItem('atelier_auth', JSON.stringify({ user, company }));
-    dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
+      if (error) throw error;
+      // Le loadUserData sera appelé automatiquement par onAuthStateChange
+    } catch (error) {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      throw error;
+    }
   };
 
-  // Simulation d'inscription d'entreprise
+  // Inscription d'entreprise avec Supabase
   const registerCompany = async (data: CompanyRegistrationData) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     
-    // Simulation d'appel API
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Vérification nom d'entreprise unique (simulation)
-    const existingCompanies = ['Atelier Existant', 'Couture Pro'];
-    if (existingCompanies.includes(data.companyName)) {
-      throw new Error('Ce nom d\'entreprise existe déjà');
+    try {
+      // Vérifier l'unicité du nom d'entreprise
+      const { data: existingCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('name', data.companyName)
+        .single();
+
+      if (existingCompany) {
+        throw new Error('Ce nom d\'entreprise existe déjà');
+      }
+
+      // Créer l'utilisateur avec les métadonnées d'entreprise
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: data.ownerEmail,
+        password: data.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            company_name: data.companyName,
+            first_name: data.ownerFirstName,
+            last_name: data.ownerLastName
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+      
+      // Le trigger handle_new_user créera automatiquement l'entreprise et le profil
+      // L'utilisateur sera connecté automatiquement après confirmation email
+      
+    } catch (error) {
+      dispatch({ type: 'SET_LOADING', payload: false });
+      throw error;
     }
-
-    // Création de l'entreprise et du premier utilisateur (Propriétaire)
-    const company: Company = {
-      id: `company-${Date.now()}`,
-      name: data.companyName,
-      email: data.ownerEmail,
-      createdAt: new Date(),
-      isActive: true
-    };
-
-    const user: User = {
-      id: `user-${Date.now()}`,
-      email: data.ownerEmail,
-      firstName: data.ownerFirstName,
-      lastName: data.ownerLastName,
-      role: 'owner', // Premier utilisateur = toujours Propriétaire
-      companyId: company.id,
-      isActive: true,
-      createdAt: new Date()
-    };
-
-    localStorage.setItem('atelier_auth', JSON.stringify({ user, company }));
-    dispatch({ type: 'REGISTER_COMPANY_SUCCESS', payload: { user, company } });
   };
 
-  const logout = () => {
-    localStorage.removeItem('atelier_auth');
-    dispatch({ type: 'LOGOUT' });
+  const logout = async () => {
+    await supabase.auth.signOut();
+    // Le dispatch({ type: 'LOGOUT' }) sera appelé automatiquement par onAuthStateChange
   };
 
-  // Fonction pour changer de rôle (pour tester les différents dashboards)
-  const switchRole = (role: UserRole) => {
+  // Fonction pour changer de rôle (pour le développement uniquement)
+  const switchRole = async (role: UserRole) => {
     if (state.user && state.company) {
-      const updatedUser = { ...state.user, role };
-      const authData = { user: updatedUser, company: state.company };
-      localStorage.setItem('atelier_auth', JSON.stringify(authData));
-      dispatch({ type: 'LOGIN_SUCCESS', payload: authData });
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role })
+          .eq('user_id', state.user.id);
+
+        if (error) throw error;
+
+        // Mettre à jour le state local
+        const updatedUser = { ...state.user, role };
+        dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
+      } catch (error) {
+        console.error('Erreur lors du changement de rôle:', error);
+      }
     }
   };
 
