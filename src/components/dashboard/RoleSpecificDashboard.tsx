@@ -68,6 +68,167 @@ interface RecentActivity {
 }
 
 // Données simulées
+const mockQuickActions = {
+  owner: [
+    {
+      title: "Nouvelle commande",
+      description: "Créer une commande client",
+      icon: <Plus className="h-4 w-4" />,
+      action: () => console.log("Nouvelle commande"),
+      color: "bg-blue-500"
+    },
+    {
+      title: "Rapport financier",
+      description: "Voir les performances",
+      icon: <BarChart3 className="h-4 w-4" />,
+      action: () => console.log("Rapport financier"),
+      color: "bg-green-500"
+    },
+    {
+      title: "Gestion RH",
+      description: "Gérer les employés",
+      icon: <UserCheck className="h-4 w-4" />,
+      action: () => console.log("Gestion RH"),
+      color: "bg-purple-500"
+    }
+  ],
+  manager: [
+    {
+      title: "Planifier production",
+      description: "Organiser les tâches",
+      icon: <Calendar className="h-4 w-4" />,
+      action: () => console.log("Planifier production"),
+      color: "bg-blue-500"
+    },
+    {
+      title: "Suivi équipe",
+      description: "Voir les performances",
+      icon: <Target className="h-4 w-4" />,
+      action: () => console.log("Suivi équipe"),
+      color: "bg-green-500"
+    },
+    {
+      title: "Alertes",
+      description: "Gérer les priorités",
+      icon: <Bell className="h-4 w-4" />,
+      action: () => console.log("Alertes"),
+      color: "bg-orange-500"
+    }
+  ],
+  orders: [
+    {
+      title: "Nouvelle commande",
+      description: "Créer une commande",
+      icon: <Plus className="h-4 w-4" />,
+      action: () => console.log("Nouvelle commande"),
+      color: "bg-blue-500"
+    },
+    {
+      title: "Mesures client",
+      description: "Prendre des mesures",
+      icon: <Ruler className="h-4 w-4" />,
+      action: () => console.log("Mesures client"),
+      color: "bg-green-500"
+    },
+    {
+      title: "Suivi commandes",
+      description: "Voir les statuts",
+      icon: <Eye className="h-4 w-4" />,
+      action: () => console.log("Suivi commandes"),
+      color: "bg-purple-500"
+    }
+  ],
+  production: [
+    {
+      title: "Tâches du jour",
+      description: "Voir mes tâches",
+      icon: <Target className="h-4 w-4" />,
+      action: () => console.log("Tâches du jour"),
+      color: "bg-blue-500"
+    },
+    {
+      title: "Signaler problème",
+      description: "Alerter un problème",
+      icon: <AlertTriangle className="h-4 w-4" />,
+      action: () => console.log("Signaler problème"),
+      color: "bg-red-500"
+    },
+    {
+      title: "Terminer tâche",
+      description: "Marquer comme terminé",
+      icon: <CheckCircle className="h-4 w-4" />,
+      action: () => console.log("Terminer tâche"),
+      color: "bg-green-500"
+    }
+  ],
+  customer_service: [
+    {
+      title: "Nouveau client",
+      description: "Ajouter un client",
+      icon: <Plus className="h-4 w-4" />,
+      action: () => console.log("Nouveau client"),
+      color: "bg-blue-500"
+    },
+    {
+      title: "Support client",
+      description: "Aider les clients",
+      icon: <MessageSquare className="h-4 w-4" />,
+      action: () => console.log("Support client"),
+      color: "bg-green-500"
+    },
+    {
+      title: "Mesures",
+      description: "Gérer les mesures",
+      icon: <Ruler className="h-4 w-4" />,
+      action: () => console.log("Mesures"),
+      color: "bg-purple-500"
+    }
+  ]
+};
+
+const mockRecentActivities = [
+  {
+    id: '1',
+    type: 'order' as const,
+    title: 'Nouvelle commande créée',
+    description: 'Commande #1234 pour Marie Dupont',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    status: 'success' as const
+  },
+  {
+    id: '2',
+    type: 'production' as const,
+    title: 'Production terminée',
+    description: 'Commande #1230 livrée',
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    status: 'success' as const
+  },
+  {
+    id: '3',
+    type: 'payment' as const,
+    title: 'Paiement reçu',
+    description: 'Facture #F2024-001 payée',
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    status: 'success' as const
+  },
+  {
+    id: '4',
+    type: 'alert' as const,
+    title: 'Stock faible',
+    description: 'Tissu coton rouge en rupture',
+    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+    status: 'warning' as const
+  },
+  {
+    id: '5',
+    type: 'client' as const,
+    title: 'Nouveau client',
+    description: 'Sophie Bernard ajoutée',
+    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    status: 'info' as const
+  }
+];
+
 const mockMetrics = {
   owner: [
     {
@@ -260,202 +421,6 @@ const mockMetrics = {
     }
   ]
 };
-
-const mockQuickActions = {
-  owner: [
-    {
-      title: "Vue d'ensemble",
-      description: "Analyser les performances",
-      icon: <BarChart3 className="h-5 w-5" />,
-      action: () => console.log("Vue d'ensemble"),
-      color: "bg-blue-500"
-    },
-    {
-      title: "Gestion RH",
-      description: "Gérer l'équipe",
-      icon: <Users className="h-5 w-5" />,
-      action: () => console.log("Gestion RH"),
-      color: "bg-purple-500"
-    },
-    {
-      title: "Finances",
-      description: "Suivi financier",
-      icon: <DollarSign className="h-5 w-5" />,
-      action: () => console.log("Finances"),
-      color: "bg-green-500"
-    },
-    {
-      title: "Configuration",
-      description: "Paramètres système",
-      icon: <Settings className="h-5 w-5" />,
-      action: () => console.log("Configuration"),
-      color: "bg-gray-500"
-    }
-  ],
-  manager: [
-    {
-      title: "Nouvelle commande",
-      description: "Créer une commande",
-      icon: <Plus className="h-5 w-5" />,
-      action: () => console.log("Nouvelle commande"),
-      color: "bg-green-500"
-    },
-    {
-      title: "Planification",
-      description: "Planifier la production",
-      icon: <Calendar className="h-5 w-5" />,
-      action: () => console.log("Planification"),
-      color: "bg-blue-500"
-    },
-    {
-      title: "Rapports",
-      description: "Générer des rapports",
-      icon: <FileText className="h-5 w-5" />,
-      action: () => console.log("Rapports"),
-      color: "bg-purple-500"
-    },
-    {
-      title: "Alertes",
-      description: "Gérer les alertes",
-      icon: <Bell className="h-5 w-5" />,
-      action: () => console.log("Alertes"),
-      color: "bg-orange-500"
-    }
-  ],
-  orders: [
-    {
-      title: "Nouvelle commande",
-      description: "Créer une commande",
-      icon: <Plus className="h-5 w-5" />,
-      action: () => console.log("Nouvelle commande"),
-      color: "bg-green-500"
-    },
-    {
-      title: "Mesures",
-      description: "Prendre des mesures",
-      icon: <Ruler className="h-5 w-5" />,
-      action: () => console.log("Mesures"),
-      color: "bg-blue-500"
-    },
-    {
-      title: "Suivi commandes",
-      description: "Suivre les commandes",
-      icon: <Eye className="h-5 w-5" />,
-      action: () => console.log("Suivi commandes"),
-      color: "bg-purple-500"
-    },
-    {
-      title: "Facturation",
-      description: "Gérer les factures",
-      icon: <Receipt className="h-5 w-5" />,
-      action: () => console.log("Facturation"),
-      color: "bg-orange-500"
-    }
-  ],
-  production: [
-    {
-      title: "Nouvelle tâche",
-      description: "Créer une tâche",
-      icon: <Plus className="h-5 w-5" />,
-      action: () => console.log("Nouvelle tâche"),
-      color: "bg-green-500"
-    },
-    {
-      title: "Planification",
-      description: "Planifier la production",
-      icon: <Calendar className="h-5 w-5" />,
-      action: () => console.log("Planification"),
-      color: "bg-blue-500"
-    },
-    {
-      title: "Stocks",
-      description: "Gérer les stocks",
-      icon: <Package className="h-5 w-5" />,
-      action: () => console.log("Stocks"),
-      color: "bg-purple-500"
-    },
-    {
-      title: "Modèles",
-      description: "Gérer les modèles",
-      icon: <Folder className="h-5 w-5" />,
-      action: () => console.log("Modèles"),
-      color: "bg-orange-500"
-    }
-  ],
-  customer_service: [
-    {
-      title: "Nouveau ticket",
-      description: "Créer un ticket",
-      icon: <Plus className="h-5 w-5" />,
-      action: () => console.log("Nouveau ticket"),
-      color: "bg-green-500"
-    },
-    {
-      title: "Tickets en cours",
-      description: "Voir les tickets",
-      icon: <MessageSquare className="h-5 w-5" />,
-      action: () => console.log("Tickets en cours"),
-      color: "bg-blue-500"
-    },
-    {
-      title: "Clients",
-      description: "Gérer les clients",
-      icon: <Users className="h-5 w-5" />,
-      action: () => console.log("Clients"),
-      color: "bg-purple-500"
-    },
-    {
-      title: "Rapports",
-      description: "Générer des rapports",
-      icon: <FileText className="h-5 w-5" />,
-      action: () => console.log("Rapports"),
-      color: "bg-orange-500"
-    }
-  ]
-};
-
-const mockRecentActivities: RecentActivity[] = [
-  {
-    id: '1',
-    type: 'order',
-    title: 'Nouvelle commande #1234',
-    description: 'Commande de Marie Dupont - Robe d\'été',
-    timestamp: '2024-01-15T14:30:00Z',
-    status: 'success'
-  },
-  {
-    id: '2',
-    type: 'production',
-    title: 'Production terminée',
-    description: 'Costume #1230 - Prêt pour livraison',
-    timestamp: '2024-01-15T13:45:00Z',
-    status: 'success'
-  },
-  {
-    id: '3',
-    type: 'payment',
-    title: 'Paiement reçu',
-    description: 'Facture #F2024-001 - €450',
-    timestamp: '2024-01-15T12:20:00Z',
-    status: 'success'
-  },
-  {
-    id: '4',
-    type: 'alert',
-    title: 'Stock faible',
-    description: 'Tissu coton - Seuil d\'alerte atteint',
-    timestamp: '2024-01-15T11:15:00Z',
-    status: 'warning'
-  },
-  {
-    id: '5',
-    type: 'client',
-    title: 'Nouveau client',
-    description: 'Sophie Bernard - Inscription',
-    timestamp: '2024-01-15T10:30:00Z',
-    status: 'info'
-  }
-];
 
 export function RoleSpecificDashboard() {
   const { user } = useAuth();

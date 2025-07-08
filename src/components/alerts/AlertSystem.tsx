@@ -135,7 +135,7 @@ export function AlertSystem() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Filtrer les alertes selon le rôle de l'utilisateur
-  const userRole = user?.role || '';
+  const userRole = user?.role || 'owner'; // Valeur par défaut si le rôle n'est pas défini
   const allowedAlertTypes = alertConfig[userRole as keyof typeof alertConfig] || [];
   const filteredAlerts = alerts.filter(alert => allowedAlertTypes.includes(alert.type));
 
@@ -202,7 +202,7 @@ export function AlertSystem() {
             ...alert, 
             isRead: true, 
             readAt: new Date().toISOString(),
-            readBy: `${user?.first_name} ${user?.last_name}`
+            readBy: `${user?.firstName} ${user?.lastName}`
           }
         : alert
     ));
@@ -215,7 +215,7 @@ export function AlertSystem() {
             ...alert, 
             isRead: true, 
             readAt: new Date().toISOString(),
-            readBy: `${user?.first_name} ${user?.last_name}`
+            readBy: `${user?.firstName} ${user?.lastName}`
           }
         : alert
     ));
@@ -416,7 +416,7 @@ function AlertCard({
               <div className="flex items-center space-x-2">
                 {getAlertIcon(alert.type)}
                 <h4 className="text-sm font-medium">{alert.title}</h4>
-                <Badge variant={getAlertBadgeVariant(alert.level)} size="sm">
+                <Badge variant={getAlertBadgeVariant(alert.level)}>
                   {alert.level}
                 </Badge>
               </div>

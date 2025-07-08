@@ -102,6 +102,12 @@ const menuItems: MenuItem[] = [
     roles: ['owner']
   },
   {
+    title: 'Mon Profil',
+    href: '/dashboard/profile',
+    icon: User,
+    roles: ['owner', 'manager', 'tailor', 'orders', 'stocks', 'customer_service']
+  },
+  {
     title: 'Paramètres',
     href: '/dashboard/settings',
     icon: Settings,
@@ -116,7 +122,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const filteredMenuItems = menuItems.filter(item => 
-    item.roles.includes(user?.role || '')
+    item.roles.includes(user?.role || 'owner') // Valeur par défaut si le rôle n'est pas défini
   );
 
   const handleLogout = async () => {
@@ -146,7 +152,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Button>
         <div className="flex items-center gap-2">
           <AlertSystem />
-          <Button variant="ghost" size="sm">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/dashboard/profile')}
+          >
             <User className="h-5 w-5" />
           </Button>
         </div>

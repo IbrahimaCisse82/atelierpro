@@ -131,6 +131,7 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                   placeholder="Ex: Atelier Couture Marie"
                   disabled={loading}
                   required
+                  autoComplete="organization"
                 />
               </div>
             </div>
@@ -153,6 +154,7 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                     placeholder="Marie"
                     disabled={loading}
                     required
+                    autoComplete="given-name"
                   />
                 </div>
                 <div>
@@ -165,6 +167,7 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                     placeholder="Dubois"
                     disabled={loading}
                     required
+                    autoComplete="family-name"
                   />
                 </div>
               </div>
@@ -180,6 +183,7 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                   placeholder="marie@atelier-couture.fr"
                   disabled={loading}
                   required
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -202,6 +206,7 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                   placeholder="Minimum 6 caractères"
                   disabled={loading}
                   required
+                  autoComplete="new-password"
                 />
               </div>
 
@@ -216,6 +221,7 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                   placeholder="Confirmez votre mot de passe"
                   disabled={loading}
                   required
+                  autoComplete="new-password"
                 />
               </div>
             </div>

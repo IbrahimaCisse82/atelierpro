@@ -1,15 +1,20 @@
--- Créer l'enum pour les rôles utilisateur
-CREATE TYPE public.user_role AS ENUM (
-  'owner',
-  'manager', 
-  'tailor',
-  'orders',
-  'stocks',
-  'customer_service'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE public.user_role AS ENUM (
+      'owner',
+      'manager',
+      'tailor',
+      'orders',
+      'stocks',
+      'customer_service'
+    );
+  END IF;
+END
+$$;
 
 -- Table des entreprises
-CREATE TABLE public.companies (
+CREATE TABLE IF NOT EXISTS public.companies (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL,
@@ -19,7 +24,7 @@ CREATE TABLE public.companies (
 );
 
 -- Table des profils utilisateur (liée à auth.users)
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
@@ -104,11 +109,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_companies_updated_at ON public.companies;
 CREATE TRIGGER update_companies_updated_at
   BEFORE UPDATE ON public.companies
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW
@@ -158,6 +165,7 @@ END;
 $$;
 
 -- Trigger pour la création automatique du profil
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -177,6 +185,7 @@ END;
 $$;
 
 -- Trigger pour mettre à jour last_login
+DROP TRIGGER IF EXISTS on_auth_user_login ON auth.users;
 CREATE TRIGGER on_auth_user_login
   AFTER UPDATE OF last_sign_in_at ON auth.users
   FOR EACH ROW 

@@ -81,9 +81,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[Supabase Auth] Event:', event, 'Session:', session);
         if (session?.user) {
+          console.log('[Supabase Auth] Utilisateur connecté, chargement du profil...');
           await loadUserData(session);
         } else {
+          console.log('[Supabase Auth] Déconnexion détectée ou session invalide, déclenchement du LOGOUT');
           dispatch({ type: 'LOGOUT' });
         }
       }
@@ -108,14 +111,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = async (session: Session) => {
     const start = Date.now();
     try {
-      const { data: profileData, error } = await supabase
+      console.log('[AuthContext] Chargement du profil pour user_id:', session.user.id);
+      
+      // Requête optimisée : d'abord le profil, puis l'entreprise séparément
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select(`user_id, email, first_name, last_name, role, company_id, is_active, created_at, last_login, companies(id, name, email, created_at, is_active)`)
+        .select('user_id, email, first_name, last_name, role, company_id, is_active, created_at, last_login')
         .eq('user_id', session.user.id)
         .single();
-      console.log('Chargement profil terminé en', Date.now() - start, 'ms');
-      if (error || !profileData) {
+      
+      console.log('[AuthContext] Chargement profil terminé en', Date.now() - start, 'ms');
+      console.log('[AuthContext] Données du profil:', profileData);
+      console.log('[AuthContext] Erreur du profil:', profileError);
+      
+      if (profileError) {
+        console.error('[AuthContext] Erreur lors du chargement du profil:', profileError);
+        dispatch({ type: 'SET_ERROR', payload: `Erreur profil: ${profileError.message}` });
+        return;
+      }
+      
+      if (!profileData) {
+        console.error('[AuthContext] Aucune donnée de profil trouvée');
         dispatch({ type: 'SET_ERROR', payload: "Profil utilisateur introuvable. Veuillez contacter l'administrateur." });
+        return;
+      }
+
+      // Charger l'entreprise séparément pour éviter les JOIN lents
+      console.log('[AuthContext] Chargement de l\'entreprise pour company_id:', profileData.company_id);
+      
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('id, name, email, created_at, is_active')
+        .eq('id', profileData.company_id)
+        .single();
+
+      console.log('[AuthContext] Données de l\'entreprise:', companyData);
+      console.log('[AuthContext] Erreur de l\'entreprise:', companyError);
+
+      if (companyError) {
+        console.error('[AuthContext] Erreur lors du chargement de l\'entreprise:', companyError);
+        dispatch({ type: 'SET_ERROR', payload: `Erreur entreprise: ${companyError.message}` });
+        return;
+      }
+      
+      if (!companyData) {
+        console.error('[AuthContext] Aucune donnée d\'entreprise trouvée');
+        dispatch({ type: 'SET_ERROR', payload: "Entreprise introuvable. Veuillez contacter l'administrateur." });
         return;
       }
 
@@ -124,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: profileData.email,
         firstName: profileData.first_name,
         lastName: profileData.last_name,
-        role: profileData.role as UserRole,
+        role: profileData.role as UserRole || 'owner', // Valeur par défaut si le rôle n'est pas défini
         companyId: profileData.company_id,
         isActive: profileData.is_active,
         createdAt: new Date(profileData.created_at),
@@ -132,17 +173,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
 
       const company: Company = {
-        id: profileData.companies.id,
-        name: profileData.companies.name,
-        email: profileData.companies.email,
-        createdAt: new Date(profileData.companies.created_at),
-        isActive: profileData.companies.is_active
+        id: companyData.id,
+        name: companyData.name,
+        email: companyData.email,
+        createdAt: new Date(companyData.created_at),
+        isActive: companyData.is_active
       };
 
+      console.log('[AuthContext] Chargement complet terminé en', Date.now() - start, 'ms');
+      console.log('[AuthContext] Utilisateur créé:', user);
+      console.log('[AuthContext] Entreprise créée:', company);
+      
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
     } catch (error) {
+      console.error('[AuthContext] Erreur lors du chargement des données utilisateur:', error);
       dispatch({ type: 'SET_ERROR', payload: "Erreur lors du chargement du profil utilisateur." });
-      console.error('Erreur lors du chargement des données utilisateur:', error);
     }
   };
 

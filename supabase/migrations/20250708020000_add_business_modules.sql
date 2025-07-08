@@ -6,7 +6,7 @@
 -- =====================================================
 
 -- Table des clients
-CREATE TABLE public.clients (
+CREATE TABLE IF NOT EXISTS public.clients (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   first_name TEXT NOT NULL,
@@ -27,7 +27,7 @@ CREATE TABLE public.clients (
 -- =====================================================
 
 -- Table des mesures clients
-CREATE TABLE public.client_measurements (
+CREATE TABLE IF NOT EXISTS public.client_measurements (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   client_id UUID NOT NULL REFERENCES public.clients(id) ON DELETE CASCADE,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
@@ -67,7 +67,7 @@ CREATE TABLE public.client_measurements (
 -- =====================================================
 
 -- Table des fournisseurs
-CREATE TABLE public.suppliers (
+CREATE TABLE IF NOT EXISTS public.suppliers (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE public.suppliers (
 );
 
 -- Table des catégories de produits
-CREATE TABLE public.product_categories (
+CREATE TABLE IF NOT EXISTS public.product_categories (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE public.product_categories (
 );
 
 -- Table des produits (tissus, accessoires, etc.)
-CREATE TABLE public.products (
+CREATE TABLE IF NOT EXISTS public.products (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   category_id UUID REFERENCES public.product_categories(id),
@@ -117,7 +117,7 @@ CREATE TABLE public.products (
 );
 
 -- Table des mouvements de stock
-CREATE TABLE public.stock_movements (
+CREATE TABLE IF NOT EXISTS public.stock_movements (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES public.products(id),
@@ -136,21 +136,27 @@ CREATE TABLE public.stock_movements (
 -- =====================================================
 
 -- Enum pour les statuts d'achat
-CREATE TYPE public.purchase_status AS ENUM (
-  'draft',
-  'ordered',
-  'confirmed',
-  'in_transit',
-  'delivered_not_received',
-  'received',
-  'invoice_received',
-  'ready_to_pay',
-  'paid',
-  'cancelled'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'purchase_status') THEN
+    CREATE TYPE public.purchase_status AS ENUM (
+      'draft',
+      'ordered',
+      'confirmed',
+      'in_transit',
+      'delivered_not_received',
+      'received',
+      'invoice_received',
+      'ready_to_pay',
+      'paid',
+      'cancelled'
+    );
+  END IF;
+END
+$$;
 
 -- Table des commandes fournisseurs
-CREATE TABLE public.purchase_orders (
+CREATE TABLE IF NOT EXISTS public.purchase_orders (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   supplier_id UUID NOT NULL REFERENCES public.suppliers(id),
@@ -167,7 +173,7 @@ CREATE TABLE public.purchase_orders (
 );
 
 -- Table des lignes de commande fournisseur
-CREATE TABLE public.purchase_order_items (
+CREATE TABLE IF NOT EXISTS public.purchase_order_items (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   purchase_order_id UUID NOT NULL REFERENCES public.purchase_orders(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES public.products(id),
@@ -181,7 +187,7 @@ CREATE TABLE public.purchase_order_items (
 );
 
 -- Table des réceptions
-CREATE TABLE public.receptions (
+CREATE TABLE IF NOT EXISTS public.receptions (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   purchase_order_id UUID NOT NULL REFERENCES public.purchase_orders(id),
@@ -196,7 +202,7 @@ CREATE TABLE public.receptions (
 );
 
 -- Table des lignes de réception
-CREATE TABLE public.reception_items (
+CREATE TABLE IF NOT EXISTS public.reception_items (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   reception_id UUID NOT NULL REFERENCES public.receptions(id) ON DELETE CASCADE,
   purchase_order_item_id UUID NOT NULL REFERENCES public.purchase_order_items(id),
@@ -210,7 +216,7 @@ CREATE TABLE public.reception_items (
 );
 
 -- Table des factures fournisseurs
-CREATE TABLE public.supplier_invoices (
+CREATE TABLE IF NOT EXISTS public.supplier_invoices (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   purchase_order_id UUID NOT NULL REFERENCES public.purchase_orders(id),
@@ -233,7 +239,7 @@ CREATE TABLE public.supplier_invoices (
 -- =====================================================
 
 -- Table des modèles
-CREATE TABLE public.models (
+CREATE TABLE IF NOT EXISTS public.models (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -249,7 +255,7 @@ CREATE TABLE public.models (
 );
 
 -- Table des patrons (fichiers PDF)
-CREATE TABLE public.patterns (
+CREATE TABLE IF NOT EXISTS public.patterns (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   model_id UUID NOT NULL REFERENCES public.models(id) ON DELETE CASCADE,
@@ -267,25 +273,31 @@ CREATE TABLE public.patterns (
 -- =====================================================
 
 -- Enum pour les statuts de production
-CREATE TYPE public.production_status AS ENUM (
-  'order_created',
-  'waiting_materials',
-  'materials_allocated',
-  'cutting_in_progress',
-  'cutting_completed',
-  'assembly_in_progress',
-  'assembly_completed',
-  'finishing_in_progress',
-  'quality_check',
-  'ready_to_deliver',
-  'delivered',
-  'invoiced',
-  'paid',
-  'cancelled'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'production_status') THEN
+    CREATE TYPE public.production_status AS ENUM (
+      'order_created',
+      'waiting_materials',
+      'materials_allocated',
+      'cutting_in_progress',
+      'cutting_completed',
+      'assembly_in_progress',
+      'assembly_completed',
+      'finishing_in_progress',
+      'quality_check',
+      'ready_to_deliver',
+      'delivered',
+      'invoiced',
+      'paid',
+      'cancelled'
+    );
+  END IF;
+END
+$$;
 
 -- Table des commandes
-CREATE TABLE public.orders (
+CREATE TABLE IF NOT EXISTS public.orders (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   client_id UUID NOT NULL REFERENCES public.clients(id),
@@ -307,7 +319,7 @@ CREATE TABLE public.orders (
 );
 
 -- Table des lignes de commande
-CREATE TABLE public.order_items (
+CREATE TABLE IF NOT EXISTS public.order_items (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   model_id UUID NOT NULL REFERENCES public.models(id),
@@ -320,7 +332,7 @@ CREATE TABLE public.order_items (
 );
 
 -- Table des matériaux utilisés par commande
-CREATE TABLE public.order_materials (
+CREATE TABLE IF NOT EXISTS public.order_materials (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   product_id UUID NOT NULL REFERENCES public.products(id),
@@ -333,7 +345,7 @@ CREATE TABLE public.order_materials (
 );
 
 -- Table du suivi de production
-CREATE TABLE public.production_tracking (
+CREATE TABLE IF NOT EXISTS public.production_tracking (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
   status public.production_status NOT NULL,
@@ -350,7 +362,7 @@ CREATE TABLE public.production_tracking (
 -- =====================================================
 
 -- Table des factures clients
-CREATE TABLE public.customer_invoices (
+CREATE TABLE IF NOT EXISTS public.customer_invoices (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   order_id UUID NOT NULL REFERENCES public.orders(id),
@@ -375,7 +387,7 @@ CREATE TABLE public.customer_invoices (
 -- =====================================================
 
 -- Table des employés (tailleurs)
-CREATE TABLE public.employees (
+CREATE TABLE IF NOT EXISTS public.employees (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   profile_id UUID NOT NULL REFERENCES public.profiles(id),
@@ -390,7 +402,7 @@ CREATE TABLE public.employees (
 );
 
 -- Table des heures travaillées
-CREATE TABLE public.work_hours (
+CREATE TABLE IF NOT EXISTS public.work_hours (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   employee_id UUID NOT NULL REFERENCES public.employees(id),
@@ -411,25 +423,37 @@ CREATE TABLE public.work_hours (
 -- =====================================================
 
 -- Enum pour les types d'alertes
-CREATE TYPE public.alert_type AS ENUM (
-  'stock_low',
-  'order_delay',
-  'payment_due',
-  'supplier_delivery',
-  'quality_issue',
-  'system_alert'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'alert_type') THEN
+    CREATE TYPE public.alert_type AS ENUM (
+      'stock_low',
+      'order_delay',
+      'payment_due',
+      'supplier_delivery',
+      'quality_issue',
+      'system_alert'
+    );
+  END IF;
+END
+$$;
 
 -- Enum pour les niveaux d'alerte
-CREATE TYPE public.alert_level AS ENUM (
-  'info',
-  'warning',
-  'error',
-  'critical'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'alert_level') THEN
+    CREATE TYPE public.alert_level AS ENUM (
+      'info',
+      'warning',
+      'error',
+      'critical'
+    );
+  END IF;
+END
+$$;
 
 -- Table des alertes
-CREATE TABLE public.alerts (
+CREATE TABLE IF NOT EXISTS public.alerts (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   type public.alert_type NOT NULL,
@@ -547,76 +571,91 @@ CREATE POLICY "Owner can manage employees"
 -- =====================================================
 
 -- Créer les triggers pour toutes les nouvelles tables
+DROP TRIGGER IF EXISTS update_clients_updated_at ON public.clients;
 CREATE TRIGGER update_clients_updated_at
   BEFORE UPDATE ON public.clients
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_client_measurements_updated_at ON public.client_measurements;
 CREATE TRIGGER update_client_measurements_updated_at
   BEFORE UPDATE ON public.client_measurements
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_suppliers_updated_at ON public.suppliers;
 CREATE TRIGGER update_suppliers_updated_at
   BEFORE UPDATE ON public.suppliers
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_product_categories_updated_at ON public.product_categories;
 CREATE TRIGGER update_product_categories_updated_at
   BEFORE UPDATE ON public.product_categories
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_products_updated_at ON public.products;
 CREATE TRIGGER update_products_updated_at
   BEFORE UPDATE ON public.products
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_purchase_orders_updated_at ON public.purchase_orders;
 CREATE TRIGGER update_purchase_orders_updated_at
   BEFORE UPDATE ON public.purchase_orders
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_purchase_order_items_updated_at ON public.purchase_order_items;
 CREATE TRIGGER update_purchase_order_items_updated_at
   BEFORE UPDATE ON public.purchase_order_items
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_supplier_invoices_updated_at ON public.supplier_invoices;
 CREATE TRIGGER update_supplier_invoices_updated_at
   BEFORE UPDATE ON public.supplier_invoices
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_models_updated_at ON public.models;
 CREATE TRIGGER update_models_updated_at
   BEFORE UPDATE ON public.models
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_orders_updated_at ON public.orders;
 CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON public.orders
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_order_items_updated_at ON public.order_items;
 CREATE TRIGGER update_order_items_updated_at
   BEFORE UPDATE ON public.order_items
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_order_materials_updated_at ON public.order_materials;
 CREATE TRIGGER update_order_materials_updated_at
   BEFORE UPDATE ON public.order_materials
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_customer_invoices_updated_at ON public.customer_invoices;
 CREATE TRIGGER update_customer_invoices_updated_at
   BEFORE UPDATE ON public.customer_invoices
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_employees_updated_at ON public.employees;
 CREATE TRIGGER update_employees_updated_at
   BEFORE UPDATE ON public.employees
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_work_hours_updated_at ON public.work_hours;
 CREATE TRIGGER update_work_hours_updated_at
   BEFORE UPDATE ON public.work_hours
   FOR EACH ROW

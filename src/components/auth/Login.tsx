@@ -88,6 +88,7 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                     className="pl-10"
                     disabled={loading}
                     required
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -106,6 +107,7 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                     className="pl-10"
                     disabled={loading}
                     required
+                    autoComplete="current-password"
                   />
                 </div>
               </div>
