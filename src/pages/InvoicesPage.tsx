@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AccessControl } from '@/components/common/AccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -258,381 +259,367 @@ export function InvoicesPage() {
             status: 'paid', 
             isPaid: true, 
             paidAt: new Date().toISOString(),
-            paidBy: user?.first_name + ' ' + user?.last_name
+            paidBy: user?.firstName + ' ' + user?.lastName
           }
         : invoice
     ));
   };
 
-  if (!canViewInvoices) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <Receipt className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Facturation</h1>
-          <p className="text-muted-foreground">
-            Gestion des factures et suivi des paiements
-          </p>
-        </div>
-        {canManageInvoices && (
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nouvelle facture
-            </Button>
+    <AccessControl allowedRoles={['owner', 'manager']}>
+      <div className="space-y-6">
+        {/* En-tête */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Facturation</h1>
+            <p className="text-muted-foreground">
+              Gestion des factures et suivi des paiements
+            </p>
           </div>
-        )}
-      </div>
+          {canManageInvoices && (
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle facture
+              </Button>
+            </div>
+          )}
+        </div>
 
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total factures</p>
-                <p className="text-2xl font-bold">{totalInvoices}</p>
-              </div>
-              <Receipt className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Payées</p>
-                <p className="text-2xl font-bold text-green-500">{paidInvoices}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">En attente</p>
-                <p className="text-2xl font-bold text-orange-500">{pendingInvoices}</p>
-              </div>
-              <Clock className="h-8 w-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">En retard</p>
-                <p className="text-2xl font-bold text-red-500">{overdueInvoices}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">CA encaissé</p>
-                <p className="text-2xl font-bold">€{totalRevenue.toLocaleString()}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Onglets */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="invoices">Factures</TabsTrigger>
-          <TabsTrigger value="ready-to-invoice">Prêtes à facturer</TabsTrigger>
-          <TabsTrigger value="reports">Rapports</TabsTrigger>
-        </TabsList>
-
-        {/* Onglet Factures */}
-        <TabsContent value="invoices" className="space-y-4">
-          {/* Filtres */}
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Rechercher une facture..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total factures</p>
+                  <p className="text-2xl font-bold">{totalInvoices}</p>
                 </div>
-                <div className="flex gap-2">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 border rounded-md"
-                  >
-                    <option value="all">Tous les statuts</option>
-                    <option value="draft">Brouillon</option>
-                    <option value="sent">Envoyée</option>
-                    <option value="paid">Payée</option>
-                    <option value="overdue">En retard</option>
-                    <option value="cancelled">Annulée</option>
-                  </select>
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Receipt className="h-8 w-8 text-muted-foreground" />
               </div>
             </CardContent>
           </Card>
-
-          {/* Tableau des factures */}
           <Card>
-            <CardHeader>
-              <CardTitle>Liste des factures</CardTitle>
-              <CardDescription>
-                {filteredInvoices.length} facture(s) trouvée(s)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Facture</TableHead>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Commande</TableHead>
-                    <TableHead>Date facture</TableHead>
-                    <TableHead>Échéance</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInvoices.map((invoice) => {
-                    const statusInfo = getStatusInfo(invoice.status);
-                    const isOverdue = new Date(invoice.dueDate) < new Date() && !invoice.isPaid;
-                    
-                    return (
-                      <TableRow key={invoice.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{invoice.invoiceNumber}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {invoice.isPaid && `Payée le ${new Date(invoice.paidAt!).toLocaleDateString('fr-FR')}`}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{invoice.clientName}</p>
-                            <p className="text-sm text-muted-foreground">{invoice.clientEmail}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{invoice.orderNumber}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">
-                            {new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                            <span className={cn(
-                              "text-sm",
-                              isOverdue ? "text-red-500 font-medium" : ""
-                            )}>
-                              {new Date(invoice.dueDate).toLocaleDateString('fr-FR')}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <span className="font-medium">€{invoice.totalWithTax.toLocaleString()}</span>
-                            <p className="text-xs text-muted-foreground">
-                              HT: €{invoice.totalAmount.toLocaleString()}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusInfo.variant}>
-                            {statusInfo.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-4xl">
-                                <DialogHeader>
-                                  <DialogTitle>Facture {invoice.invoiceNumber}</DialogTitle>
-                                </DialogHeader>
-                                <InvoiceDetails invoice={invoice} />
-                              </DialogContent>
-                            </Dialog>
-                            <Button variant="ghost" size="sm">
-                              <Download className="h-4 w-4" />
-                            </Button>
-                            {canManageInvoices && invoice.status === 'draft' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleSendInvoice(invoice.id)}
-                              >
-                                <Send className="h-4 w-4 mr-1" />
-                                Envoyer
-                              </Button>
-                            )}
-                            {canManageInvoices && invoice.status === 'sent' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleMarkAsPaid(invoice.id)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Marquer payée
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Payées</p>
+                  <p className="text-2xl font-bold text-green-500">{paidInvoices}</p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-500" />
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Onglet Prêtes à facturer */}
-        <TabsContent value="ready-to-invoice" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Commandes prêtes à facturer</CardTitle>
-              <CardDescription>
-                Commandes livrées en attente de facturation automatique
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {ordersReadyForInvoicing.length === 0 ? (
-                <div className="text-center py-8">
-                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Aucune commande en attente</h3>
-                  <p className="text-muted-foreground">
-                    Toutes les commandes livrées ont été facturées
-                  </p>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">En attente</p>
+                  <p className="text-2xl font-bold text-orange-500">{pendingInvoices}</p>
                 </div>
-              ) : (
+                <Clock className="h-8 w-8 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">En retard</p>
+                  <p className="text-2xl font-bold text-red-500">{overdueInvoices}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-red-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">CA encaissé</p>
+                  <p className="text-2xl font-bold">€{totalRevenue.toLocaleString()}</p>
+                </div>
+                <DollarSign className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Onglets */}
+        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="invoices">Factures</TabsTrigger>
+            <TabsTrigger value="ready-to-invoice">Prêtes à facturer</TabsTrigger>
+            <TabsTrigger value="reports">Rapports</TabsTrigger>
+          </TabsList>
+
+          {/* Onglet Factures */}
+          <TabsContent value="invoices" className="space-y-4">
+            {/* Filtres */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Rechercher une facture..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="px-3 py-2 border rounded-md"
+                    >
+                      <option value="all">Tous les statuts</option>
+                      <option value="draft">Brouillon</option>
+                      <option value="sent">Envoyée</option>
+                      <option value="paid">Payée</option>
+                      <option value="overdue">En retard</option>
+                      <option value="cancelled">Annulée</option>
+                    </select>
+                    <Button variant="outline">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tableau des factures */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Liste des factures</CardTitle>
+                <CardDescription>
+                  {filteredInvoices.length} facture(s) trouvée(s)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Commande</TableHead>
+                      <TableHead>Facture</TableHead>
                       <TableHead>Client</TableHead>
-                      <TableHead>Date livraison</TableHead>
+                      <TableHead>Commande</TableHead>
+                      <TableHead>Date facture</TableHead>
+                      <TableHead>Échéance</TableHead>
                       <TableHead>Montant</TableHead>
+                      <TableHead>Statut</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {ordersReadyForInvoicing.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell>
-                          <p className="font-medium">{order.orderNumber}</p>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">{order.clientName}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm">
-                            {new Date(order.deliveredAt!).toLocaleDateString('fr-FR')}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">€{order.totalAmount.toLocaleString()}</span>
-                        </TableCell>
-                        <TableCell>
-                          {canManageInvoices && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleCreateInvoice(order)}
-                            >
-                              <Receipt className="h-4 w-4 mr-1" />
-                              Créer facture
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredInvoices.map((invoice) => {
+                      const statusInfo = getStatusInfo(invoice.status);
+                      const isOverdue = new Date(invoice.dueDate) < new Date() && !invoice.isPaid;
+                      
+                      return (
+                        <TableRow key={invoice.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{invoice.invoiceNumber}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {invoice.isPaid && `Payée le ${new Date(invoice.paidAt!).toLocaleDateString('fr-FR')}`}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{invoice.clientName}</p>
+                              <p className="text-sm text-muted-foreground">{invoice.clientEmail}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">{invoice.orderNumber}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">
+                              {new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
+                              <span className={cn(
+                                "text-sm",
+                                isOverdue ? "text-red-500 font-medium" : ""
+                              )}>
+                                {new Date(invoice.dueDate).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <span className="font-medium">€{invoice.totalWithTax.toLocaleString()}</span>
+                              <p className="text-xs text-muted-foreground">
+                                HT: €{invoice.totalAmount.toLocaleString()}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusInfo.variant}>
+                              {statusInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-4xl">
+                                  <DialogHeader>
+                                    <DialogTitle>Facture {invoice.invoiceNumber}</DialogTitle>
+                                  </DialogHeader>
+                                  <InvoiceDetails invoice={invoice} />
+                                </DialogContent>
+                              </Dialog>
+                              <Button variant="ghost" size="sm">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              {canManageInvoices && invoice.status === 'draft' && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleSendInvoice(invoice.id)}
+                                >
+                                  <Send className="h-4 w-4 mr-1" />
+                                  Envoyer
+                                </Button>
+                              )}
+                              {canManageInvoices && invoice.status === 'sent' && (
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => handleMarkAsPaid(invoice.id)}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Marquer payée
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Onglet Rapports */}
-        <TabsContent value="reports" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Onglet Prêtes à facturer */}
+          <TabsContent value="ready-to-invoice" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Chiffre d'affaires</CardTitle>
+                <CardTitle>Commandes prêtes à facturer</CardTitle>
                 <CardDescription>
-                  Évolution des encaissements
+                  Commandes livrées en attente de facturation automatique
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Graphique en cours de développement
-                </div>
+                {ordersReadyForInvoicing.length === 0 ? (
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Aucune commande en attente</h3>
+                    <p className="text-muted-foreground">
+                      Toutes les commandes livrées ont été facturées
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Commande</TableHead>
+                        <TableHead>Client</TableHead>
+                        <TableHead>Date livraison</TableHead>
+                        <TableHead>Montant</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {ordersReadyForInvoicing.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>
+                            <p className="font-medium">{order.orderNumber}</p>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">{order.clientName}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm">
+                              {new Date(order.deliveredAt!).toLocaleDateString('fr-FR')}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium">€{order.totalAmount.toLocaleString()}</span>
+                          </TableCell>
+                          <TableCell>
+                            {canManageInvoices && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleCreateInvoice(order)}
+                              >
+                                <Receipt className="h-4 w-4 mr-1" />
+                                Créer facture
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Délais de paiement</CardTitle>
-                <CardDescription>
-                  Analyse des retards de paiement
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
-                  Graphique en cours de développement
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+          </TabsContent>
+
+          {/* Onglet Rapports */}
+          <TabsContent value="reports" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Chiffre d'affaires</CardTitle>
+                  <CardDescription>
+                    Évolution des encaissements
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                    Graphique en cours de développement
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Délais de paiement</CardTitle>
+                  <CardDescription>
+                    Analyse des retards de paiement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                    Graphique en cours de développement
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AccessControl>
   );
 }
 
@@ -706,4 +693,4 @@ function InvoiceDetails({ invoice }: { invoice: Invoice }) {
       )}
     </div>
   );
-} 
+}

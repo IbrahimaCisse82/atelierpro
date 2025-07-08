@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AccessControl } from '@/components/common/AccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -190,10 +191,25 @@ export function MeasurementsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Permissions
-  const canManageMeasurements = ['owner', 'orders'].includes(user?.role || '');
-  const canViewMeasurements = ['owner', 'manager', 'orders', 'customer_service'].includes(user?.role || '');
-  const canValidateMeasurements = ['owner', 'manager'].includes(user?.role || '');
+  // Permissions centralisées
+  const canViewMeasurements = ['owner', 'manager', 'measurements', 'production', 'tailor'].includes(user?.role || '');
+  const canManageMeasurements = ['owner', 'manager', 'measurements'].includes(user?.role || '');
+  const canValidateMeasurements = ['owner', 'manager', 'measurements'].includes(user?.role || '');
+  if (!canViewMeasurements) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <Ruler className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
+            <p className="text-muted-foreground">
+              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Filtrer les mesures
   const filteredMeasurements = measurements.filter(measurement => {
@@ -229,7 +245,19 @@ export function MeasurementsPage() {
       createdBy: `${user?.firstName} ${user?.lastName}`,
       updatedAt: new Date().toISOString(),
       updatedBy: `${user?.firstName} ${user?.lastName}`,
-      ...measurementData
+      ...measurementData,
+      bust: typeof measurementData.bust === 'string' ? Number(measurementData.bust) : measurementData.bust,
+      waist: typeof measurementData.waist === 'string' ? Number(measurementData.waist) : measurementData.waist,
+      hips: typeof measurementData.hips === 'string' ? Number(measurementData.hips) : measurementData.hips,
+      shoulderWidth: typeof measurementData.shoulderWidth === 'string' ? Number(measurementData.shoulderWidth) : measurementData.shoulderWidth,
+      armLength: typeof measurementData.armLength === 'string' ? Number(measurementData.armLength) : measurementData.armLength,
+      legLength: typeof measurementData.legLength === 'string' ? Number(measurementData.legLength) : measurementData.legLength,
+      neckCircumference: typeof measurementData.neckCircumference === 'string' ? Number(measurementData.neckCircumference) : measurementData.neckCircumference,
+      chestWidth: typeof measurementData.chestWidth === 'string' ? Number(measurementData.chestWidth) : measurementData.chestWidth,
+      backWidth: typeof measurementData.backWidth === 'string' ? Number(measurementData.backWidth) : measurementData.backWidth,
+      armCircumference: typeof measurementData.armCircumference === 'string' ? Number(measurementData.armCircumference) : measurementData.armCircumference,
+      thighCircumference: typeof measurementData.thighCircumference === 'string' ? Number(measurementData.thighCircumference) : measurementData.thighCircumference,
+      calfCircumference: typeof measurementData.calfCircumference === 'string' ? Number(measurementData.calfCircumference) : measurementData.calfCircumference,
     };
     
     setMeasurements(prev => [...prev, newMeasurement]);
@@ -261,249 +289,235 @@ export function MeasurementsPage() {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
-  if (!canViewMeasurements) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <Ruler className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Gestion des Mesures</h1>
-          <p className="text-muted-foreground">
-            Prise de mesures, validation et suivi des évolutions
-          </p>
-        </div>
-        {canManageMeasurements && (
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouvelle mesure
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle>Prendre de nouvelles mesures</DialogTitle>
-                  <DialogDescription>
-                    Saisissez les mesures du client
-                  </DialogDescription>
-                </DialogHeader>
-                <MeasurementForm 
-                  clients={clients}
-                  onSubmit={handleCreateMeasurement}
-                />
-              </DialogContent>
-            </Dialog>
+    <AccessControl allowedRoles={['owner', 'manager', 'orders', 'customer_service']}>
+      <div className="space-y-6">
+        {/* En-tête */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Gestion des Mesures</h1>
+            <p className="text-muted-foreground">
+              Prise de mesures, validation et suivi des évolutions
+            </p>
           </div>
-        )}
-      </div>
-
-      {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total mesures</p>
-                <p className="text-2xl font-bold">{totalMeasurements}</p>
-              </div>
-              <Ruler className="h-8 w-8 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Validées</p>
-                <p className="text-2xl font-bold text-green-500">{validatedMeasurements}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">En attente</p>
-                <p className="text-2xl font-bold text-orange-500">{pendingMeasurements}</p>
-              </div>
-              <Clock className="h-8 w-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Ce mois</p>
-                <p className="text-2xl font-bold text-blue-500">{recentMeasurements}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filtres */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par client..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
+          {canManageMeasurements && (
             <div className="flex gap-2">
-              <select
-                value={validationFilter}
-                onChange={(e) => setValidationFilter(e.target.value as any)}
-                className="px-3 py-2 border rounded-md"
-              >
-                <option value="all">Tous les statuts</option>
-                <option value="validated">Validées</option>
-                <option value="pending">En attente</option>
-              </select>
               <Button variant="outline">
-                <Filter className="h-4 w-4" />
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
               </Button>
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nouvelle mesure
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                    <DialogTitle>Prendre de nouvelles mesures</DialogTitle>
+                    <DialogDescription>
+                      Saisissez les mesures du client
+                    </DialogDescription>
+                  </DialogHeader>
+                  <MeasurementForm 
+                    clients={clients}
+                    onSubmit={handleCreateMeasurement}
+                  />
+                </DialogContent>
+              </Dialog>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </div>
 
-      {/* Tableau des mesures */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mesures clients</CardTitle>
-          <CardDescription>
-            {filteredMeasurements.length} mesure(s) trouvée(s)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Date mesure</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>Complétude</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Validé par</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredMeasurements.map((measurement) => {
-                const completeness = getMeasurementCompleteness(measurement);
-                return (
-                  <TableRow key={measurement.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{measurement.clientName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Version {measurement.version}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <span className="text-sm">
-                          {formatDate(measurement.measurementDate)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">v{measurement.version}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="w-24">
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span>{Math.round(completeness)}%</span>
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total mesures</p>
+                  <p className="text-2xl font-bold">{totalMeasurements}</p>
+                </div>
+                <Ruler className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Validées</p>
+                  <p className="text-2xl font-bold text-green-500">{validatedMeasurements}</p>
+                </div>
+                <CheckCircle className="h-8 w-8 text-green-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">En attente</p>
+                  <p className="text-2xl font-bold text-orange-500">{pendingMeasurements}</p>
+                </div>
+                <Clock className="h-8 w-8 text-orange-500" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Ce mois</p>
+                  <p className="text-2xl font-bold text-blue-500">{recentMeasurements}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-blue-500" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filtres */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Rechercher par client..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={validationFilter}
+                  onChange={(e) => setValidationFilter(e.target.value as any)}
+                  className="px-3 py-2 border rounded-md"
+                >
+                  <option value="all">Tous les statuts</option>
+                  <option value="validated">Validées</option>
+                  <option value="pending">En attente</option>
+                </select>
+                <Button variant="outline">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tableau des mesures */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Mesures clients</CardTitle>
+            <CardDescription>
+              {filteredMeasurements.length} mesure(s) trouvée(s)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Date mesure</TableHead>
+                  <TableHead>Version</TableHead>
+                  <TableHead>Complétude</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Validé par</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredMeasurements.map((measurement) => {
+                  const completeness = getMeasurementCompleteness(measurement);
+                  return (
+                    <TableRow key={measurement.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{measurement.clientName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Version {measurement.version}
+                          </p>
                         </div>
-                        <Progress 
-                          value={completeness} 
-                          className="h-2"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={measurement.isValidated ? "default" : "secondary"}>
-                        {measurement.isValidated ? "Validée" : "En attente"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm">
-                        {measurement.validatedBy || 'Non validée'}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
+                          <span className="text-sm">
+                            {formatDate(measurement.measurementDate)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">v{measurement.version}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-24">
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span>{Math.round(completeness)}%</span>
+                          </div>
+                          <Progress 
+                            value={completeness} 
+                            className="h-2"
+                          />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={measurement.isValidated ? "default" : "secondary"}>
+                          {measurement.isValidated ? "Validée" : "En attente"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm">
+                          {measurement.validatedBy || 'Non validée'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl">
+                              <DialogHeader>
+                                <DialogTitle>Mesures de {measurement.clientName}</DialogTitle>
+                              </DialogHeader>
+                              <MeasurementDetails measurement={measurement} />
+                            </DialogContent>
+                          </Dialog>
+                          {canManageMeasurements && (
                             <Button variant="ghost" size="sm">
-                              <Eye className="h-4 w-4" />
+                              <Edit className="h-4 w-4" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl">
-                            <DialogHeader>
-                              <DialogTitle>Mesures de {measurement.clientName}</DialogTitle>
-                            </DialogHeader>
-                            <MeasurementDetails measurement={measurement} />
-                          </DialogContent>
-                        </Dialog>
-                        {canManageMeasurements && (
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canValidateMeasurements && !measurement.isValidated && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleValidateMeasurement(measurement.id)}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Valider
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+                          )}
+                          {canValidateMeasurements && !measurement.isValidated && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleValidateMeasurement(measurement.id)}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Valider
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </AccessControl>
   );
 }
 
@@ -539,7 +553,21 @@ function MeasurementForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      bust: typeof formData.bust === 'string' ? Number(formData.bust) : formData.bust,
+      waist: typeof formData.waist === 'string' ? Number(formData.waist) : formData.waist,
+      hips: typeof formData.hips === 'string' ? Number(formData.hips) : formData.hips,
+      shoulderWidth: typeof formData.shoulderWidth === 'string' ? Number(formData.shoulderWidth) : formData.shoulderWidth,
+      armLength: typeof formData.armLength === 'string' ? Number(formData.armLength) : formData.armLength,
+      legLength: typeof formData.legLength === 'string' ? Number(formData.legLength) : formData.legLength,
+      neckCircumference: typeof formData.neckCircumference === 'string' ? Number(formData.neckCircumference) : formData.neckCircumference,
+      chestWidth: typeof formData.chestWidth === 'string' ? Number(formData.chestWidth) : formData.chestWidth,
+      backWidth: typeof formData.backWidth === 'string' ? Number(formData.backWidth) : formData.backWidth,
+      armCircumference: typeof formData.armCircumference === 'string' ? Number(formData.armCircumference) : formData.armCircumference,
+      thighCircumference: typeof formData.thighCircumference === 'string' ? Number(formData.thighCircumference) : formData.thighCircumference,
+      calfCircumference: typeof formData.calfCircumference === 'string' ? Number(formData.calfCircumference) : formData.calfCircumference,
+    });
   };
 
   const handleClientChange = (clientId: string) => {
@@ -841,4 +869,4 @@ function MeasurementDetails({ measurement }: { measurement: ClientMeasurement })
       </TabsContent>
     </Tabs>
   );
-} 
+}

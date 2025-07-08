@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   User,
   Calendar,
-  DollarSign
+  DollarSign,
+  ShoppingCart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -104,15 +105,30 @@ const mockOrders: Order[] = [
 
 export function OrdersPage() {
   const { user } = useAuth();
+  // Permissions centralisées
+  const canViewOrders = ['owner', 'manager', 'tailor', 'orders', 'customer_service'].includes(user?.role || '');
+  const canManageOrders = ['owner', 'manager', 'orders'].includes(user?.role || '');
+  const canViewProduction = ['owner', 'manager', 'tailor'].includes(user?.role || '');
+  if (!canViewOrders) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
+            <p className="text-muted-foreground">
+              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-  // Filtrer les commandes selon les permissions
-  const canManageOrders = ['owner', 'manager', 'orders'].includes(user?.role || '');
-  const canViewProduction = ['owner', 'manager', 'tailor'].includes(user?.role || '');
-  const canViewOrders = ['owner', 'manager', 'tailor', 'orders', 'customer_service'].includes(user?.role || '');
 
   // Filtrer les commandes
   const filteredOrders = orders.filter(order => {
@@ -122,7 +138,7 @@ export function OrdersPage() {
     
     // Les tailleurs ne voient que leurs commandes assignées
     if (user?.role === 'tailor') {
-      return matchesSearch && matchesStatus && order.assignedTailor === `${user.first_name} ${user.last_name}`;
+      return matchesSearch && matchesStatus && order.assignedTailor === `${user.firstName} ${user.lastName}`;
     }
     
     return matchesSearch && matchesStatus;
@@ -152,22 +168,6 @@ export function OrdersPage() {
     const statusIndex = productionStatuses.findIndex(s => s.value === status);
     return statusIndex >= 0 ? ((statusIndex + 1) / productionStatuses.length) * 100 : 0;
   };
-
-  if (!canViewOrders) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -462,4 +462,4 @@ export function OrdersPage() {
       </Card>
     </div>
   );
-} 
+}

@@ -1,0 +1,1 @@
+console.log("[AuthContext] Résultat profil :", profil, "Erreur :", erreur);

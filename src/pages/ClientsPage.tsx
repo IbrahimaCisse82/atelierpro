@@ -27,6 +27,7 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types pour les clients
 interface Client {
@@ -96,17 +97,114 @@ const mockClients: Client[] = [
 
 export function ClientsPage() {
   const { user } = useAuth();
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  // Permissions centralisées
+  const canViewClients = ['owner', 'manager', 'clients', 'customer_service'].includes(user?.role || '');
+  const canManageClients = ['owner', 'manager', 'clients'].includes(user?.role || '');
+  const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [newClient, setNewClient] = useState<Partial<Client>>({});
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Permissions
-  const canManageClients = ['owner', 'orders', 'customer_service'].includes(user?.role || '');
-  const canViewClients = ['owner', 'manager', 'orders', 'customer_service'].includes(user?.role || '');
-  const canViewClientDetails = ['owner', 'orders', 'customer_service'].includes(user?.role || '');
+  // Charger les clients depuis Supabase
+  React.useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    supabase
+      .from('clients')
+      .select('*')
+      .eq('company_id', user.companyId)
+      .then(({ data, error }) => {
+        if (error) setError(error.message);
+        else if (data) setClients(data.map(c => ({
+          id: c.id,
+          firstName: c.first_name,
+          lastName: c.last_name,
+          email: c.email || '',
+          phone: c.phone || '',
+          address: c.address || '',
+          notes: c.notes || '',
+          isActive: c.is_active,
+          createdAt: c.created_at,
+          totalOrders: 0,
+          totalSpent: 0,
+          satisfaction: 0,
+          lastOrderDate: ''
+        })));
+        setLoading(false);
+      });
+  }, [user]);
+
+  // CRUD Handlers
+  const handleAddClient = async () => {
+    if (!newClient.firstName || !newClient.lastName || !user) return;
+    setLoading(true);
+    const { data, error } = await supabase.from('clients').insert([
+      {
+        first_name: newClient.firstName,
+        last_name: newClient.lastName,
+        email: newClient.email,
+        phone: newClient.phone,
+        address: newClient.address,
+        notes: newClient.notes,
+        company_id: user.companyId,
+        created_by: user.id,
+        updated_by: user.id,
+        is_active: newClient.isActive ?? true
+      }
+    ]).select();
+    if (error) setError(error.message);
+    if (data) setClients(prev => [...prev, {
+      id: data[0].id,
+      firstName: data[0].first_name,
+      lastName: data[0].last_name,
+      email: data[0].email || '',
+      phone: data[0].phone || '',
+      address: data[0].address || '',
+      notes: data[0].notes || '',
+      isActive: data[0].is_active,
+      createdAt: data[0].created_at,
+      totalOrders: 0,
+      totalSpent: 0,
+      satisfaction: 0,
+      lastOrderDate: ''
+    }]);
+    setNewClient({});
+    setIsCreateDialogOpen(false);
+    setLoading(false);
+  };
+
+  const handleUpdateClient = async (id: string, updates: Partial<Client>) => {
+    if (!user) return;
+    setLoading(true);
+    const { error } = await supabase.from('clients').update({
+      first_name: updates.firstName,
+      last_name: updates.lastName,
+      email: updates.email,
+      phone: updates.phone,
+      address: updates.address,
+      notes: updates.notes,
+      is_active: updates.isActive,
+      updated_by: user.id
+    }).eq('id', id);
+    if (error) setError(error.message);
+    setClients(prev => prev.map(client => client.id === id ? { ...client, ...updates } : client));
+    setIsEditDialogOpen(false);
+    setSelectedClient(null);
+    setLoading(false);
+  };
+
+  const handleDeleteClient = async (id: string) => {
+    setLoading(true);
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+    if (error) setError(error.message);
+    setClients(prev => prev.filter(client => client.id !== id));
+    setLoading(false);
+  };
 
   // Filtrer les clients
   const filteredClients = clients.filter(client => {
@@ -135,17 +233,6 @@ export function ClientsPage() {
     setIsCreateDialogOpen(false);
   };
 
-  const handleUpdateClient = (id: string, updates: Partial<Client>) => {
-    setClients(prev => prev.map(client => 
-      client.id === id ? { ...client, ...updates } : client
-    ));
-    setIsEditDialogOpen(false);
-  };
-
-  const handleDeleteClient = (id: string) => {
-    setClients(prev => prev.filter(client => client.id !== id));
-  };
-
   const getSatisfactionStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -157,22 +244,6 @@ export function ClientsPage() {
       />
     ));
   };
-
-  if (!canViewClients) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -589,4 +660,4 @@ function ClientDetails({ client }: { client: Client }) {
       </TabsContent>
     </Tabs>
   );
-} 
+}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AccessControl } from '@/components/common/AccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -213,10 +214,24 @@ export function PatternsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Permissions
-  const canManagePatterns = ['owner', 'manager'].includes(user?.role || '');
-  const canViewPatterns = ['owner', 'manager', 'orders', 'customer_service'].includes(user?.role || '');
-  const canUploadPatterns = ['owner', 'manager', 'orders'].includes(user?.role || '');
+  // Permissions centralisées
+  const canViewPatterns = ['owner', 'manager', 'patterns', 'production'].includes(user?.role || '');
+  const canManagePatterns = ['owner', 'manager', 'patterns'].includes(user?.role || '');
+  if (!canViewPatterns) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
+            <p className="text-muted-foreground">
+              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Filtrer les patrons
   const filteredPatterns = patterns.filter(pattern => {
@@ -306,22 +321,6 @@ export function PatternsPage() {
     }
   };
 
-  if (!canViewPatterns) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <Folder className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -332,7 +331,7 @@ export function PatternsPage() {
             Gestion des patrons, modèles et gabarits
           </p>
         </div>
-        {canUploadPatterns && (
+        {canManagePatterns && (
           <div className="flex gap-2">
             <Button variant="outline">
               <Download className="h-4 w-4 mr-2" />
@@ -1029,4 +1028,4 @@ function PatternDetails({ pattern }: { pattern: Pattern }) {
       </TabsContent>
     </Tabs>
   );
-} 
+}

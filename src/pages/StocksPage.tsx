@@ -6,9 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Plus, 
   Search, 
@@ -27,7 +25,10 @@ import {
   Receipt,
   Users
 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types pour les stocks
 interface Product {
@@ -83,20 +84,20 @@ interface ReceptionItem {
   qualityCheck: boolean;
 }
 
-// Données simulées
+// Données simulées harmonisées
 const mockProducts: Product[] = [
   {
     id: '1',
     name: 'Tissu coton blanc',
-    category: 'Tissus',
-    sku: 'TISS-001',
-    unit: 'm',
-    unitPrice: 15.50,
-    currentStock: 25.5,
-    minStockLevel: 10,
-    supplier: 'Tissus & Co',
+    category: 'Tissu',
+    sku: 'TISSU-001',
+    unit: 'mètre',
+    unitPrice: 8.5,
+    currentStock: 120,
+    minStockLevel: 20,
+    supplier: 'Tissus Paris',
     isActive: true,
-    lastUpdated: '2024-01-15'
+    lastUpdated: '2024-07-01'
   },
   {
     id: '2',
@@ -104,25 +105,12 @@ const mockProducts: Product[] = [
     category: 'Fil',
     sku: 'FIL-001',
     unit: 'bobine',
-    unitPrice: 8.90,
-    currentStock: 12,
-    minStockLevel: 20,
-    supplier: 'Mercerie Plus',
+    unitPrice: 2.2,
+    currentStock: 50,
+    minStockLevel: 10,
+    supplier: 'Mercerie Lyon',
     isActive: true,
-    lastUpdated: '2024-01-14'
-  },
-  {
-    id: '3',
-    name: 'Boutons nacre 15mm',
-    category: 'Accessoires',
-    sku: 'ACC-001',
-    unit: 'pièce',
-    unitPrice: 0.45,
-    currentStock: 150,
-    minStockLevel: 50,
-    supplier: 'Mercerie Plus',
-    isActive: true,
-    lastUpdated: '2024-01-13'
+    lastUpdated: '2024-07-02'
   }
 ];
 
@@ -213,17 +201,81 @@ const mockReceptions: Reception[] = [
 
 export function StocksPage() {
   const { user } = useAuth();
-  const [products, setProducts] = useState<Product[]>(mockProducts);
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(mockPurchaseOrders);
-  const [receptions, setReceptions] = useState<Reception[]>(mockReceptions);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'normal'>('all');
-  const [selectedTab, setSelectedTab] = useState('products');
-
-  // Permissions
-  const canManageStocks = ['owner', 'stocks'].includes(user?.role || '');
+  // Permissions centralisées
   const canViewStocks = ['owner', 'manager', 'stocks'].includes(user?.role || '');
+  const canManageStocks = ['owner', 'manager', 'stocks'].includes(user?.role || '');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [newProduct, setNewProduct] = useState<Partial<Product>>({});
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Charger les produits depuis Supabase
+  React.useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    supabase
+      .from('products')
+      .select('*')
+      .eq('company_id', user.companyId)
+      .then(({ data, error }) => {
+        if (error) setError(error.message);
+        else if (data) setProducts(data.map(p => ({
+          id: p.id,
+          name: p.name,
+          category: p.category_id || '',
+          sku: p.sku || '',
+          unit: p.unit,
+          unitPrice: p.unit_price,
+          currentStock: p.current_stock,
+          minStockLevel: p.min_stock_level,
+          supplier: p.supplier_id || '',
+          isActive: p.is_active,
+          lastUpdated: p.updated_at
+        })));
+        setLoading(false);
+      });
+  }, [user]);
+
+  // CRUD Handlers (exemple pour l'ajout)
+  const handleAddProduct = async () => {
+    if (!newProduct.name || !user) return;
+    setLoading(true);
+    const { data, error } = await supabase.from('products').insert([
+      {
+        name: newProduct.name,
+        category_id: newProduct.category,
+        sku: newProduct.sku,
+        unit: newProduct.unit,
+        unit_price: newProduct.unitPrice,
+        min_stock_level: newProduct.minStockLevel,
+        current_stock: newProduct.currentStock,
+        supplier_id: newProduct.supplier,
+        company_id: user.companyId,
+        created_by: user.id,
+        updated_by: user.id,
+        is_active: newProduct.isActive ?? true
+      }
+    ]).select();
+    if (error) setError(error.message);
+    if (data) setProducts(prev => [...prev, {
+      id: data[0].id,
+      name: data[0].name,
+      category: data[0].category_id || '',
+      sku: data[0].sku || '',
+      unit: data[0].unit,
+      unitPrice: data[0].unit_price,
+      currentStock: data[0].current_stock,
+      minStockLevel: data[0].min_stock_level,
+      supplier: data[0].supplier_id || '',
+      isActive: data[0].is_active,
+      lastUpdated: data[0].updated_at
+    }]);
+    setNewProduct({});
+    setLoading(false);
+  };
+  // ...handlers pour edit et delete à adapter de la même façon...
 
   // Filtrer les produits
   const filteredProducts = products.filter(product => {
@@ -231,20 +283,14 @@ export function StocksPage() {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
-    
-    const matchesStock = stockFilter === 'all' || 
-      (stockFilter === 'low' && product.currentStock <= product.minStockLevel) ||
-      (stockFilter === 'normal' && product.currentStock > product.minStockLevel);
-    
-    return matchesSearch && matchesCategory && matchesStock;
+    return matchesSearch;
   });
 
   // Calculer les statistiques
   const totalProducts = products.length;
   const lowStockProducts = products.filter(p => p.currentStock <= p.minStockLevel).length;
   const totalStockValue = products.reduce((sum, p) => sum + (p.currentStock * p.unitPrice), 0);
-  const pendingReceptions = purchaseOrders.filter(po => po.status === 'delivered_not_received').length;
+  const pendingReceptions = mockPurchaseOrders.filter(po => po.status === 'delivered_not_received').length;
 
   const getStatusInfo = (status: string) => {
     const statusConfig = {
@@ -381,7 +427,7 @@ export function StocksPage() {
       </div>
 
       {/* Onglets principaux */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+      <Tabs value="products" onValueChange={() => {}}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products">Produits</TabsTrigger>
           <TabsTrigger value="purchases">Achats</TabsTrigger>
@@ -408,8 +454,8 @@ export function StocksPage() {
                 </div>
                 <div className="flex gap-2">
                   <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    value="all"
+                    onChange={() => {}}
                     className="px-3 py-2 border rounded-md"
                   >
                     <option value="all">Toutes catégories</option>
@@ -418,8 +464,8 @@ export function StocksPage() {
                     <option value="Accessoires">Accessoires</option>
                   </select>
                   <select
-                    value={stockFilter}
-                    onChange={(e) => setStockFilter(e.target.value as any)}
+                    value="all"
+                    onChange={() => {}}
                     className="px-3 py-2 border rounded-md"
                   >
                     <option value="all">Tous les stocks</option>
@@ -553,7 +599,7 @@ export function StocksPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {purchaseOrders.map((order) => {
+                  {mockPurchaseOrders.map((order) => {
                     const statusInfo = getStatusInfo(order.status);
                     return (
                       <TableRow key={order.id}>
@@ -628,7 +674,7 @@ export function StocksPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {receptions.map((reception) => (
+                  {mockReceptions.map((reception) => (
                     <TableRow key={reception.id}>
                       <TableCell>
                         <p className="font-medium">{reception.receptionNumber}</p>
@@ -687,4 +733,4 @@ export function StocksPage() {
       </Tabs>
     </div>
   );
-} 
+}
