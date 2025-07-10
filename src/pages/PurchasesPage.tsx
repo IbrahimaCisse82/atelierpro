@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, Filter, Eye, Edit, Package, ShoppingCart, DollarSign } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Edit, Package, ShoppingCart, DollarSign, Download, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccessControl } from '@/components/common/AccessControl';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour les achats
 interface Purchase {
@@ -70,6 +71,14 @@ export function PurchasesPage() {
     return purchaseStatuses.find(s => s.value === status) || { value: status, label: status, color: 'bg-gray-500' };
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -78,13 +87,17 @@ export function PurchasesPage() {
           <p className="text-muted-foreground">Suivi des commandes fournisseurs</p>
         </div>
         {canManagePurchases && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvel achat
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleComingSoon('Créer un achat')}>
+                  <Plus className="h-4 w-4 mr-2" /> Nouvel achat
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Créer un achat</DialogTitle>
@@ -219,7 +232,7 @@ export function PurchasesPage() {
                       <div className="flex items-center space-x-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -240,8 +253,13 @@ export function PurchasesPage() {
                           </DialogContent>
                         </Dialog>
                         {canManagePurchases && (
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
                             <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canManagePurchases && (
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>

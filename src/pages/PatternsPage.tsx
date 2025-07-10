@@ -34,6 +34,7 @@ import {
   List
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour les modèles/patrons
 interface Pattern {
@@ -323,6 +324,14 @@ export function PatternsPage() {
     }
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -335,9 +344,11 @@ export function PatternsPage() {
         </div>
         {canManagePatterns && (
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
+            <Button onClick={() => handleComingSoon('Créer un patron')}>
+              <Plus className="h-4 w-4 mr-2" /> Nouveau patron
+            </Button>
+            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+              <Download className="h-4 w-4 mr-2" /> Exporter
             </Button>
             <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
               <DialogTrigger asChild>
@@ -514,7 +525,7 @@ export function PatternsPage() {
                   </Button>
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => handleComingSoon('Voir')}>
                         <Eye className="h-3 w-3" />
                       </Button>
                     </DialogTrigger>
@@ -601,7 +612,7 @@ export function PatternsPage() {
                         </Button>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -613,8 +624,13 @@ export function PatternsPage() {
                           </DialogContent>
                         </Dialog>
                         {canManagePatterns && (
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
                             <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canManagePatterns && (
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>

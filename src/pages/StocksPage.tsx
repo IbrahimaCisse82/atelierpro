@@ -23,12 +23,15 @@ import {
   TrendingDown,
   ShoppingCart,
   Receipt,
-  Users
+  Users,
+  Download,
+  Trash2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour les stocks
 interface Product {
@@ -314,6 +317,14 @@ export function StocksPage() {
     return { status: 'normal', color: 'text-green-500' };
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   if (!canViewStocks) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -344,9 +355,8 @@ export function StocksPage() {
           <div className="flex gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau produit
+                <Button variant="outline" onClick={() => handleComingSoon('Ajouter un article')}>
+                  <Plus className="h-4 w-4 mr-2" /> Ajouter un article
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -360,9 +370,8 @@ export function StocksPage() {
             </Dialog>
             <Dialog>
               <DialogTrigger asChild>
-                <Button>
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Nouvel achat
+                <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+                  <Download className="h-4 w-4 mr-2" /> Exporter
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -557,14 +566,17 @@ export function StocksPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                               <Eye className="h-4 w-4" />
                             </Button>
                             {canManageStocks && (
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
                                 <Edit className="h-4 w-4" />
                               </Button>
                             )}
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -632,11 +644,11 @@ export function StocksPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                               <Eye className="h-4 w-4" />
                             </Button>
                             {canManageStocks && order.status === 'delivered_not_received' && (
-                              <Button variant="outline" size="sm">
+                              <Button variant="outline" size="sm" onClick={() => handleComingSoon('Réceptionner')}>
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Réceptionner
                               </Button>
@@ -699,11 +711,11 @@ export function StocksPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           {canManageStocks && !reception.isValidated && (
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" onClick={() => handleComingSoon('Valider')}>
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Valider
                             </Button>

@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Settings as SettingsIcon } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { Plus, Download, Edit, Trash2 } from 'lucide-react';
 
 export function SettingsPage() {
 	const { user } = useAuth();
@@ -32,6 +34,14 @@ export function SettingsPage() {
 			</div>
 		);
 	}
+
+	// Toast handler générique
+	const handleComingSoon = (action: string) => {
+		toast({
+			title: 'Fonctionnalité à venir',
+			description: `L'action « ${action} » sera bientôt disponible.`,
+		});
+	};
 
 	return (
 		<div className="space-y-6">
@@ -76,7 +86,18 @@ export function SettingsPage() {
 						/>
 					</div>
 					<div className="flex justify-end">
-						<Button>Enregistrer</Button>
+						<Button onClick={() => handleComingSoon('Ajouter un paramètre')}>
+							<Plus className="h-4 w-4 mr-2" /> Nouveau paramètre
+						</Button>
+						<Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+							<Download className="h-4 w-4 mr-2" /> Exporter
+						</Button>
+						<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+							<Edit className="h-4 w-4" />
+						</Button>
+						<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+							<Trash2 className="h-4 w-4" />
+						</Button>
 					</div>
 				</CardContent>
 			</Card>

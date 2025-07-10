@@ -13,14 +13,24 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/ui/logo';
 import { ChevronDown, LogOut, Settings, User, Building2 } from 'lucide-react';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import { useNavigate } from 'react-router-dom';
+import React from 'react';
 
 export function DashboardHeader() {
   const { user, company, logout, switchRole } = useAuth();
+  const navigate = useNavigate();
+  const [open, setOpen] = React.useState(false);
 
   if (!user || !company) return null;
 
   const roleInfo = ROLE_PERMISSIONS[user.role];
   const userInitials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
 
   return (
     <header className="h-16 border-b bg-card shadow-sm px-6 flex items-center justify-between">
@@ -33,12 +43,34 @@ export function DashboardHeader() {
         </div>
       </div>
 
-      {/* Profil utilisateur */}
+      {/* Profil utilisateur + bouton déconnexion direct */}
       <div className="flex items-center gap-4">
         {/* Badge de rôle */}
         <Badge variant="secondary" className="hidden sm:flex">
           {roleInfo.label}
         </Badge>
+
+        {/* Bouton de déconnexion direct */}
+        <AlertDialog open={open} onOpenChange={setOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2" title="Se déconnecter" onClick={() => setOpen(true)}>
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Déconnexion</span>
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmer la déconnexion</AlertDialogTitle>
+              <AlertDialogDescription>
+                Êtes-vous sûr de vouloir vous déconnecter ?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction onClick={handleLogout}>Se déconnecter</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Menu utilisateur */}
         <DropdownMenu>

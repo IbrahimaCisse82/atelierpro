@@ -25,9 +25,11 @@ import {
   AlertTriangle,
   Calendar,
   Download,
-  Upload
+  Upload,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour les mesures
 interface ClientMeasurement {
@@ -289,6 +291,14 @@ export function MeasurementsPage() {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <AccessControl allowedRoles={['owner', 'manager', 'orders', 'customer_service']}>
       <div className="space-y-6">
@@ -302,9 +312,11 @@ export function MeasurementsPage() {
           </div>
           {canManageMeasurements && (
             <div className="flex gap-2">
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Exporter
+              <Button onClick={() => handleComingSoon('Ajouter des mesures')}>
+                <Plus className="h-4 w-4 mr-2" /> Ajouter des mesures
+              </Button>
+              <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+                <Download className="h-4 w-4 mr-2" /> Exporter
               </Button>
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
@@ -481,7 +493,7 @@ export function MeasurementsPage() {
                         <div className="flex items-center space-x-2">
                           <Dialog>
                             <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                                 <Eye className="h-4 w-4" />
                               </Button>
                             </DialogTrigger>
@@ -493,7 +505,7 @@ export function MeasurementsPage() {
                             </DialogContent>
                           </Dialog>
                           {canManageMeasurements && (
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
                               <Edit className="h-4 w-4" />
                             </Button>
                           )}
@@ -507,6 +519,9 @@ export function MeasurementsPage() {
                               Valider
                             </Button>
                           )}
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

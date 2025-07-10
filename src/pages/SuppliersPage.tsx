@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Building2, Plus, Edit, Trash2, Search } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, Search, Download, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 interface Supplier {
   id: string;
@@ -111,6 +112,14 @@ export function SuppliersPage() {
     s.contact.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   if (!canViewSuppliers) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -135,40 +144,46 @@ export function SuppliersPage() {
           <p className="text-muted-foreground">Gestion des fournisseurs de matières et services</p>
         </div>
         {canManageSuppliers && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" /> Nouveau fournisseur
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Ajouter un fournisseur</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Nom</Label>
-                  <Input value={newSupplier.name || ''} onChange={e => setNewSupplier(s => ({ ...s, name: e.target.value }))} />
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleComingSoon('Ajouter un fournisseur')}>
+                  <Plus className="h-4 w-4 mr-2" /> Nouveau fournisseur
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Ajouter un fournisseur</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Nom</Label>
+                    <Input value={newSupplier.name || ''} onChange={e => setNewSupplier(s => ({ ...s, name: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Contact</Label>
+                    <Input value={newSupplier.contact || ''} onChange={e => setNewSupplier(s => ({ ...s, contact: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input value={newSupplier.email || ''} onChange={e => setNewSupplier(s => ({ ...s, email: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Téléphone</Label>
+                    <Input value={newSupplier.phone || ''} onChange={e => setNewSupplier(s => ({ ...s, phone: e.target.value }))} />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => setNewSupplier({})}>Annuler</Button>
+                    <Button onClick={handleAddSupplier}>Ajouter</Button>
+                  </div>
                 </div>
-                <div>
-                  <Label>Contact</Label>
-                  <Input value={newSupplier.contact || ''} onChange={e => setNewSupplier(s => ({ ...s, contact: e.target.value }))} />
-                </div>
-                <div>
-                  <Label>Email</Label>
-                  <Input value={newSupplier.email || ''} onChange={e => setNewSupplier(s => ({ ...s, email: e.target.value }))} />
-                </div>
-                <div>
-                  <Label>Téléphone</Label>
-                  <Input value={newSupplier.phone || ''} onChange={e => setNewSupplier(s => ({ ...s, phone: e.target.value }))} />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setNewSupplier({})}>Annuler</Button>
-                  <Button onClick={handleAddSupplier}>Ajouter</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
       <Card>
@@ -208,8 +223,8 @@ export function SuppliersPage() {
                       <div className="flex gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => setEditSupplier(supplier)}>
-                              <Edit className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+                              <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
@@ -240,7 +255,10 @@ export function SuppliersPage() {
                             </div>
                           </DialogContent>
                         </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleDeleteSupplier(supplier.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

@@ -14,7 +14,13 @@ import {
 	DollarSign,
 	Calendar,
 	CheckCircle,
+	Plus,
+	Download,
+	Eye,
+	Edit,
+	Trash2,
 } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 export function HRPage() {
 	const { user } = useAuth();
@@ -24,6 +30,14 @@ export function HRPage() {
 	const canViewAll = true;
 	const canViewPlanning = true;
 	const canViewPersonal = true;
+
+	// Toast handler générique
+	const handleComingSoon = (action: string) => {
+		toast({
+			title: 'Fonctionnalité à venir',
+			description: `L'action « ${action} » sera bientôt disponible.`,
+		});
+	};
 
 	if (!role) {
 		return <div className="p-8 text-center">Chargement...</div>;
@@ -45,9 +59,134 @@ export function HRPage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						{/* TODO: Table des employés, actions CRUD, calcul paie, stats, etc. */}
-						<div className="text-muted-foreground">
-							Module RH complet à implémenter.
+						<div className="flex items-center gap-2 mb-4">
+							<h2 className="text-2xl font-semibold">Employés</h2>
+							<Badge variant="outline">
+								{/* TODO: Get total employees count */}
+								{'0'} employés
+							</Badge>
+						</div>
+						<div className="flex items-center gap-2 mb-4">
+							<Button onClick={() => handleComingSoon('Ajouter un employé')}>
+								<Plus className="h-4 w-4 mr-2" /> Nouvel employé
+							</Button>
+							<Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+								<Download className="h-4 w-4 mr-2" /> Exporter
+							</Button>
+						</div>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<Card>
+								<CardHeader>
+									<CardTitle>Fiches de présence</CardTitle>
+									<CardDescription>
+										Visualisez et gérez les fiches de présence des employés.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="flex items-center gap-2 mb-4">
+										<h3 className="text-xl font-bold">Présence</h3>
+										<Badge variant="outline">
+											{/* TODO: Get total absences count */}
+											{'0'} absences
+										</Badge>
+									</div>
+									<div className="flex items-center gap-2 mb-4">
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+											<Eye className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+											<Edit className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardHeader>
+									<CardTitle>Bulletins de paie</CardTitle>
+									<CardDescription>
+										Accédez aux bulletins de paie et aux détails de la paie.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="flex items-center gap-2 mb-4">
+										<h3 className="text-xl font-bold">Paie</h3>
+										<Badge variant="outline">
+											{/* TODO: Get total payrolls count */}
+											{'0'} bulletins
+										</Badge>
+									</div>
+									<div className="flex items-center gap-2 mb-4">
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+											<Eye className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+											<Edit className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardHeader>
+									<CardTitle>Évaluations</CardTitle>
+									<CardDescription>
+										Suivez et gérez les évaluations des employés.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="flex items-center gap-2 mb-4">
+										<h3 className="text-xl font-bold">Évaluations</h3>
+										<Badge variant="outline">
+											{/* TODO: Get total evaluations count */}
+											{'0'} évaluations
+										</Badge>
+									</div>
+									<div className="flex items-center gap-2 mb-4">
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+											<Eye className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+											<Edit className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+							<Card>
+								<CardHeader>
+									<CardTitle>Documents RH</CardTitle>
+									<CardDescription>
+										Accédez aux documents RH et gérez les fichiers.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="flex items-center gap-2 mb-4">
+										<h3 className="text-xl font-bold">Documents</h3>
+										<Badge variant="outline">
+											{/* TODO: Get total documents count */}
+											{'0'} documents
+										</Badge>
+									</div>
+									<div className="flex items-center gap-2 mb-4">
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+											<Eye className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+											<Edit className="h-4 w-4" />
+										</Button>
+										<Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
 						</div>
 					</CardContent>
 				</Card>

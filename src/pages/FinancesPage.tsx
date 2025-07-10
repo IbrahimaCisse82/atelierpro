@@ -14,12 +14,17 @@ import {
 	BarChart3,
 	CheckCircle,
 	Download,
+	Plus,
+	Eye,
+	Edit,
+	Trash2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 
 interface CustomerInvoice {
   id: string;
@@ -332,6 +337,14 @@ export function FinancesPage() {
 		);
 	}
 
+	// Toast handler générique
+	const handleComingSoon = (action: string) => {
+		toast({
+			title: 'Fonctionnalité à venir',
+			description: `L'action « ${action} » sera bientôt disponible.`,
+		});
+	};
+
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center gap-2 mb-4">
@@ -349,6 +362,14 @@ export function FinancesPage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
+						<div className="flex items-center gap-2 mb-4">
+							<Button onClick={() => handleComingSoon('Créer une transaction')}>
+								<Plus className="h-4 w-4 mr-2" /> Nouvelle transaction
+							</Button>
+							<Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+								<Download className="h-4 w-4 mr-2" /> Exporter
+							</Button>
+						</div>
 						{/* TODO: Graphiques, stats, paiements, rapports, etc. */}
 						<div className="text-muted-foreground">
 							Module Finances complet à implémenter.

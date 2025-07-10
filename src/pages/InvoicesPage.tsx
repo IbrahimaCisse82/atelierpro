@@ -25,9 +25,12 @@ import {
   User,
   ShoppingCart,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour la facturation
 interface Invoice {
@@ -265,6 +268,14 @@ export function InvoicesPage() {
     ));
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <AccessControl allowedRoles={['owner', 'manager']}>
       <div className="space-y-6">
@@ -278,11 +289,11 @@ export function InvoicesPage() {
           </div>
           {canManageInvoices && (
             <div className="flex gap-2">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
                 <Download className="h-4 w-4 mr-2" />
                 Exporter
               </Button>
-              <Button>
+              <Button onClick={() => handleComingSoon('Créer une facture')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nouvelle facture
               </Button>
@@ -474,7 +485,7 @@ export function InvoicesPage() {
                             <div className="flex items-center space-x-2">
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">
+                                  <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                                     <Eye className="h-4 w-4" />
                                   </Button>
                                 </DialogTrigger>
@@ -485,7 +496,7 @@ export function InvoicesPage() {
                                   <InvoiceDetails invoice={invoice} />
                                 </DialogContent>
                               </Dialog>
-                              <Button variant="ghost" size="sm">
+                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Exporter')}>
                                 <Download className="h-4 w-4" />
                               </Button>
                               {canManageInvoices && invoice.status === 'draft' && (
@@ -508,6 +519,12 @@ export function InvoicesPage() {
                                   Marquer payée
                                 </Button>
                               )}
+                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>

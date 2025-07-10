@@ -22,9 +22,12 @@ import {
   User,
   Calendar,
   DollarSign,
-  ShoppingCart
+  ShoppingCart,
+  Download,
+  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour les commandes
 interface Order {
@@ -154,6 +157,14 @@ export function OrdersPage() {
     return statusIndex >= 0 ? ((statusIndex + 1) / productionStatuses.length) * 100 : 0;
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -165,13 +176,17 @@ export function OrdersPage() {
           </p>
         </div>
         {canManageOrders && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle commande
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button onClick={() => handleComingSoon('Créer une commande')}>
+                  <Plus className="h-4 w-4 mr-2" /> Nouvelle commande
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Créer une nouvelle commande</DialogTitle>
@@ -387,7 +402,7 @@ export function OrdersPage() {
                       <div className="flex items-center space-x-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -432,8 +447,13 @@ export function OrdersPage() {
                           </DialogContent>
                         </Dialog>
                         {canManageOrders && (
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
                             <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canManageOrders && (
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
                       </div>

@@ -2,6 +2,9 @@ import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ListChecks } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { Plus, Download, Eye, Edit, Trash2 } from 'lucide-react';
 
 export function AuditTrailPage() {
   const { user } = useAuth();
@@ -21,6 +24,15 @@ export function AuditTrailPage() {
       </div>
     );
   }
+
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -35,6 +47,23 @@ export function AuditTrailPage() {
           <CardDescription>Liste des opérations sensibles et modifications</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center justify-end space-x-2 mb-4">
+            <Button onClick={() => handleComingSoon('Créer un log manuel')}>
+              <Plus className="h-4 w-4 mr-2" /> Nouveau log
+            </Button>
+            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+              <Download className="h-4 w-4 mr-2" /> Exporter
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
           <p className="text-muted-foreground">(À intégrer : table d'audit trail, filtres, export...)</p>
         </CardContent>
       </Card>

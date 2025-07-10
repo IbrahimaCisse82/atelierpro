@@ -24,10 +24,12 @@ import {
   ShoppingCart,
   MessageSquare,
   Star,
-  MoreHorizontal
+  MoreHorizontal,
+  Download
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 // Types pour les clients
 interface Client {
@@ -245,6 +247,14 @@ export function ClientsPage() {
     ));
   };
 
+  // Toast handler générique
+  const handleComingSoon = (action: string) => {
+    toast({
+      title: 'Fonctionnalité à venir',
+      description: `L'action « ${action} » sera bientôt disponible.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -258,7 +268,7 @@ export function ClientsPage() {
         {canManageClients && (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={() => handleComingSoon('Créer un client')}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau client
               </Button>
@@ -450,7 +460,7 @@ export function ClientsPage() {
                     <div className="flex items-center space-x-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
                             <Eye className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -468,7 +478,7 @@ export function ClientsPage() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => setSelectedClient(client)}
+                                onClick={() => handleComingSoon('Modifier')}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -488,7 +498,7 @@ export function ClientsPage() {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => handleDeleteClient(client.id)}
+                            onClick={() => handleComingSoon('Supprimer')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
