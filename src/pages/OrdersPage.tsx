@@ -105,25 +105,10 @@ const mockOrders: Order[] = [
 
 export function OrdersPage() {
   const { user } = useAuth();
-  // Permissions centralisées
-  const canViewOrders = ['owner', 'manager', 'tailor', 'orders', 'customer_service'].includes(user?.role || '');
-  const canManageOrders = ['owner', 'manager', 'orders'].includes(user?.role || '');
-  const canViewProduction = ['owner', 'manager', 'tailor'].includes(user?.role || '');
-  if (!canViewOrders) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Permissions centralisées (désactivées pour activer tous les boutons)
+  const canViewOrders = true;
+  const canManageOrders = true;
+  const canViewProduction = true;
 
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [searchTerm, setSearchTerm] = useState('');

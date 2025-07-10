@@ -398,7 +398,7 @@ function AlertCard({
   formatTimeAgo: (date: string) => string;
   getAlertIcon: (type: string) => React.ReactNode;
   getAlertLevelIcon: (level: string) => React.ReactNode;
-  getAlertBadgeVariant: (level: string) => any;
+  getAlertBadgeVariant: (level: string) => "default" | "secondary" | "destructive" | "outline";
   isRead?: boolean;
 }) {
   return (

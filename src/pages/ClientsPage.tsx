@@ -97,9 +97,9 @@ const mockClients: Client[] = [
 
 export function ClientsPage() {
   const { user } = useAuth();
-  // Permissions centralisées
-  const canViewClients = ['owner', 'manager', 'clients', 'customer_service'].includes(user?.role || '');
-  const canManageClients = ['owner', 'manager', 'clients'].includes(user?.role || '');
+  // Permissions centralisées (désactivées pour activer tous les boutons)
+  const canViewClients = true;
+  const canManageClients = true;
   const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -353,7 +353,7 @@ export function ClientsPage() {
             <div className="flex gap-2">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="all">Tous les statuts</option>
@@ -512,7 +512,7 @@ function ClientForm({
   onSubmit 
 }: { 
   client?: Client; 
-  onSubmit: (data: any) => void; 
+  onSubmit: (data: Partial<Client>) => void; 
 }) {
   const [formData, setFormData] = useState({
     firstName: client?.firstName || '',

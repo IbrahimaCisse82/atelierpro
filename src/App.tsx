@@ -8,28 +8,35 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashboard";
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
-import { OrdersPage } from "@/pages/OrdersPage";
-import { ClientsPage } from "@/pages/ClientsPage";
-import { StocksPage } from "@/pages/StocksPage";
-import { InvoicesPage } from "@/pages/InvoicesPage";
-import { MeasurementsPage } from "./pages/MeasurementsPage";
-import { PatternsPage } from "./pages/PatternsPage";
-import { ProductionPage } from "./pages/ProductionPage";
-import { PurchasesPage } from "./pages/PurchasesPage";
-import { HRPage } from "./pages/HRPage";
-import { FinancesPage } from "./pages/FinancesPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { ReportsPage } from "./pages/ReportsPage";
-import { AuditTrailPage } from "@/pages/AuditTrailPage";
-import { AlertsPage } from "@/pages/AlertsPage";
-import { AdvancedExportPage } from "@/pages/AdvancedExportPage";
-import { SuppliersPage } from "@/pages/SuppliersPage";
+import { lazy, Suspense } from 'react';
 
 const queryClient = new QueryClient();
+
+// Lazy loading des pages volumineuses
+const DashboardContent = lazy(() => import('./components/dashboard/DashboardContent').then(module => ({ default: module.DashboardContent })));
+const ClientsPage = lazy(() => import('./pages/ClientsPage').then(module => ({ default: module.ClientsPage })));
+const FinancesPage = lazy(() => import('./pages/FinancesPage').then(module => ({ default: module.FinancesPage })));
+const HRPage = lazy(() => import('./pages/HRPage').then(module => ({ default: module.HRPage })));
+const OrdersPage = lazy(() => import('./pages/OrdersPage').then(module => ({ default: module.OrdersPage })));
+const ProductionPage = lazy(() => import('./pages/ProductionPage').then(module => ({ default: module.ProductionPage })));
+const StocksPage = lazy(() => import('./pages/StocksPage').then(module => ({ default: module.StocksPage })));
+const SuppliersPage = lazy(() => import('./pages/SuppliersPage').then(module => ({ default: module.SuppliersPage })));
+const PatternsPage = lazy(() => import('./pages/PatternsPage').then(module => ({ default: module.PatternsPage })));
+const MeasurementsPage = lazy(() => import('./pages/MeasurementsPage').then(module => ({ default: module.MeasurementsPage })));
+const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then(module => ({ default: module.InvoicesPage })));
+const PurchasesPage = lazy(() => import('./pages/PurchasesPage').then(module => ({ default: module.PurchasesPage })));
+const ReportsPage = lazy(() => import('./pages/ReportsPage').then(module => ({ default: module.ReportsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(module => ({ default: module.SettingsPage })));
+const AlertsPage = lazy(() => import('./pages/AlertsPage').then(module => ({ default: module.AlertsPage })));
+const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then(module => ({ default: module.AuditTrailPage })));
+const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(module => ({ default: module.AdvancedExportPage })));
+
+// Pages légères importées normalement
+// import { Index } from './pages/Index';
+// import { NotFound } from './pages/NotFound';
 
 // Composant pour protéger les routes
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -61,27 +68,29 @@ function AppContent() {
   return (
     <SidebarProvider>
       <DashboardLayout>
-        <Routes>
-          <Route path="/dashboard" element={<RoleSpecificDashboard />} />
-          <Route path="/dashboard/orders" element={<OrdersPage />} />
-          <Route path="/dashboard/clients" element={<ClientsPage />} />
-          <Route path="/dashboard/production" element={<ProductionPage />} />
-          <Route path="/dashboard/stocks" element={<StocksPage />} />
-          <Route path="/dashboard/purchases" element={<PurchasesPage />} />
-          <Route path="/dashboard/patterns" element={<PatternsPage />} />
-          <Route path="/dashboard/measurements" element={<MeasurementsPage />} />
-          <Route path="/dashboard/invoices" element={<InvoicesPage />} />
-          <Route path="/dashboard/profile" element={<UserProfile />} />
-          <Route path="/dashboard/hr" element={<HRPage />} />
-          <Route path="/dashboard/finances" element={<FinancesPage />} />
-          <Route path="/dashboard/settings" element={<SettingsPage />} />
-          <Route path="/dashboard/reports" element={<ReportsPage />} />
-          <Route path="/dashboard/audit" element={<AuditTrailPage />} />
-          <Route path="/dashboard/alerts" element={<AlertsPage />} />
-          <Route path="/dashboard/export" element={<AdvancedExportPage />} />
-          <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <Suspense fallback={<LoadingPage />}>
+          <Routes>
+            <Route path="/dashboard" element={<RoleSpecificDashboard />} />
+            <Route path="/dashboard/orders" element={<OrdersPage />} />
+            <Route path="/dashboard/clients" element={<ClientsPage />} />
+            <Route path="/dashboard/production" element={<ProductionPage />} />
+            <Route path="/dashboard/stocks" element={<StocksPage />} />
+            <Route path="/dashboard/purchases" element={<PurchasesPage />} />
+            <Route path="/dashboard/patterns" element={<PatternsPage />} />
+            <Route path="/dashboard/measurements" element={<MeasurementsPage />} />
+            <Route path="/dashboard/invoices" element={<InvoicesPage />} />
+            <Route path="/dashboard/profile" element={<UserProfile />} />
+            <Route path="/dashboard/hr" element={<HRPage />} />
+            <Route path="/dashboard/finances" element={<FinancesPage />} />
+            <Route path="/dashboard/settings" element={<SettingsPage />} />
+            <Route path="/dashboard/reports" element={<ReportsPage />} />
+            <Route path="/dashboard/audit" element={<AuditTrailPage />} />
+            <Route path="/dashboard/alerts" element={<AlertsPage />} />
+            <Route path="/dashboard/export" element={<AdvancedExportPage />} />
+            <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
       </DashboardLayout>
     </SidebarProvider>
   );

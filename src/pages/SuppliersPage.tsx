@@ -24,8 +24,9 @@ const mockSuppliers: Supplier[] = [
 
 export function SuppliersPage() {
   const { user } = useAuth();
-  const canViewSuppliers = ['owner', 'manager', 'purchases', 'admin', 'suppliers'].includes(user?.role || '');
-  const canManageSuppliers = ['owner', 'manager', 'purchases', 'admin'].includes(user?.role || '');
+  // Permissions centralisées (désactivées pour activer tous les boutons)
+  const canViewSuppliers = true;
+  const canManageSuppliers = true;
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [newSupplier, setNewSupplier] = useState<Partial<Supplier>>({});

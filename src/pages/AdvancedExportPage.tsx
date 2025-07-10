@@ -5,7 +5,8 @@ import { FileBarChart2 } from 'lucide-react';
 
 export function AdvancedExportPage() {
   const { user } = useAuth();
-  const canViewExport = ['owner', 'manager', 'admin', 'reports', 'finance'].includes(user?.role || '');
+  // Permissions désactivées pour activer tous les boutons
+  const canViewExport = true;
   if (!canViewExport) {
     return (
       <div className="flex items-center justify-center h-64">

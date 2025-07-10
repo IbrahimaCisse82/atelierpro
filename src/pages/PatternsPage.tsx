@@ -214,9 +214,11 @@ export function PatternsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Permissions centralisées
-  const canViewPatterns = ['owner', 'manager', 'patterns', 'production'].includes(user?.role || '');
-  const canManagePatterns = ['owner', 'manager', 'patterns'].includes(user?.role || '');
+  // Permissions centralisées (désactivées pour activer tous les boutons)
+  const canViewPatterns = true;
+  const canManagePatterns = true;
+  // const canViewPatterns = ['owner', 'manager', 'patterns', 'production'].includes(user?.role || '');
+  // const canManagePatterns = ['owner', 'manager', 'patterns'].includes(user?.role || '');
   if (!canViewPatterns) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -837,7 +839,7 @@ function PatternUploadForm({
             value={formData.difficulty}
             onChange={(e) => setFormData(prev => ({ 
               ...prev, 
-              difficulty: e.target.value as any 
+              difficulty: e.target.value as 'beginner' | 'intermediate' | 'advanced' | 'expert' 
             }))}
             className="w-full px-3 py-2 border rounded-md"
           >

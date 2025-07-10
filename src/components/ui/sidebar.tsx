@@ -89,7 +89,8 @@ export function Sidebar({
   collapsible = 'default',
   ...props 
 }: SidebarProps) {
-  const { state, open, openMobile, isMobile } = useSidebar();
+  const { open, openMobile, isMobile } = useSidebar();
+  const { setOpenMobile } = useSidebar();
 
   return (
     <>
@@ -97,7 +98,7 @@ export function Sidebar({
       {isMobile && openMobile && (
         <div 
           className="fixed inset-0 z-50 bg-black/50 md:hidden"
-          onClick={() => useSidebar().setOpenMobile(false)}
+          onClick={() => setOpenMobile(false)}
         />
       )}
       

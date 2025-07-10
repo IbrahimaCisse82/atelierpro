@@ -55,8 +55,13 @@ const mockProductions: Production[] = [
 
 export function ProductionPage() {
   const { user } = useAuth();
+  const [productions, setProductions] = useState<Production[]>(mockProductions);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  
   const canViewProduction = ['owner', 'manager', 'tailor', 'production'].includes(user?.role || '');
   const canManageProduction = ['owner', 'manager', 'production'].includes(user?.role || '');
+  
   if (!canViewProduction) {
     return (
       <AccessControl allowedRoles={["owner", "manager", "tailor", "production"]}>
@@ -74,10 +79,6 @@ export function ProductionPage() {
       </AccessControl>
     );
   }
-
-  const [productions, setProductions] = useState<Production[]>(mockProductions);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const filteredProductions = productions.filter(prod => {
     const matchesSearch = prod.label.toLowerCase().includes(searchTerm.toLowerCase());

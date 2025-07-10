@@ -201,9 +201,9 @@ const mockReceptions: Reception[] = [
 
 export function StocksPage() {
   const { user } = useAuth();
-  // Permissions centralisées
-  const canViewStocks = ['owner', 'manager', 'stocks'].includes(user?.role || '');
-  const canManageStocks = ['owner', 'manager', 'stocks'].includes(user?.role || '');
+  // Permissions centralisées (désactivées pour activer tous les boutons)
+  const canViewStocks = true;
+  const canManageStocks = true;
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [newProduct, setNewProduct] = useState<Partial<Product>>({});

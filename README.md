@@ -1,73 +1,138 @@
-# Welcome to your Lovable project
+# 🏭 AtelierPro - Gestion d'Atelier de Couture
 
-## Project info
+Application web moderne pour la gestion complète d'ateliers de couture, développée avec React, TypeScript, Vite et Supabase.
 
-**URL**: https://lovable.dev/projects/7c144381-cbcc-432e-9008-747ec0192c11
+## 🚀 Déploiement Vercel
 
-## How can I edit this code?
+### Prérequis
+- Compte Vercel (gratuit)
+- Projet Supabase configuré
+- Git installé
 
-There are several ways of editing your application.
+### Étapes de Déploiement
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/7c144381-cbcc-432e-9008-747ec0192c11) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+#### 1. Préparer le Repository
+```bash
+# Vérifier que tout est commité
+git add .
+git commit -m "Ready for Vercel deployment"
+git push origin main
 ```
 
-**Edit a file directly in GitHub**
+#### 2. Déployer sur Vercel
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+**Option A : Interface Web (Recommandée)**
+1. Va sur [vercel.com](https://vercel.com)
+2. Clique "New Project"
+3. Importe ton repository GitHub
+4. Configure les variables d'environnement :
+   ```
+   VITE_SUPABASE_URL=https://zvdytkcqhnsivrargtvp.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHl0a2NxaG5zaXZyYXJndHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MzY2NTMsImV4cCI6MjA2NzUxMjY1M30.VG0gPQFIYskyiRLgbC7A3kq7rpHghxWH4US3ghXDqPc
+   ```
+5. Clique "Deploy"
 
-**Use GitHub Codespaces**
+**Option B : CLI Vercel**
+```bash
+# Installer Vercel CLI
+npm i -g vercel
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Déployer
+vercel
 
-## What technologies are used for this project?
+# Suivre les instructions et configurer les variables d'environnement
+```
 
-This project is built with:
+#### 3. Configuration Post-Déploiement
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. **Vérifier l'URL de production** (ex: `https://atelierpro.vercel.app`)
+2. **Tester l'authentification** avec un compte existant
+3. **Vérifier les fonctionnalités** principales
 
-## How can I deploy this project?
+### Variables d'Environnement Requises
 
-Simply open [Lovable](https://lovable.dev/projects/7c144381-cbcc-432e-9008-747ec0192c11) and click on Share -> Publish.
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `VITE_SUPABASE_URL` | URL de ton projet Supabase | `https://xxx.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | Clé publique Supabase | `eyJhbGciOiJIUzI1NiIs...` |
 
-## Can I connect a custom domain to my Lovable project?
+### Optimisations Actives
 
-Yes, you can!
+- ✅ **Bundle Splitting** : Code divisé par fonctionnalité
+- ✅ **Lazy Loading** : Pages chargées à la demande
+- ✅ **Image Optimization** : Images compressées
+- ✅ **Minification** : Code minifié avec Terser
+- ✅ **Cache Headers** : Assets mis en cache 1 an
+- ✅ **Security Headers** : Protection XSS, Clickjacking, etc.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Monitoring et Analytics
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- **Vercel Analytics** : Activable dans le dashboard
+- **Performance** : Métriques automatiques
+- **Logs** : Accessibles via Vercel CLI ou dashboard
+
+## 🛠️ Développement Local
+
+```bash
+# Installation
+npm install
+
+# Développement
+npm run dev
+
+# Build de production
+npm run build
+
+# Preview locale
+npm run preview
+```
+
+## 📊 Fonctionnalités
+
+- 🔐 **Authentification** : Connexion/Inscription avec Supabase
+- 👥 **Gestion des Rôles** : Owner, Manager, Employee
+- 📦 **Gestion des Commandes** : Suivi complet
+- 👤 **Gestion des Clients** : Base de données clients
+- 🏭 **Production** : Planning et suivi
+- 📊 **Finances** : Facturation et comptabilité
+- 📦 **Stocks** : Gestion des matières premières
+- 📏 **Mesures** : Base de données mesures clients
+- 📋 **Rapports** : Analytics et exports
+
+## 🏗️ Architecture
+
+- **Frontend** : React 18 + TypeScript + Vite
+- **UI** : Shadcn/ui + Tailwind CSS
+- **Backend** : Supabase (Auth + Database)
+- **Routing** : React Router v6
+- **State Management** : React Context + TanStack Query
+- **Charts** : Chart.js + Recharts
+
+## 🔧 Scripts Disponibles
+
+```bash
+npm run dev          # Développement local
+npm run build        # Build de production
+npm run preview      # Preview du build
+npm run lint         # Vérification du code
+npm run start:prod   # Serveur de production local
+```
+
+## 📝 Notes de Déploiement
+
+- L'application utilise le **SPA routing** (React Router)
+- Toutes les routes sont redirigées vers `index.html`
+- Les assets sont optimisés et mis en cache
+- Les variables d'environnement sont sécurisées
+
+## 🆘 Support
+
+En cas de problème :
+1. Vérifier les logs dans le dashboard Vercel
+2. Tester en local avec `npm run preview`
+3. Vérifier les variables d'environnement
+4. Consulter la documentation Supabase
+
+---
+
+**AtelierPro** - Gestion moderne d'ateliers de couture 🧵✨

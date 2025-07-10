@@ -396,7 +396,7 @@ export function MeasurementsPage() {
               <div className="flex gap-2">
                 <select
                   value={validationFilter}
-                  onChange={(e) => setValidationFilter(e.target.value as any)}
+                  onChange={(e) => setValidationFilter(e.target.value as 'all' | 'validated' | 'pending')}
                   className="px-3 py-2 border rounded-md"
                 >
                   <option value="all">Tous les statuts</option>

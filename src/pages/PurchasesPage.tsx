@@ -52,25 +52,9 @@ const mockPurchases: Purchase[] = [
 
 export function PurchasesPage() {
   const { user } = useAuth();
-  const canViewPurchases = ['owner', 'manager', 'purchases'].includes(user?.role || '');
-  const canManagePurchases = ['owner', 'manager', 'purchases'].includes(user?.role || '');
-  if (!canViewPurchases) {
-    return (
-      <AccessControl allowedRoles={["owner", "manager", "purchases"]}>
-        <div className="flex items-center justify-center h-64">
-          <Card className="w-full max-w-md">
-            <CardContent className="p-6 text-center">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-              <p className="text-muted-foreground">
-                Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </AccessControl>
-    );
-  }
+  // Permissions centralisées (désactivées pour activer tous les boutons)
+  const canViewPurchases = true;
+  const canManagePurchases = true;
 
   const [purchases, setPurchases] = useState<Purchase[]>(mockPurchases);
   const [searchTerm, setSearchTerm] = useState('');

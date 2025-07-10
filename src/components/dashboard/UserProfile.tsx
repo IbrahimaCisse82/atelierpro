@@ -44,7 +44,7 @@ export function UserProfile() {
 
   const handleRoleChange = async () => {
     try {
-      await switchRole(selectedRole as any);
+      await switchRole(selectedRole as 'owner' | 'manager' | 'tailor' | 'orders' | 'stocks' | 'customer_service');
       setIsEditing(false);
     } catch (error) {
       console.error('Erreur lors du changement de rôle:', error);

@@ -58,15 +58,15 @@ export function EmployeesTable() {
         toast({ title: 'Erreur', description: "Impossible de charger les employés.", variant: 'destructive' });
         return;
       }
-      const mapped = (data || []).map((e: any) => ({
-        id: e.id,
-        firstName: e.profile?.first_name || '',
-        lastName: e.profile?.last_name || '',
-        email: e.profile?.email || '',
-        role: e.profile?.role || 'tailor',
-        salary: e.hourly_rate,
-        hireDate: e.hire_date,
-        isActive: e.is_active,
+      const mapped = (data || []).map((e: Record<string, unknown>) => ({
+        id: e.id as string,
+        firstName: (e.profile as Record<string, unknown>)?.first_name as string || '',
+        lastName: (e.profile as Record<string, unknown>)?.last_name as string || '',
+        email: (e.profile as Record<string, unknown>)?.email as string || '',
+        role: ((e.profile as Record<string, unknown>)?.role as string || 'tailor') as 'owner' | 'manager' | 'tailor' | 'orders' | 'stocks' | 'customer_service',
+        salary: e.hourly_rate as number,
+        hireDate: e.hire_date as string,
+        isActive: e.is_active as boolean,
       }));
       setEmployees(mapped);
     };
@@ -89,21 +89,22 @@ export function EmployeesTable() {
         return;
       }
       const grouped: Record<string, WorkHour[]> = {};
-      (data || []).forEach((wh: any) => {
-        if (!grouped[wh.employee_id]) grouped[wh.employee_id] = [];
-        grouped[wh.employee_id].push({
-          id: wh.id,
-          workDate: wh.work_date,
-          startTime: wh.start_time,
-          endTime: wh.end_time,
-          totalHours: wh.total_hours || 0,
-          notes: wh.notes,
+      (data || []).forEach((wh: Record<string, unknown>) => {
+        const employeeId = wh.employee_id as string;
+        if (!grouped[employeeId]) grouped[employeeId] = [];
+        grouped[employeeId].push({
+          id: wh.id as string,
+          workDate: wh.work_date as string,
+          startTime: wh.start_time as string | null,
+          endTime: wh.end_time as string | null,
+          totalHours: (wh.total_hours as number) || 0,
+          notes: wh.notes as string | null,
         });
       });
       setWorkHours(grouped);
     };
     fetchWorkHours();
-  }, [user, employees]);
+  }, [user, employees, toast]);
 
   // Récupération des factures clients pour stats CA/impayés
   useEffect(() => {
@@ -117,15 +118,17 @@ export function EmployeesTable() {
       setFinanceLoading(false);
       if (error) return;
       let caSum = 0, unpaidSum = 0;
-      (data || []).forEach((inv: any) => {
-        if (inv.is_paid) caSum += inv.amount;
-        else unpaidSum += inv.amount;
+      (data || []).forEach((inv: Record<string, unknown>) => {
+        const amount = inv.amount as number;
+        const isPaid = inv.is_paid as boolean;
+        if (isPaid) caSum += amount;
+        else unpaidSum += amount;
       });
       setCA(caSum);
       setUnpaid(unpaidSum);
     };
     fetchFinanceStats();
-  }, [user]);
+  }, [user, toast]);
 
   // Calcul du total d'heures et du salaire mensuel pour chaque employé
   function getStats(empId: string) {
@@ -215,15 +218,15 @@ export function EmployeesTable() {
       .select(`id, hire_date, hourly_rate, is_active, profile:profiles(id, first_name, last_name, email, role)`)
       .eq('company_id', user.companyId);
     if (!error) {
-      const mapped = (data || []).map((e: any) => ({
-        id: e.id,
-        firstName: e.profile?.first_name || '',
-        lastName: e.profile?.last_name || '',
-        email: e.profile?.email || '',
-        role: e.profile?.role || 'tailor',
-        salary: e.hourly_rate,
-        hireDate: e.hire_date,
-        isActive: e.is_active,
+      const mapped = (data || []).map((e: Record<string, unknown>) => ({
+        id: e.id as string,
+        firstName: (e.profile as Record<string, unknown>)?.first_name as string || '',
+        lastName: (e.profile as Record<string, unknown>)?.last_name as string || '',
+        email: (e.profile as Record<string, unknown>)?.email as string || '',
+        role: ((e.profile as Record<string, unknown>)?.role as string || 'tailor') as 'owner' | 'manager' | 'tailor' | 'orders' | 'stocks' | 'customer_service',
+        salary: e.hourly_rate as number,
+        hireDate: e.hire_date as string,
+        isActive: e.is_active as boolean,
       }));
       setEmployees(mapped);
     }
@@ -249,15 +252,15 @@ export function EmployeesTable() {
       .select(`id, hire_date, hourly_rate, is_active, profile:profiles(id, first_name, last_name, email, role)`)
       .eq('company_id', user.companyId);
     if (!error) {
-      const mapped = (data || []).map((e: any) => ({
-        id: e.id,
-        firstName: e.profile?.first_name || '',
-        lastName: e.profile?.last_name || '',
-        email: e.profile?.email || '',
-        role: e.profile?.role || 'tailor',
-        salary: e.hourly_rate,
-        hireDate: e.hire_date,
-        isActive: e.is_active,
+      const mapped = (data || []).map((e: Record<string, unknown>) => ({
+        id: e.id as string,
+        firstName: (e.profile as Record<string, unknown>)?.first_name as string || '',
+        lastName: (e.profile as Record<string, unknown>)?.last_name as string || '',
+        email: (e.profile as Record<string, unknown>)?.email as string || '',
+        role: ((e.profile as Record<string, unknown>)?.role as string || 'tailor') as 'owner' | 'manager' | 'tailor' | 'orders' | 'stocks' | 'customer_service',
+        salary: e.hourly_rate as number,
+        hireDate: e.hire_date as string,
+        isActive: e.is_active as boolean,
       }));
       setEmployees(mapped);
     }
@@ -363,13 +366,13 @@ export function EmployeesTable() {
                               .eq('company_id', user.companyId)
                               .eq('employee_id', emp.id);
                             if (!error) {
-                              setWorkHours(prev => ({ ...prev, [emp.id]: (data || []).map((wh: any) => ({
-                                id: wh.id,
-                                workDate: wh.work_date,
-                                startTime: wh.start_time,
-                                endTime: wh.end_time,
-                                totalHours: wh.total_hours || 0,
-                                notes: wh.notes,
+                              setWorkHours(prev => ({ ...prev, [emp.id]: (data || []).map((wh: Record<string, unknown>) => ({
+                                id: wh.id as string,
+                                workDate: wh.work_date as string,
+                                startTime: wh.start_time as string | null,
+                                endTime: wh.end_time as string | null,
+                                totalHours: (wh.total_hours as number) || 0,
+                                notes: wh.notes as string | null,
                               })) }));
                             }
                           };
@@ -417,13 +420,13 @@ export function EmployeesTable() {
                                             .eq('company_id', user.companyId)
                                             .eq('employee_id', emp.id);
                                           if (!error) {
-                                            setWorkHours(prev => ({ ...prev, [emp.id]: (data || []).map((wh: any) => ({
-                                              id: wh.id,
-                                              workDate: wh.work_date,
-                                              startTime: wh.start_time,
-                                              endTime: wh.end_time,
-                                              totalHours: wh.total_hours || 0,
-                                              notes: wh.notes,
+                                            setWorkHours(prev => ({ ...prev, [emp.id]: (data || []).map((wh: Record<string, unknown>) => ({
+                                              id: wh.id as string,
+                                              workDate: wh.work_date as string,
+                                              startTime: wh.start_time as string | null,
+                                              endTime: wh.end_time as string | null,
+                                              totalHours: (wh.total_hours as number) || 0,
+                                              notes: wh.notes as string | null,
                                             })) }));
                                           }
                                         };

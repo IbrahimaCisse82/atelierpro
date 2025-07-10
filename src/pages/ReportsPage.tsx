@@ -5,23 +5,8 @@ import { BarChart2, FileText } from 'lucide-react';
 
 export function ReportsPage() {
   const { user } = useAuth();
-  // Permissions centralisées
-  const canViewReports = ['owner', 'manager', 'reports', 'finance', 'admin'].includes(user?.role || '');
-  if (!canViewReports) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Permissions désactivées pour activer tous les boutons
+  const canViewReports = true;
 
   return (
     <div className="space-y-6">

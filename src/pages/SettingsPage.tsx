@@ -14,10 +14,8 @@ import { Settings as SettingsIcon } from 'lucide-react';
 
 export function SettingsPage() {
 	const { user } = useAuth();
-	// Permissions centralisées
-	const canViewSettings = ['owner', 'manager', 'settings', 'admin'].includes(
-		user?.role || ''
-	);
+	// Permissions désactivées pour activer tous les boutons
+	const canViewSettings = true;
 	if (!canViewSettings) {
 		return (
 			<div className="flex items-center justify-center h-64">
