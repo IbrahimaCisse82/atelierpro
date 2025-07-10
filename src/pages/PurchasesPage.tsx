@@ -98,32 +98,33 @@ export function PurchasesPage() {
                   <Plus className="h-4 w-4 mr-2" /> Nouvel achat
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Créer un achat</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="supplier">Fournisseur</Label>
-                  <Input id="supplier" placeholder="Nom du fournisseur" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Créer un achat</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="purchaseDate">Date achat</Label>
-                    <Input type="date" id="purchaseDate" />
+                    <Label htmlFor="supplier">Fournisseur</Label>
+                    <Input id="supplier" placeholder="Nom du fournisseur" />
                   </div>
-                  <div>
-                    <Label htmlFor="deliveryDate">Date livraison</Label>
-                    <Input type="date" id="deliveryDate" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="purchaseDate">Date achat</Label>
+                      <Input type="date" id="purchaseDate" />
+                    </div>
+                    <div>
+                      <Label htmlFor="deliveryDate">Date livraison</Label>
+                      <Input type="date" id="deliveryDate" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline">Annuler</Button>
+                    <Button>Créer</Button>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline">Annuler</Button>
-                  <Button>Créer</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
       <Card>
