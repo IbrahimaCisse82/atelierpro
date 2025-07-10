@@ -187,43 +187,44 @@ export function OrdersPage() {
                   <Plus className="h-4 w-4 mr-2" /> Nouvelle commande
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Créer une nouvelle commande</DialogTitle>
-                <DialogDescription>
-                  Saisissez les informations de la commande
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="client">Client</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un client" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="client1">Marie Dupont</SelectItem>
-                        <SelectItem value="client2">Jean Martin</SelectItem>
-                      </SelectContent>
-                    </Select>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Créer une nouvelle commande</DialogTitle>
+                  <DialogDescription>
+                    Saisissez les informations de la commande
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="client">Client</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un client" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="client1">Marie Dupont</SelectItem>
+                          <SelectItem value="client2">Jean Martin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="delivery">Date de livraison</Label>
+                      <Input type="date" id="delivery" />
+                    </div>
                   </div>
                   <div>
-                    <Label htmlFor="delivery">Date de livraison</Label>
-                    <Input type="date" id="delivery" />
+                    <Label htmlFor="description">Description</Label>
+                    <Input id="description" placeholder="Description de la commande" />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline">Annuler</Button>
+                    <Button>Créer la commande</Button>
                   </div>
                 </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input id="description" placeholder="Description de la commande" />
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline">Annuler</Button>
-                  <Button>Créer la commande</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
 
