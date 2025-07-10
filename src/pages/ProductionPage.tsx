@@ -118,32 +118,33 @@ export function ProductionPage() {
                   <Plus className="h-4 w-4 mr-2" /> Nouvelle tâche
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Créer une nouvelle production</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="label">Libellé</Label>
-                  <Input id="label" placeholder="Nom du lot de production" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Créer une nouvelle production</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
                   <div>
-                    <Label htmlFor="start">Début</Label>
-                    <Input type="date" id="start" />
+                    <Label htmlFor="label">Libellé</Label>
+                    <Input id="label" placeholder="Nom du lot de production" />
                   </div>
-                  <div>
-                    <Label htmlFor="end">Fin</Label>
-                    <Input type="date" id="end" />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="start">Début</Label>
+                      <Input type="date" id="start" />
+                    </div>
+                    <div>
+                      <Label htmlFor="end">Fin</Label>
+                      <Input type="date" id="end" />
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline">Annuler</Button>
+                    <Button>Créer</Button>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline">Annuler</Button>
-                  <Button>Créer</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
       <Card>
