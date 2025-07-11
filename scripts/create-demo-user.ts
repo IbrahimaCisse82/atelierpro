@@ -1,12 +1,12 @@
-#!/usr/bin/env tsx
+#!/usr/bin/env node
 
 import { createClient } from '@supabase/supabase-js';
 
-// Configuration Supabase (utilisez votre SERVICE_ROLE_KEY ici)
-const SUPABASE_URL = "https://zvdytkcqhnsivrargtvp.supabase.co";
+// Configuration
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://zvdytkcqhnsivrargtvp.supabase.co";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "VOTRE_SERVICE_ROLE_KEY_ICI";
 
-// Créer le client Supabase avec la clé service role
+// Client Supabase avec service role pour les opérations admin
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: {
     autoRefreshToken: false,
@@ -14,14 +14,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   }
 });
 
-// Fonction pour créer un utilisateur avec confirmation forcée
+// Fonction pour créer l'utilisateur demo avec confirmation forcée
 async function createDemoUserWithConfirmation() {
   const email = 'demo@atelierpro.com';
   const password = 'DemoTest@1234';
   
-  console.log('🔧 Création forcée de l\'utilisateur demo');
-  console.log('========================================');
-  console.log(`📧 Email: ${email}`);
+  console.log('📧 Email:', email);
   console.log(`🔑 Mot de passe: ${password.replace(/./g, '*')}`);
   console.log('');
 
@@ -29,24 +27,27 @@ async function createDemoUserWithConfirmation() {
     // 1. Vérifier si l'utilisateur existe déjà
     console.log('🔍 Vérification de l\'existence de l\'utilisateur...');
     
-    const { data: existingUser, error: getUserError } = await supabase.auth.admin.getUserByEmail(email);
+    // Utiliser listUsers avec un filtre par email au lieu de getUserByEmail
+    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     
-    if (getUserError && !getUserError.message.includes('User not found')) {
-      console.log('❌ Erreur lors de la vérification:', getUserError.message);
+    if (listError) {
+      console.log('❌ Erreur lors de la récupération des utilisateurs:', listError.message);
       return false;
     }
 
-    if (existingUser.user) {
+    const existingUser = users.users.find(user => user.email === email);
+    
+    if (existingUser) {
       console.log('⚠️  L\'utilisateur existe déjà');
-      console.log(`👤 ID: ${existingUser.user.id}`);
-      console.log(`✅ Email confirmé: ${existingUser.user.email_confirmed_at ? 'Oui' : 'Non'}`);
+      console.log(`👤 ID: ${existingUser.id}`);
+      console.log(`✅ Email confirmé: ${existingUser.email_confirmed_at ? 'Oui' : 'Non'}`);
       
       // Si l'email n'est pas confirmé, le confirmer
-      if (!existingUser.user.email_confirmed_at) {
+      if (!existingUser.email_confirmed_at) {
         console.log('📧 Confirmation de l\'email...');
         
         const { error: confirmError } = await supabase.auth.admin.updateUserById(
-          existingUser.user.id,
+          existingUser.id,
           { email_confirm: true }
         );
         
@@ -62,7 +63,7 @@ async function createDemoUserWithConfirmation() {
       console.log('🔑 Mise à jour du mot de passe...');
       
       const { error: updateError } = await supabase.auth.admin.updateUserById(
-        existingUser.user.id,
+        existingUser.id,
         { password: password }
       );
       
