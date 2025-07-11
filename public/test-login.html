@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Connexion AtelierPro</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .config {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Test de Connexion AtelierPro</h1>
+        
+        <div class="config result">
+            <strong>Configuration Supabase:</strong>
+            URL: <span id="supabaseUrl">Chargement...</span>
+            Clé: <span id="supabaseKey">Chargement...</span>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="demo@atelierpro.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mot de passe:</label>
+                <input type="password" id="password" value="DemoTest@1234" required>
+            </div>
+            
+            <button type="submit" id="loginBtn">Tester la Connexion</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Configuration Supabase
+        const SUPABASE_URL = 'https://zvdytkcqhnsivrargtvp.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2ZHl0a2NxaG5zaXZyYXJndHZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5MzY2NTMsImV4cCI6MjA2NzUxMjY1M30.VG0gPQFIYskyiRLgbC7A3kq7rpHghxWH4US3ghXDqPc';
+
+        // Afficher la configuration
+        document.getElementById('supabaseUrl').textContent = SUPABASE_URL;
+        document.getElementById('supabaseKey').textContent = SUPABASE_ANON_KEY.substring(0, 20) + '...';
+
+        // Créer le client Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Fonction pour afficher les résultats
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.textContent = message;
+        }
+
+        // Fonction pour tester la connexion
+        async function testLogin(email, password) {
+            const startTime = Date.now();
+            
+            try {
+                console.log('🔍 Tentative de connexion...');
+                console.log('Email:', email);
+                console.log('URL Supabase:', SUPABASE_URL);
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email.trim(),
+                    password: password
+                });
+
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+
+                if (error) {
+                    console.error('❌ Erreur de connexion:', error);
+                    
+                    let diagnostic = '';
+                    if (error.message.includes('Invalid login credentials')) {
+                        diagnostic = '\n\n🔍 DIAGNOSTIC:\n• L\'email ou le mot de passe est incorrect\n• Vérifiez que le compte existe dans Supabase\n• Vérifiez que l\'email est confirmé';
+                    } else if (error.message.includes('Email not confirmed')) {
+                        diagnostic = '\n\n🔍 DIAGNOSTIC:\n• L\'email n\'est pas confirmé\n• Vérifiez votre boîte mail pour le lien de confirmation';
+                    }
+
+                    showResult(`❌ ÉCHEC DE CONNEXION\n⏱️ Durée: ${duration}ms\n🚨 Code: ${error.message}\n📝 Détails: ${JSON.stringify(error, null, 2)}${diagnostic}`, 'error');
+                    return false;
+                }
+
+                if (data.user) {
+                    console.log('✅ Connexion réussie:', data.user.email);
+                    
+                    let result = `✅ CONNEXION RÉUSSIE\n⏱️ Durée: ${duration}ms\n👤 ID: ${data.user.id}\n📧 Email: ${data.user.email}\n✅ Confirmé: ${data.user.email_confirmed_at ? 'Oui' : 'Non'}\n🕐 Créé: ${data.user.created_at}`;
+                    
+                    // Vérifier le profil
+                    try {
+                        const { data: profile, error: profileError } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('user_id', data.user.id)
+                            .single();
+
+                        if (profileError) {
+                            result += `\n\n⚠️ Erreur profil: ${profileError.message}`;
+                        } else if (profile) {
+                            result += `\n\n✅ Profil trouvé:\n• Nom: ${profile.first_name} ${profile.last_name}\n• Rôle: ${profile.role}\n• Actif: ${profile.is_active ? 'Oui' : 'Non'}`;
+                        }
+                    } catch (profileErr) {
+                        result += `\n\n⚠️ Erreur lors de la vérification du profil: ${profileErr.message}`;
+                    }
+
+                    // Déconnexion
+                    await supabase.auth.signOut();
+                    result += '\n\n🔓 Déconnexion effectuée';
+                    
+                    showResult(result, 'success');
+                    return true;
+                }
+
+            } catch (error) {
+                console.error('💥 Erreur inattendue:', error);
+                showResult(`💥 ERREUR INATTENDUE\n${error.message}\n\n${error.stack}`, 'error');
+                return false;
+            }
+        }
+
+        // Gestionnaire du formulaire
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Connexion en cours...';
+            
+            showResult('⏳ Test de connexion en cours...', 'info');
+            
+            try {
+                await testLogin(email, password);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Tester la Connexion';
+            }
+        });
+
+        // Test automatique au chargement
+        window.addEventListener('load', () => {
+            showResult('🚀 Page de test chargée. Cliquez sur "Tester la Connexion" pour diagnostiquer.', 'info');
+        });
+    </script>
+</body>
+</html> 
