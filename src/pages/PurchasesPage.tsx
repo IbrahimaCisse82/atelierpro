@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Plus, Search, Filter, Eye, Edit, Package, ShoppingCart, DollarSign, Dow
 import { cn } from '@/lib/utils';
 import { AccessControl } from '@/components/common/AccessControl';
 import { toast } from '@/components/ui/use-toast';
+import { formatFCFA } from '@/lib/utils';
 
 // Types pour les achats
 interface Purchase {
@@ -176,7 +177,7 @@ export function PurchasesPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Montant total</p>
-                <p className="text-2xl font-bold">€{filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0).toLocaleString()}</p>
+                <p className="text-2xl font-bold">{formatFCFA(filteredPurchases.reduce((sum, p) => sum + p.totalAmount, 0))}</p>
               </div>
               <DollarSign className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -228,7 +229,7 @@ export function PurchasesPage() {
                     </TableCell>
                     <TableCell>{new Date(purchase.purchaseDate).toLocaleDateString('fr-FR')}</TableCell>
                     <TableCell>{new Date(purchase.deliveryDate).toLocaleDateString('fr-FR')}</TableCell>
-                    <TableCell>€{purchase.totalAmount}</TableCell>
+                    <TableCell>{formatFCFA(purchase.totalAmount)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <Dialog>

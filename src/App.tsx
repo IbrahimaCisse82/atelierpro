@@ -109,24 +109,96 @@ function AppContent() {
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={<LoadingPage />}>
           <Routes>
-            <Route path="/dashboard" element={<RoleSpecificDashboard />} />
-            <Route path="/dashboard/orders" element={<OrdersPage />} />
-            <Route path="/dashboard/clients" element={<ClientsPage />} />
-            <Route path="/dashboard/production" element={<ProductionPage />} />
-            <Route path="/dashboard/stocks" element={<StocksPage />} />
-            <Route path="/dashboard/purchases" element={<PurchasesPage />} />
-            <Route path="/dashboard/patterns" element={<PatternsPage />} />
-            <Route path="/dashboard/measurements" element={<MeasurementsPage />} />
-            <Route path="/dashboard/invoices" element={<InvoicesPage />} />
-            <Route path="/dashboard/profile" element={<UserProfile />} />
-            <Route path="/dashboard/hr" element={<HRPage />} />
-            <Route path="/dashboard/finances" element={<FinancesPage />} />
-            <Route path="/dashboard/suppliers" element={<SuppliersPage />} />
-            <Route path="/dashboard/reports" element={<ReportsPage />} />
-            <Route path="/dashboard/settings" element={<SettingsPage />} />
-            <Route path="/dashboard/alerts" element={<AlertsPage />} />
-            <Route path="/dashboard/audit" element={<AuditTrailPage />} />
-            <Route path="/dashboard/export" element={<AdvancedExportPage />} />
+            <Route path="/dashboard" element={
+              <DashboardLayout>
+                <RoleSpecificDashboard />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/orders" element={
+              <DashboardLayout>
+                <OrdersPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/clients" element={
+              <DashboardLayout>
+                <ClientsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/production" element={
+              <DashboardLayout>
+                <ProductionPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/stocks" element={
+              <DashboardLayout>
+                <StocksPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/purchases" element={
+              <DashboardLayout>
+                <PurchasesPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/patterns" element={
+              <DashboardLayout>
+                <PatternsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/measurements" element={
+              <DashboardLayout>
+                <MeasurementsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/invoices" element={
+              <DashboardLayout>
+                <InvoicesPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/profile" element={
+              <DashboardLayout>
+                <UserProfile />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/hr" element={
+              <DashboardLayout>
+                <HRPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/finances" element={
+              <DashboardLayout>
+                <FinancesPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/suppliers" element={
+              <DashboardLayout>
+                <SuppliersPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/reports" element={
+              <DashboardLayout>
+                <ReportsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/settings" element={
+              <DashboardLayout>
+                <SettingsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/alerts" element={
+              <DashboardLayout>
+                <AlertsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/audit" element={
+              <DashboardLayout>
+                <AuditTrailPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/export" element={
+              <DashboardLayout>
+                <AdvancedExportPage />
+              </DashboardLayout>
+            } />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>

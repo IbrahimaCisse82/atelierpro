@@ -25,6 +25,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { formatFCFA, getFCFASymbol } from '@/lib/utils';
 
 interface CustomerInvoice {
   id: string;
@@ -459,7 +460,7 @@ export function FinancesPage() {
 												<TableCell>{inv.invoiceNumber}</TableCell>
 												<TableCell>{inv.invoiceDate}</TableCell>
 												<TableCell>{inv.dueDate}</TableCell>
-												<TableCell>{inv.totalWithTax} €</TableCell>
+												<TableCell>{formatFCFA(inv.totalWithTax)}</TableCell>
 												<TableCell>{inv.isPaid ? <Badge variant="default">Payée</Badge> : <Badge variant="destructive">En attente</Badge>}</TableCell>
 												<TableCell>
 													<Button size="sm" variant="outline" onClick={() => { setEditInvoice(inv); setIsDialogOpen(true); }}>Éditer</Button>
@@ -527,7 +528,7 @@ export function FinancesPage() {
 										<TableCell>{inv.invoiceNumber}</TableCell>
 										<TableCell>{inv.invoiceDate}</TableCell>
 										<TableCell>{inv.dueDate}</TableCell>
-										<TableCell>{inv.totalAmount} €</TableCell>
+										<TableCell>{formatFCFA(inv.totalAmount)}</TableCell>
 										<TableCell>{inv.isPaid ? <Badge variant="default">Payée</Badge> : <Badge variant="destructive">En attente</Badge>}</TableCell>
 									</TableRow>
 								))}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,11 +25,13 @@ import {
   MessageSquare,
   Star,
   MoreHorizontal,
-  Download
+  Download,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { formatFCFA } from '@/lib/utils';
 
 // Types pour les clients
 interface Client {
@@ -437,7 +439,7 @@ export function ClientsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium">€{client.totalSpent.toLocaleString()}</span>
+                    <span className="font-medium">{formatFCFA(client.totalSpent)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center">

@@ -434,7 +434,7 @@ export function StocksPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {totalValue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+              {totalValue.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}
             </div>
           </CardContent>
         </Card>
@@ -534,10 +534,10 @@ export function StocksPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {product.unitPrice.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      {product.unitPrice.toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}
                     </TableCell>
                     <TableCell>
-                      {(product.currentStock * product.unitPrice).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                      {(product.currentStock * product.unitPrice).toLocaleString('fr-FR', { style: 'currency', currency: 'XOF' })}
                     </TableCell>
                     <TableCell>
                       <Badge variant={product.currentStock === 0 ? 'destructive' : product.currentStock <= product.minStockLevel ? 'secondary' : 'default'}>

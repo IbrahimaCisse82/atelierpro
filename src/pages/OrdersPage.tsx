@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,12 @@ import {
   DollarSign,
   ShoppingCart,
   Download,
-  Trash2
+  Trash2,
+  Truck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
+import { formatFCFA } from '@/lib/utils';
 
 // Types pour les commandes
 interface Order {
@@ -310,7 +312,7 @@ export function OrdersPage() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Chiffre d'affaires</p>
                 <p className="text-2xl font-bold">
-                  €{filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0).toLocaleString()}
+                  {formatFCFA(filteredOrders.reduce((sum, order) => sum + order.totalAmount, 0))}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-muted-foreground" />
@@ -397,7 +399,7 @@ export function OrdersPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium">€{order.totalAmount}</span>
+                      <span className="font-medium">{formatFCFA(order.totalAmount)}</span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">

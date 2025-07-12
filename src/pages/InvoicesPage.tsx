@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AccessControl } from '@/components/common/AccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
+import { formatFCFA, formatFCFAWithDecimals } from '@/lib/utils';
 
 // Types pour la facturation
 interface Invoice {
@@ -352,7 +353,7 @@ export function InvoicesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">CA encaissé</p>
-                  <p className="text-2xl font-bold">€{totalRevenue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">{formatFCFA(totalRevenue)}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -470,9 +471,9 @@ export function InvoicesPage() {
                           </TableCell>
                           <TableCell>
                             <div>
-                              <span className="font-medium">€{invoice.totalWithTax.toLocaleString()}</span>
+                              <span className="font-medium">{formatFCFA(invoice.totalWithTax)}</span>
                               <p className="text-xs text-muted-foreground">
-                                HT: €{invoice.totalAmount.toLocaleString()}
+                                HT: {formatFCFA(invoice.totalAmount)}
                               </p>
                             </div>
                           </TableCell>
@@ -580,7 +581,7 @@ export function InvoicesPage() {
                             </span>
                           </TableCell>
                           <TableCell>
-                            <span className="font-medium">€{order.totalAmount.toLocaleString()}</span>
+                            <span className="font-medium">{formatFCFA(order.totalAmount)}</span>
                           </TableCell>
                           <TableCell>
                             {canManageInvoices && (
@@ -677,8 +678,8 @@ function InvoiceDetails({ invoice }: { invoice: Invoice }) {
               <TableRow key={item.id}>
                 <TableCell>{item.description}</TableCell>
                 <TableCell className="text-right">{item.quantity}</TableCell>
-                <TableCell className="text-right">€{item.unitPrice.toFixed(2)}</TableCell>
-                <TableCell className="text-right">€{item.totalPrice.toFixed(2)}</TableCell>
+                <TableCell className="text-right">{formatFCFAWithDecimals(item.unitPrice)}</TableCell>
+                <TableCell className="text-right">{formatFCFAWithDecimals(item.totalPrice)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -689,15 +690,15 @@ function InvoiceDetails({ invoice }: { invoice: Invoice }) {
       <div className="space-y-2 text-right">
         <div className="flex justify-between">
           <span>Total HT:</span>
-          <span>€{invoice.totalAmount.toFixed(2)}</span>
+          <span>{formatFCFAWithDecimals(invoice.totalAmount)}</span>
         </div>
         <div className="flex justify-between">
           <span>TVA (20%):</span>
-          <span>€{invoice.taxAmount.toFixed(2)}</span>
+          <span>{formatFCFAWithDecimals(invoice.taxAmount)}</span>
         </div>
         <div className="flex justify-between font-bold text-lg">
           <span>Total TTC:</span>
-          <span>€{invoice.totalWithTax.toFixed(2)}</span>
+          <span>{formatFCFAWithDecimals(invoice.totalWithTax)}</span>
         </div>
       </div>
 
