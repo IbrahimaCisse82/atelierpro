@@ -352,6 +352,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.error('[AuthContext] Erreur de connexion:', error);
+        
+        // Gestion spécifique des erreurs 400
+        if (error.status === 400) {
+          if (error.message.includes('Email not confirmed')) {
+            throw new Error('Votre email n\'est pas encore confirmé. Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation.');
+          } else if (error.message.includes('Invalid login credentials')) {
+            throw new Error('Email ou mot de passe incorrect.');
+          } else if (error.message.includes('Too many requests')) {
+            throw new Error('Trop de tentatives de connexion. Veuillez patienter quelques minutes.');
+          } else {
+            throw new Error(`Erreur d'authentification: ${error.message}`);
+          }
+        }
+        
         throw error;
       }
 

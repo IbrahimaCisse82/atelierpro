@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AuthDebug } from "@/components/debug/AuthDebug";
 import { PerformanceMonitor } from "@/components/debug/PerformanceMonitor";
+import { PWAInstallPrompt } from "@/components/ui/pwa-install-prompt";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
@@ -136,6 +137,9 @@ function AppContent() {
         
         {/* Moniteur de performance */}
         <PerformanceMonitor />
+        
+        {/* Composants PWA */}
+        <PWAInstallPrompt />
       </QueryClientProvider>
     </SidebarProvider>
   );

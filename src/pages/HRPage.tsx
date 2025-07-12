@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
 	Card,
@@ -7,6 +7,7 @@ import {
 	CardTitle,
 	CardDescription,
 } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
 	AlertTriangle,
@@ -21,6 +22,8 @@ import {
 	Trash2,
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 
 export function HRPage() {
 	const { user } = useAuth();

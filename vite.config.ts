@@ -1,76 +1,80 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { visualizer } from 'rollup-plugin-visualizer'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
-    // Plugin d'analyse du bundle
-    visualizer({
-      filename: 'dist/stats.html',
-      open: true,
-      gzipSize: true,
-      brotliSize: true,
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 jours
+              },
+            },
+          },
+        ],
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'AtelierPro - Gestion d\'atelier de couture',
+        short_name: 'AtelierPro',
+        description: 'Application de gestion complète pour atelier de couture',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
     }),
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Optimisations de build
   build: {
-    // Optimisation du bundle
+    outDir: 'dist',
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
-          // Séparer les librairies lourdes
-          'react-vendor': ['react', 'react-dom'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-toast'],
-          'query-vendor': ['@tanstack/react-query'],
+          vendor: ['react', 'react-dom'],
+          supabase: ['@supabase/supabase-js'],
         },
       },
     },
-    // Optimisation des assets
-    assetsInlineLimit: 4096, // 4kb
-    chunkSizeWarningLimit: 1000, // 1MB
-    // Minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Supprimer console.log en production
-        drop_debugger: true,
-      },
-    },
   },
-  // Optimisations de développement
   server: {
-    // Hot reload optimisé
-    hmr: {
-      overlay: false, // Désactiver l'overlay d'erreur pour de meilleures performances
-    },
-    // Préchargement des modules
-    preTransformRequests: true,
+    port: 5173,
+    host: true,
   },
-  // Optimisations générales
-  optimizeDeps: {
-    // Pré-bundle des dépendances
-    include: [
-      'react',
-      'react-dom',
-      '@supabase/supabase-js',
-      '@tanstack/react-query',
-      'react-router-dom',
-    ],
-    // Exclure les dépendances qui causent des problèmes
-    exclude: ['@sentry/react', '@sentry/tracing'],
-  },
-  // Variables d'environnement
   define: {
-    __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
+    global: 'globalThis',
   },
 })
+
 

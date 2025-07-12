@@ -168,7 +168,7 @@ export function DashboardContent() {
         <div>
           <h1 className="text-3xl font-bold">Tableau de bord</h1>
           <p className="text-muted-foreground">
-            Bonjour {user?.first_name}, voici un aperçu de votre atelier
+            Bonjour {user?.firstName}, voici un aperçu de votre atelier
           </p>
         </div>
                  <div className="flex items-center gap-2">

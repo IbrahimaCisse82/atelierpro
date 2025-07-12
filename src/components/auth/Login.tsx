@@ -32,15 +32,30 @@ export function Login({ onSwitchToRegister }: LoginProps) {
     e.preventDefault();
     setError('');
 
-    if (!formData.email.trim() || !formData.password.trim()) {
-      setError('Veuillez remplir tous les champs');
-      return;
-    }
-
     try {
-      await login(formData.email.trim(), formData.password);
-    } catch (err) {
-      setError('Email ou mot de passe incorrect');
+      await login(formData.email, formData.password);
+      // La redirection sera gérée automatiquement par le contexte d'auth
+    } catch (error: any) {
+      console.error('Erreur de connexion:', error);
+      
+      // Gestion spécifique des erreurs avec messages personnalisés
+      let errorMessage = 'Une erreur est survenue lors de la connexion.';
+      
+      if (error.message) {
+        if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Votre email n\'est pas encore confirmé. Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation.';
+        } else if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Email ou mot de passe incorrect.';
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = 'Trop de tentatives de connexion. Veuillez patienter quelques minutes.';
+        } else if (error.message.includes('Network error')) {
+          errorMessage = 'Erreur de connexion réseau. Vérifiez votre connexion internet.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     }
   };
 
