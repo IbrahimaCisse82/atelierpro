@@ -20,30 +20,28 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Définition des droits d'accès par rôle
-  const role = user?.role;
-  // Par défaut, tout le monde voit Dashboard, Clients, Commandes
-  // Les modules avancés sont réservés à owner/manager
+  // Ordre harmonisé du menu selon la charte utilisateur
   const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['owner','manager','tailor','orders','stocks','customer_service'] },
-    { path: '/dashboard/orders', label: 'Commandes', icon: '📋', roles: ['owner','manager','orders'] },
-    { path: '/dashboard/clients', label: 'Clients', icon: '👥', roles: ['owner','manager','customer_service'] },
-    { path: '/dashboard/production', label: 'Production', icon: '⚙️', roles: ['owner','manager'] },
-    { path: '/dashboard/stocks', label: 'Stocks', icon: '📦', roles: ['owner','manager','stocks'] },
-    { path: '/dashboard/purchases', label: 'Achats', icon: '🛒', roles: ['owner','manager'] },
-    { path: '/dashboard/suppliers', label: 'Fournisseurs', icon: '🏢', roles: ['owner','manager','purchases','admin','suppliers'] },
-    { path: '/dashboard/patterns', label: 'Patrons', icon: '✂️', roles: ['owner','manager'] },
-    { path: '/dashboard/measurements', label: 'Mesures', icon: '📏', roles: ['owner','manager'] },
-    { path: '/dashboard/invoices', label: 'Factures', icon: '💰', roles: ['owner','manager'] },
-    { path: '/dashboard/hr', label: 'RH', icon: '👤', roles: ['owner','manager'] },
-    { path: '/dashboard/finances', label: 'Finances', icon: '💳', roles: ['owner','manager'] },
-    { path: '/dashboard/settings', label: 'Paramètres', icon: '⚙️', roles: ['owner','manager','settings','admin'] },
-    { path: '/dashboard/reports', label: 'Rapports', icon: '📑', roles: ['owner','manager','reports','finance','admin'] },
-    { path: '/dashboard/audit', label: "Journal d'activité", icon: '📝', roles: ['owner','manager','admin','audit'] },
-    { path: '/dashboard/alerts', label: 'Alertes', icon: '🔔', roles: ['owner','manager','admin','alerts'] },
-    { path: '/dashboard/export', label: 'Export avancé', icon: '📤', roles: ['owner','manager','admin','reports','finance'] },
+    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+    { path: '/dashboard/orders', label: 'Commandes', icon: '📋' },
+    { path: '/dashboard/clients', label: 'Clients', icon: '👥' },
+    { path: '/dashboard/production', label: 'Production', icon: '⚙️' },
+    { path: '/dashboard/stocks', label: 'Stocks', icon: '📦' },
+    { path: '/dashboard/purchases', label: 'Achats', icon: '🛒' },
+    { path: '/dashboard/suppliers', label: 'Fournisseurs', icon: '🏢' },
+    { path: '/dashboard/patterns', label: 'Patrons', icon: '✂️' },
+    { path: '/dashboard/measurements', label: 'Mesures', icon: '📏' },
+    { path: '/dashboard/invoices', label: 'Factures', icon: '💰' },
+    { path: '/dashboard/hr', label: 'RH', icon: '👤' },
+    { path: '/dashboard/finances', label: 'Finances', icon: '💳' },
+    { path: '/dashboard/settings', label: 'Paramètres', icon: '⚙️' },
+    { path: '/dashboard/reports', label: 'Rapports', icon: '📑' },
+    { path: '/dashboard/audit', label: "Journal d'activité", icon: '📝' },
+    { path: '/dashboard/alerts', label: 'Alertes', icon: '🔔' },
+    { path: '/dashboard/export', label: 'Export avancé', icon: '📤' },
   ];
-  const filteredMenu = menuItems.filter(item => !role || item.roles.includes(role));
+  // Plus de restriction de rôle sur l'affichage du menu
+  const filteredMenu = menuItems;
 
   return (
     <div className="flex h-screen bg-gray-100">

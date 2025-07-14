@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { formatFCFA } from '@/lib/utils';
 
 interface DashboardWidget {
   title: string;
@@ -80,8 +81,8 @@ const dashboardWidgets: DashboardWidget[] = [
     roles: ['owner', 'orders', 'customer_service']
   },
   {
-    title: 'Chiffre d\'affaires',
-    value: '€12,450',
+    title: "Chiffre d'affaires",
+    value: 12450, // valeur numérique pour formatage FCFA
     description: '+8% ce mois',
     icon: DollarSign,
     trend: { value: 8, isPositive: true },
@@ -91,7 +92,7 @@ const dashboardWidgets: DashboardWidget[] = [
   {
     title: 'Factures en attente',
     value: 5,
-    description: '€3,200 à encaisser',
+    description: '3 200 FCFA à encaisser',
     icon: FileText,
     trend: { value: -1, isPositive: false },
     color: 'text-red-600',
@@ -208,7 +209,11 @@ export function DashboardContent() {
                     <Icon className={cn("h-4 w-4", widget.color)} />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">{widget.value}</div>
+                    <div className="text-2xl font-bold">
+                      {typeof widget.value === 'number' && widget.title === "Chiffre d'affaires"
+                        ? formatFCFA(widget.value as number)
+                        : widget.value}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {widget.description}
                     </p>
