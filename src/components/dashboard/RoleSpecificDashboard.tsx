@@ -38,6 +38,7 @@ import {
   Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 // Types pour les métriques
 interface DashboardMetric {
@@ -425,9 +426,35 @@ const mockMetrics = {
 export function RoleSpecificDashboard() {
   const { user } = useAuth();
   const userRole = user?.role || 'customer_service';
+  const navigate = useNavigate();
+
+  // Actions rapides dynamiques selon le rôle
+  const quickActions = [
+    {
+      title: "Nouvelle commande",
+      description: "Créer une commande client",
+      icon: <Plus className="h-4 w-4" />,
+      action: () => navigate('/dashboard/orders'),
+      color: "bg-blue-500"
+    },
+    {
+      title: "Rapport financier",
+      description: "Voir les performances",
+      icon: <BarChart3 className="h-4 w-4" />,
+      action: () => navigate('/dashboard/finances'),
+      color: "bg-green-500"
+    },
+    {
+      title: "Gestion RH",
+      description: "Gérer les employés",
+      icon: <UserCheck className="h-4 w-4" />,
+      action: () => navigate('/dashboard/hr'),
+      color: "bg-purple-500"
+    }
+  ];
 
   const metrics = mockMetrics[userRole as keyof typeof mockMetrics] || mockMetrics.customer_service;
-  const quickActions = mockQuickActions[userRole as keyof typeof mockQuickActions] || mockQuickActions.customer_service;
+  // const quickActions = mockQuickActions[userRole as keyof typeof mockQuickActions] || mockQuickActions.customer_service; // This line is now redundant
 
   const getRoleTitle = (role: string) => {
     switch (role) {

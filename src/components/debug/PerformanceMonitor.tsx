@@ -33,7 +33,11 @@ interface NetworkMetrics {
   lastCheck: Date;
 }
 
-export function PerformanceMonitor() {
+interface PerformanceMonitorProps {
+  onClose?: () => void;
+}
+
+export function PerformanceMonitor({ onClose }: PerformanceMonitorProps) {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<PerformanceMetrics>({
     authTime: 0,
@@ -194,7 +198,7 @@ export function PerformanceMonitor() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsVisible(false)}
+                onClick={onClose}
                 className="h-6 w-6 p-0"
               >
                 ×

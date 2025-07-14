@@ -101,11 +101,10 @@ export function Sidebar({
           onClick={() => setOpenMobile(false)}
         />
       )}
-      
-      {/* Sidebar */}
+      {/* Sidebar avec dégradé vertical */}
       <div
         className={cn(
-          "relative h-full bg-background border-r transition-all duration-300 ease-in-out",
+          "relative h-full border-r transition-all duration-300 ease-in-out text-white border-[hsl(var(--sidebar-border))] shadow-lg",
           {
             // Desktop states
             "w-64": !isMobile && open,
@@ -117,6 +116,7 @@ export function Sidebar({
           },
           className
         )}
+        style={{ background: 'linear-gradient(to bottom, #2563eb 0%, #fb923c 100%)' }}
         {...props}
       >
         <div className="h-full overflow-hidden">
@@ -137,7 +137,8 @@ export function SidebarHeader({ children, className, ...props }: SidebarHeaderPr
   return (
     <div
       className={cn(
-        "flex items-center justify-between p-4 border-b",
+        // Palette pro : fond, bordure, texte
+        "flex items-center justify-between p-4 border-b border-[hsl(var(--sidebar-border))] bg-[hsl(var(--sidebar-bg,var(--sidebar-background)))] text-[hsl(var(--sidebar-fg,var(--sidebar-foreground)))]",
         className
       )}
       {...props}
@@ -248,13 +249,11 @@ export function SidebarMenuButton({
   return (
     <button
       className={cn(
+        // Palette pro : fond, texte, hover, sélection
         "flex items-center w-full px-3 py-2 text-sm font-medium rounded-md transition-colors",
-        "hover:bg-accent hover:text-accent-foreground",
-        "focus:bg-accent focus:text-accent-foreground focus:outline-none",
-        {
-          "bg-accent text-accent-foreground": isActive,
-          "text-muted-foreground": !isActive,
-        },
+        isActive
+          ? "bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-fg))] shadow"
+          : "text-[hsl(var(--sidebar-fg,var(--sidebar-foreground)))] hover:bg-[hsl(var(--sidebar-accent))]/80 hover:text-[hsl(var(--sidebar-accent-fg))] focus:bg-[hsl(var(--sidebar-accent))]/90 focus:text-[hsl(var(--sidebar-accent-fg))]",
         className
       )}
       onClick={onClick}

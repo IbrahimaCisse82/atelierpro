@@ -14,7 +14,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashboard";
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 
 // Configuration optimisée de React Query
 const queryClient = new QueryClient({
@@ -95,6 +95,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Composant principal de l'application
 function AppContent() {
   const { user, loading } = useAuth();
+  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
 
   if (loading) {
     return <LoadingPage />;
@@ -207,11 +208,18 @@ function AppContent() {
         {/* Devtools React Query en développement */}
         {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
         
-        {/* Moniteur de performance */}
-        <PerformanceMonitor />
-        
         {/* Composants PWA */}
         <PWAInstallPrompt />
+        {/* Bouton flottant pour afficher/masquer le panneau de performance */}
+        <button
+          className="fixed bottom-6 right-6 z-50 bg-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-gray-100 transition"
+          onClick={() => setShowPerformanceMonitor((v) => !v)}
+        >
+          {showPerformanceMonitor ? 'Masquer' : 'Performance'}
+        </button>
+        {showPerformanceMonitor && (
+          <PerformanceMonitor onClose={() => setShowPerformanceMonitor(false)} />
+        )}
       </QueryClientProvider>
     </SidebarProvider>
   );
