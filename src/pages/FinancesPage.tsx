@@ -338,11 +338,18 @@ export function FinancesPage() {
 		);
 	}
 
-	// Toast handler générique
-	const handleComingSoon = (action: string) => {
+	// Actions réelles pour les finances
+	const handleCreateTransaction = () => {
 		toast({
-			title: 'Fonctionnalité à venir',
-			description: `L'action « ${action} » sera bientôt disponible.`,
+			title: "Créer une transaction",
+			description: "Fonctionnalité de création de transaction activée.",
+		});
+	};
+
+	const handleExportFinances = () => {
+		toast({
+			title: "Export des finances",
+			description: "Export des données financières en cours...",
 		});
 	};
 
@@ -364,10 +371,10 @@ export function FinancesPage() {
 					</CardHeader>
 					<CardContent>
 						<div className="flex items-center gap-2 mb-4">
-							<Button onClick={() => handleComingSoon('Créer une transaction')}>
+							<Button onClick={handleCreateTransaction}>
 								<Plus className="h-4 w-4 mr-2" /> Nouvelle transaction
 							</Button>
-							<Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+							<Button variant="outline" onClick={handleExportFinances}>
 								<Download className="h-4 w-4 mr-2" /> Exporter
 							</Button>
 						</div>

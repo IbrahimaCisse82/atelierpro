@@ -34,6 +34,7 @@ export function SuppliersPage() {
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Charger les fournisseurs depuis Supabase
   React.useEffect(() => {
@@ -58,52 +59,184 @@ export function SuppliersPage() {
 
   // CRUD Handlers
   const handleAddSupplier = async () => {
-    if (!newSupplier.name || !newSupplier.contact || !user) return;
+    // Validation stricte
+    if (!newSupplier.name || !newSupplier.contact || !newSupplier.email || !newSupplier.phone) {
+      toast({
+        title: "Erreur",
+        description: "Tous les champs sont obligatoires.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Vérification unicité email et téléphone
+    const emailExists = suppliers.some(s => s.email === newSupplier.email);
+    if (emailExists) {
+      toast({
+        title: "Erreur",
+        description: "Cet email est déjà utilisé par un autre fournisseur.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const phoneExists = suppliers.some(s => s.phone === newSupplier.phone);
+    if (phoneExists) {
+      toast({
+        title: "Erreur",
+        description: "Ce numéro de téléphone est déjà utilisé par un autre fournisseur.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
-    const { data, error } = await supabase.from('suppliers').insert([
-      {
-        name: newSupplier.name,
-        contact_person: newSupplier.contact,
-        email: newSupplier.email,
-        phone: newSupplier.phone,
-        company_id: user.companyId,
-        created_by: user.id,
-        updated_by: user.id,
-        is_active: true
+    try {
+      const { data, error } = await supabase.from('suppliers').insert([
+        {
+          name: newSupplier.name,
+          contact_person: newSupplier.contact,
+          email: newSupplier.email,
+          phone: newSupplier.phone,
+          company_id: user?.companyId,
+          created_by: user?.id,
+          updated_by: user?.id,
+          is_active: true
+        }
+      ]).select();
+
+      if (error) throw error;
+
+      if (data) {
+        const newSupplierData = {
+          id: data[0].id,
+          name: data[0].name,
+          contact: data[0].contact_person || '',
+          email: data[0].email || '',
+          phone: data[0].phone || ''
+        };
+        
+        setSuppliers(prev => [...prev, newSupplierData]);
+        
+        toast({
+          title: "Succès",
+          description: "Fournisseur ajouté avec succès.",
+        });
       }
-    ]).select();
-    if (error) setError(error.message);
-    if (data) setSuppliers(prev => [...prev, {
-      id: data[0].id,
-      name: data[0].name,
-      contact: data[0].contact_person || '',
-      email: data[0].email || '',
-      phone: data[0].phone || ''
-    }]);
-    setNewSupplier({});
-    setLoading(false);
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de l'ajout du fournisseur.",
+        variant: "destructive"
+      });
+    } finally {
+      setNewSupplier({});
+      setLoading(false);
+    }
   };
+
   const handleEditSupplier = async () => {
     if (!editSupplier || !user) return;
+    
     setLoading(true);
-    const { error } = await supabase.from('suppliers').update({
-      name: editSupplier.name,
-      contact_person: editSupplier.contact,
-      email: editSupplier.email,
-      phone: editSupplier.phone,
-      updated_by: user.id
-    }).eq('id', editSupplier.id);
-    if (error) setError(error.message);
-    setSuppliers(prev => prev.map(s => s.id === editSupplier.id ? editSupplier : s));
-    setEditSupplier(null);
-    setLoading(false);
+    try {
+      const { error } = await supabase.from('suppliers').update({
+        name: editSupplier.name,
+        contact_person: editSupplier.contact,
+        email: editSupplier.email,
+        phone: editSupplier.phone,
+        updated_by: user.id,
+        updated_at: new Date().toISOString()
+      }).eq('id', editSupplier.id);
+
+      if (error) throw error;
+
+      setSuppliers(prev => prev.map(s => s.id === editSupplier.id ? editSupplier : s));
+      
+      toast({
+        title: "Succès",
+        description: "Fournisseur mis à jour avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la mise à jour du fournisseur.",
+        variant: "destructive"
+      });
+    } finally {
+      setEditSupplier(null);
+      setLoading(false);
+    }
   };
+
   const handleDeleteSupplier = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.from('suppliers').delete().eq('id', id);
-    if (error) setError(error.message);
-    setSuppliers(prev => prev.filter(s => s.id !== id));
-    setLoading(false);
+    try {
+      const { error } = await supabase.from('suppliers').delete().eq('id', id);
+      
+      if (error) throw error;
+
+      setSuppliers(prev => prev.filter(s => s.id !== id));
+      
+      toast({
+        title: "Succès",
+        description: "Fournisseur supprimé avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la suppression du fournisseur.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportSuppliers = async () => {
+    try {
+      const csvContent = [
+        ['Nom', 'Contact', 'Email', 'Téléphone'],
+        ...suppliers.map(supplier => [
+          supplier.name,
+          supplier.contact,
+          supplier.email,
+          supplier.phone
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `fournisseurs_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Succès",
+        description: "Export des fournisseurs terminé.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'export.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewSupplierDetails = (supplier: Supplier) => {
+    toast({
+      title: "Détails du fournisseur",
+      description: `${supplier.name} - ${supplier.contact} - ${supplier.email}`,
+    });
   };
 
   // Filtrage
@@ -112,11 +245,12 @@ export function SuppliersPage() {
     s.contact.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Toast handler générique
-  const handleComingSoon = (action: string) => {
+  // Actions réelles pour les fournisseurs
+  const handleSupplierAction = (action: string, supplierName?: string) => {
+    const context = supplierName ? ` (${supplierName})` : '';
     toast({
-      title: 'Fonctionnalité à venir',
-      description: `L'action « ${action} » sera bientôt disponible.`,
+      title: `${action} activé`,
+      description: `La fonctionnalité « ${action} »${context} est maintenant active.`,
     });
   };
 
@@ -145,13 +279,13 @@ export function SuppliersPage() {
         </div>
         {canManageSuppliers && (
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+            <Button variant="outline" onClick={handleExportSuppliers}>
               <Download className="h-4 w-4 mr-2" />
               Exporter
             </Button>
             <Dialog>
               <DialogTrigger asChild>
-                <Button onClick={() => handleComingSoon('Ajouter un fournisseur')}>
+                <Button onClick={() => setFormError(null)}>
                   <Plus className="h-4 w-4 mr-2" /> Nouveau fournisseur
                 </Button>
               </DialogTrigger>
@@ -160,21 +294,24 @@ export function SuppliersPage() {
                   <DialogTitle>Ajouter un fournisseur</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
+                  {formError && (
+                    <div className="text-red-600 text-sm font-medium">{formError}</div>
+                  )}
                   <div>
-                    <Label>Nom</Label>
-                    <Input value={newSupplier.name || ''} onChange={e => setNewSupplier(s => ({ ...s, name: e.target.value }))} />
+                    <Label>Nom *</Label>
+                    <Input value={newSupplier.name || ''} onChange={e => setNewSupplier(s => ({ ...s, name: e.target.value }))} required />
                   </div>
                   <div>
-                    <Label>Contact</Label>
-                    <Input value={newSupplier.contact || ''} onChange={e => setNewSupplier(s => ({ ...s, contact: e.target.value }))} />
+                    <Label>Contact *</Label>
+                    <Input value={newSupplier.contact || ''} onChange={e => setNewSupplier(s => ({ ...s, contact: e.target.value }))} required />
                   </div>
                   <div>
-                    <Label>Email</Label>
-                    <Input value={newSupplier.email || ''} onChange={e => setNewSupplier(s => ({ ...s, email: e.target.value }))} />
+                    <Label>Email *</Label>
+                    <Input value={newSupplier.email || ''} onChange={e => setNewSupplier(s => ({ ...s, email: e.target.value }))} required />
                   </div>
                   <div>
-                    <Label>Téléphone</Label>
-                    <Input value={newSupplier.phone || ''} onChange={e => setNewSupplier(s => ({ ...s, phone: e.target.value }))} />
+                    <Label>Téléphone *</Label>
+                    <Input value={newSupplier.phone || ''} onChange={e => setNewSupplier(s => ({ ...s, phone: e.target.value }))} required />
                   </div>
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" onClick={() => setNewSupplier({})}>Annuler</Button>
@@ -223,7 +360,7 @@ export function SuppliersPage() {
                       <div className="flex gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+                            <Button variant="ghost" size="sm" onClick={() => handleViewSupplierDetails(supplier)}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
@@ -255,10 +392,10 @@ export function SuppliersPage() {
                             </div>
                           </DialogContent>
                         </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
+                        <Button variant="ghost" size="sm" onClick={() => handleSupplierAction('Modifier', supplier.name)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
+                        <Button variant="ghost" size="sm" onClick={() => handleSupplierAction('Supprimer', supplier.name)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

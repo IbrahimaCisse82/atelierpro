@@ -566,6 +566,50 @@ CREATE POLICY "Owner can manage employees"
   TO authenticated
   USING (company_id = public.get_user_company_id() AND public.has_role('owner'));
 
+-- Politiques pour les order_items
+CREATE POLICY "Users can view order_items from their company"
+  ON public.order_items FOR SELECT
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.orders WHERE public.orders.id = order_items.order_id AND public.orders.company_id = public.get_user_company_id()));
+
+CREATE POLICY "Orders and manager can manage order_items"
+  ON public.order_items FOR ALL
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.orders WHERE public.orders.id = order_items.order_id AND public.orders.company_id = public.get_user_company_id() AND (public.has_role('orders') OR public.has_role('manager') OR public.has_role('owner'))));
+
+-- Politiques pour les purchase_order_items
+CREATE POLICY "Users can view purchase_order_items from their company"
+  ON public.purchase_order_items FOR SELECT
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.purchase_orders WHERE public.purchase_orders.id = purchase_order_items.purchase_order_id AND public.purchase_orders.company_id = public.get_user_company_id()));
+
+CREATE POLICY "Stocks can manage purchase_order_items"
+  ON public.purchase_order_items FOR ALL
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.purchase_orders WHERE public.purchase_orders.id = purchase_order_items.purchase_order_id AND public.purchase_orders.company_id = public.get_user_company_id() AND (public.has_role('stocks') OR public.has_role('owner'))));
+
+-- Politiques pour les reception_items
+CREATE POLICY "Users can view reception_items from their company"
+  ON public.reception_items FOR SELECT
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.receptions WHERE public.receptions.id = reception_items.reception_id AND public.receptions.company_id = public.get_user_company_id()));
+
+CREATE POLICY "Stocks can manage reception_items"
+  ON public.reception_items FOR ALL
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.receptions WHERE public.receptions.id = reception_items.reception_id AND public.receptions.company_id = public.get_user_company_id() AND (public.has_role('stocks') OR public.has_role('owner'))));
+
+-- Politiques pour les order_materials
+CREATE POLICY "Users can view order_materials from their company"
+  ON public.order_materials FOR SELECT
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.orders WHERE public.orders.id = order_materials.order_id AND public.orders.company_id = public.get_user_company_id()));
+
+CREATE POLICY "Orders and manager can manage order_materials"
+  ON public.order_materials FOR ALL
+  TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.orders WHERE public.orders.id = order_materials.order_id AND public.orders.company_id = public.get_user_company_id() AND (public.has_role('orders') OR public.has_role('manager') OR public.has_role('owner'))));
+
 -- =====================================================
 -- TRIGGERS POUR UPDATED_AT
 -- =====================================================

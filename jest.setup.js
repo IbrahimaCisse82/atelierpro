@@ -1,0 +1,1 @@
+// Extension du matcher supprimée car non compatible avec la version installée de jest-axe. 

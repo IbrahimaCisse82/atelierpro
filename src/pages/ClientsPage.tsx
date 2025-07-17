@@ -43,6 +43,7 @@ interface Client {
   address: string;
   notes: string;
   isActive: boolean;
+  gender: 'homme' | 'femme' | 'enfant';
   createdAt: string;
   lastOrderDate?: string;
   totalOrders: number;
@@ -65,7 +66,8 @@ const mockClients: Client[] = [
     lastOrderDate: '2024-01-15',
     totalOrders: 8,
     totalSpent: 2450,
-    satisfaction: 5
+    satisfaction: 5,
+    gender: 'femme'
   },
   {
     id: '2',
@@ -80,7 +82,8 @@ const mockClients: Client[] = [
     lastOrderDate: '2024-01-10',
     totalOrders: 5,
     totalSpent: 1800,
-    satisfaction: 4
+    satisfaction: 4,
+    gender: 'homme'
   },
   {
     id: '3',
@@ -95,7 +98,8 @@ const mockClients: Client[] = [
     lastOrderDate: '2024-01-12',
     totalOrders: 2,
     totalSpent: 650,
-    satisfaction: 5
+    satisfaction: 5,
+    gender: 'femme'
   }
 ];
 
@@ -137,7 +141,8 @@ export function ClientsPage() {
           totalOrders: 0,
           totalSpent: 0,
           satisfaction: 0,
-          lastOrderDate: ''
+          lastOrderDate: '',
+          gender: c.gender || ''
         })));
         setLoading(false);
       });
@@ -145,69 +150,190 @@ export function ClientsPage() {
 
   // CRUD Handlers
   const handleAddClient = async () => {
-    if (!newClient.firstName || !newClient.lastName || !user) return;
+    if (!newClient.firstName || !newClient.lastName || !user) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
-    const { data, error } = await supabase.from('clients').insert([
-      {
-        first_name: newClient.firstName,
-        last_name: newClient.lastName,
-        email: newClient.email,
-        phone: newClient.phone,
-        address: newClient.address,
-        notes: newClient.notes,
-        company_id: user.companyId,
-        created_by: user.id,
-        updated_by: user.id,
-        is_active: newClient.isActive ?? true
+    try {
+      const { data, error } = await supabase.from('clients').insert([
+        {
+          first_name: newClient.firstName,
+          last_name: newClient.lastName,
+          email: newClient.email,
+          phone: newClient.phone,
+          address: newClient.address,
+          notes: newClient.notes,
+          company_id: user.companyId,
+          created_by: user.id,
+          updated_by: user.id,
+          is_active: newClient.isActive ?? true,
+          gender: newClient.gender || 'homme'
+        }
+      ]).select();
+
+      if (error) throw error;
+
+      if (data) {
+        const newClientData = {
+          id: data[0].id,
+          firstName: data[0].first_name,
+          lastName: data[0].last_name,
+          email: data[0].email || '',
+          phone: data[0].phone || '',
+          address: data[0].address || '',
+          notes: data[0].notes || '',
+          isActive: data[0].is_active,
+          createdAt: data[0].created_at,
+          totalOrders: 0,
+          totalSpent: 0,
+          satisfaction: 0,
+          lastOrderDate: '',
+          gender: data[0].gender || 'homme'
+        };
+        
+        setClients(prev => [...prev, newClientData]);
+        
+        toast({
+          title: "Succès",
+          description: "Client ajouté avec succès.",
+        });
       }
-    ]).select();
-    if (error) setError(error.message);
-    if (data) setClients(prev => [...prev, {
-      id: data[0].id,
-      firstName: data[0].first_name,
-      lastName: data[0].last_name,
-      email: data[0].email || '',
-      phone: data[0].phone || '',
-      address: data[0].address || '',
-      notes: data[0].notes || '',
-      isActive: data[0].is_active,
-      createdAt: data[0].created_at,
-      totalOrders: 0,
-      totalSpent: 0,
-      satisfaction: 0,
-      lastOrderDate: ''
-    }]);
-    setNewClient({});
-    setIsCreateDialogOpen(false);
-    setLoading(false);
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de l'ajout du client.",
+        variant: "destructive"
+      });
+    } finally {
+      setNewClient({});
+      setIsCreateDialogOpen(false);
+      setLoading(false);
+    }
   };
 
   const handleUpdateClient = async (id: string, updates: Partial<Client>) => {
     if (!user) return;
+    
     setLoading(true);
-    const { error } = await supabase.from('clients').update({
-      first_name: updates.firstName,
-      last_name: updates.lastName,
-      email: updates.email,
-      phone: updates.phone,
-      address: updates.address,
-      notes: updates.notes,
-      is_active: updates.isActive,
-      updated_by: user.id
-    }).eq('id', id);
-    if (error) setError(error.message);
-    setClients(prev => prev.map(client => client.id === id ? { ...client, ...updates } : client));
-    setIsEditDialogOpen(false);
-    setSelectedClient(null);
-    setLoading(false);
+    try {
+      const { error } = await supabase.from('clients').update({
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        email: updates.email,
+        phone: updates.phone,
+        address: updates.address,
+        notes: updates.notes,
+        is_active: updates.isActive,
+        gender: updates.gender,
+        updated_by: user.id,
+        updated_at: new Date().toISOString()
+      }).eq('id', id);
+
+      if (error) throw error;
+
+      setClients(prev => prev.map(client => 
+        client.id === id 
+          ? { ...client, ...updates }
+          : client
+      ));
+
+      toast({
+        title: "Succès",
+        description: "Client mis à jour avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la mise à jour du client.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteClient = async (id: string) => {
+    if (!user) return;
+    
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) {
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.from('clients').delete().eq('id', id);
-    if (error) setError(error.message);
-    setClients(prev => prev.filter(client => client.id !== id));
-    setLoading(false);
+    try {
+      const { error } = await supabase.from('clients').delete().eq('id', id);
+      
+      if (error) throw error;
+
+      setClients(prev => prev.filter(client => client.id !== id));
+      
+      toast({
+        title: "Succès",
+        description: "Client supprimé avec succès.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erreur",
+        description: error.message || "Erreur lors de la suppression du client.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportClients = async () => {
+    try {
+      const csvContent = [
+        ['Nom', 'Prénom', 'Email', 'Téléphone', 'Adresse', 'Type', 'Statut', 'Notes'],
+        ...clients.map(client => [
+          client.lastName,
+          client.firstName,
+          client.email,
+          client.phone,
+          client.address,
+          client.gender,
+          client.isActive ? 'Actif' : 'Inactif',
+          client.notes
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `clients_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Succès",
+        description: "Export des clients terminé.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'export.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewClientDetails = (client: Client) => {
+    setSelectedClient(client);
+    // Ici on pourrait ouvrir un dialog avec les détails du client
+    toast({
+      title: "Détails du client",
+      description: `${client.firstName} ${client.lastName} - ${client.email}`,
+    });
   };
 
   // Filtrer les clients
@@ -224,14 +350,15 @@ export function ClientsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const handleCreateClient = (clientData: Omit<Client, 'id' | 'createdAt' | 'totalOrders' | 'totalSpent' | 'satisfaction'>) => {
+  const handleCreateClient = (clientData: Omit<Client, 'id' | 'createdAt' | 'totalOrders' | 'totalSpent' | 'satisfaction' | 'gender'>) => {
     const newClient: Client = {
       ...clientData,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
       totalOrders: 0,
       totalSpent: 0,
-      satisfaction: 0
+      satisfaction: 0,
+      gender: '' // Default to empty for new clients
     };
     setClients(prev => [...prev, newClient]);
     setIsCreateDialogOpen(false);
@@ -249,12 +376,39 @@ export function ClientsPage() {
     ));
   };
 
-  // Toast handler générique
-  const handleComingSoon = (action: string) => {
+  // Actions réelles pour les clients
+  const handleCreateClientAction = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  const handleViewClient = (client: Client) => {
+    setSelectedClient(client);
+    // Ici on pourrait ouvrir un modal de détails
     toast({
-      title: 'Fonctionnalité à venir',
-      description: `L'action « ${action} » sera bientôt disponible.`,
+      title: "Détails du client",
+      description: `Affichage des détails de ${client.firstName} ${client.lastName}`,
     });
+  };
+
+  const handleEditClient = (client: Client) => {
+    setSelectedClient(client);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClientAction = async (client: Client) => {
+    try {
+      await handleDeleteClient(client.id);
+      toast({
+        title: "Succès",
+        description: `Client ${client.firstName} ${client.lastName} supprimé avec succès.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du client.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -270,7 +424,7 @@ export function ClientsPage() {
         {canManageClients && (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleComingSoon('Créer un client')}>
+              <Button onClick={handleCreateClientAction}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau client
               </Button>
@@ -462,7 +616,7 @@ export function ClientsPage() {
                     <div className="flex items-center space-x-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
+                          <Button variant="ghost" size="sm" onClick={() => handleViewClient(client)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
@@ -480,7 +634,7 @@ export function ClientsPage() {
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => handleComingSoon('Modifier')}
+                                onClick={() => handleEditClient(client)}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -500,7 +654,7 @@ export function ClientsPage() {
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => handleComingSoon('Supprimer')}
+                            onClick={() => handleDeleteClientAction(client)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -521,10 +675,12 @@ export function ClientsPage() {
 // Composant formulaire client
 function ClientForm({ 
   client, 
-  onSubmit 
+  onSubmit, 
+  clients = [] 
 }: { 
   client?: Client; 
   onSubmit: (data: Partial<Client>) => void; 
+  clients?: Client[];
 }) {
   const [formData, setFormData] = useState({
     firstName: client?.firstName || '',
@@ -533,16 +689,49 @@ function ClientForm({
     phone: client?.phone || '',
     address: client?.address || '',
     notes: client?.notes || '',
-    isActive: client?.isActive ?? true
+    isActive: client?.isActive ?? true,
+    gender: client?.gender || ''
   });
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Validation stricte
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      setError('Le prénom et le nom sont obligatoires.');
+      return;
+    }
+    if (!formData.email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) {
+      setError('Une adresse email valide est obligatoire.');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setError('Le numéro de téléphone est obligatoire.');
+      return;
+    }
+    // Vérification unicité du téléphone (hors modification du client courant)
+    const phoneExists = clients.some(c => c.phone === formData.phone && (!client || c.id !== client.id));
+    if (phoneExists) {
+      setError('Ce numéro de téléphone est déjà utilisé par un autre client.');
+      return;
+    }
+    if (!formData.address.trim()) {
+      setError('L\'adresse est obligatoire.');
+      return;
+    }
+    if (!formData.gender) {
+      setError('Veuillez spécifier si le client est un homme, une femme ou un enfant.');
+      return;
+    }
+    setError(null);
     onSubmit(formData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="text-red-600 text-sm font-medium">{error}</div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">Prénom *</Label>
@@ -575,21 +764,58 @@ function ClientForm({
           />
         </div>
         <div>
-          <Label htmlFor="phone">Téléphone</Label>
+          <Label htmlFor="phone">Téléphone *</Label>
           <Input
             id="phone"
             value={formData.phone}
             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            required
           />
         </div>
       </div>
       <div>
-        <Label htmlFor="address">Adresse</Label>
+        <Label htmlFor="address">Adresse *</Label>
         <Textarea
           id="address"
           value={formData.address}
           onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+          required
         />
+      </div>
+      <div>
+        <Label>Type de client *</Label>
+        <div className="flex gap-4 mt-2">
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="gender"
+              value="homme"
+              checked={formData.gender === 'homme'}
+              onChange={() => setFormData(prev => ({ ...prev, gender: 'homme' }))}
+            />
+            Homme
+          </label>
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="gender"
+              value="femme"
+              checked={formData.gender === 'femme'}
+              onChange={() => setFormData(prev => ({ ...prev, gender: 'femme' }))}
+            />
+            Femme
+          </label>
+          <label className="flex items-center gap-1">
+            <input
+              type="radio"
+              name="gender"
+              value="enfant"
+              checked={formData.gender === 'enfant'}
+              onChange={() => setFormData(prev => ({ ...prev, gender: 'enfant' }))}
+            />
+            Enfant
+          </label>
+        </div>
       </div>
       <div>
         <Label htmlFor="notes">Notes</Label>
@@ -599,7 +825,7 @@ function ClientForm({
           onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
         />
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <input
           type="checkbox"
           id="isActive"
@@ -608,13 +834,8 @@ function ClientForm({
         />
         <Label htmlFor="isActive">Client actif</Label>
       </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline">
-          Annuler
-        </Button>
-        <Button type="submit">
-          {client ? 'Modifier' : 'Créer'}
-        </Button>
+      <div className="flex justify-end">
+        <Button type="submit">{client ? 'Enregistrer' : 'Créer le client'}</Button>
       </div>
     </form>
   );
@@ -647,6 +868,10 @@ function ClientDetails({ client }: { client: Client }) {
           <div>
             <Label>Téléphone</Label>
             <p className="text-sm">{client.phone || 'Non renseigné'}</p>
+          </div>
+          <div>
+            <Label>Type de client</Label>
+            <p className="text-sm">{client.gender === 'homme' ? 'Homme' : client.gender === 'femme' ? 'Femme' : 'Enfant'}</p>
           </div>
         </div>
         <div>

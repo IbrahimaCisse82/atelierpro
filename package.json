@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:performance": "tsx scripts/test-performance.ts",
     "test:performance:watch": "tsx watch scripts/test-performance.ts",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
@@ -53,6 +54,10 @@
     "@supabase/supabase-js": "^2.39.0",
     "@tanstack/react-query": "^5.17.9",
     "@tanstack/react-query-devtools": "^5.17.9",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@types/jest": "^29.5.0",
+    "axe-core": "^4.8.0",
     "chart.js": "^4.5.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
@@ -61,6 +66,9 @@
     "dotenv": "^17.2.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
+    "jest-environment-jsdom": "^29.5.0",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.303.0",
     "next-themes": "^0.4.6",
     "react": "^18.2.0",
@@ -75,12 +83,36 @@
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.8.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.22.4"
   },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "jsdom",
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)": "<rootDir>/src/$1"
+    }
+  },
   "devDependencies": {
+    "@playwright/test": "^1.54.1",
     "@types/node": "^20.10.5",
-    "@types/react": "^18.2.45",
+    "@types/react": "^18.3.23",
     "@types/react-dom": "^18.2.18",
+    "@types/xlsx": "^0.0.35",
     "@typescript-eslint/eslint-plugin": "^6.15.0",
     "@typescript-eslint/parser": "^6.15.0",
     "@vitejs/plugin-react": "^4.2.1",
@@ -88,10 +120,12 @@
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "jest-axe": "^6.0.1",
     "postcss": "^8.4.32",
     "prettier": "^3.1.1",
     "rollup-plugin-visualizer": "^5.12.0",
     "tailwindcss": "^3.4.0",
+    "ts-jest": "^29.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.10",

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AccessControl } from '@/components/common/AccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,196 +6,212 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { 
+  Ruler, 
   Plus, 
   Search, 
-  Filter, 
   Eye, 
   Edit, 
-  CheckCircle,
-  Clock,
-  User,
-  Ruler,
-  History,
-  TrendingUp,
-  AlertTriangle,
-  Calendar,
+  Trash2,
   Download,
-  Upload,
-  Trash2
+  User,
+  FileText,
+  Copy,
+  CheckCircle
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
 // Types pour les mesures
-interface ClientMeasurement {
+interface Measurement {
   id: string;
   clientId: string;
   clientName: string;
-  measurementDate: string;
-  version: number;
-  // Mesures principales
-  bust?: number;
-  waist?: number;
-  hips?: number;
-  shoulderWidth?: number;
-  armLength?: number;
-  legLength?: number;
-  neckCircumference?: number;
-  // Mesures supplémentaires
-  chestWidth?: number;
-  backWidth?: number;
-  armCircumference?: number;
-  thighCircumference?: number;
-  calfCircumference?: number;
-  // Validation
-  isValidated: boolean;
-  validatedBy?: string;
-  validatedAt?: string;
+  garmentType: string;
+  measurements: Record<string, number>;
   notes?: string;
-  // Métadonnées
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string;
-  updatedBy: string;
+  takenBy: string;
+  takenAt: string;
+  isActive: boolean;
+  version: number;
 }
 
-interface Client {
+interface GarmentType {
   id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  lastMeasurementDate?: string;
-  measurementCount: number;
+  name: string;
+  measurementFields: string[];
+  description: string;
 }
 
-// Données simulées
-const mockClients: Client[] = [
+// Types de vêtements avec leurs mesures spécifiques
+const garmentTypes: GarmentType[] = [
   {
-    id: '1',
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    email: 'marie.dupont@email.com',
-    lastMeasurementDate: '2024-01-15',
-    measurementCount: 3
+    id: 'robe',
+    name: 'Robe',
+    description: 'Mesures pour robes de tous types',
+    measurementFields: [
+      'tour_de_poitrine', 'tour_de_taille', 'tour_de_hanches', 'longueur_robe',
+      'longueur_manche', 'tour_de_manche', 'largeur_epaule', 'tour_de_cou',
+      'longueur_entre_jambes', 'tour_de_poignet'
+    ]
   },
   {
-    id: '2',
-    firstName: 'Jean',
-    lastName: 'Martin',
-    email: 'jean.martin@email.com',
-    lastMeasurementDate: '2024-01-10',
-    measurementCount: 2
+    id: 'costume',
+    name: 'Costume',
+    description: 'Mesures pour costumes hommes et femmes',
+    measurementFields: [
+      'tour_de_poitrine', 'tour_de_taille', 'tour_de_hanches', 'longueur_veste',
+      'longueur_pantalon', 'tour_de_manche', 'largeur_epaule', 'tour_de_cou',
+      'longueur_entre_jambes', 'tour_de_poignet', 'largeur_revers'
+    ]
   },
   {
-    id: '3',
-    firstName: 'Sophie',
-    lastName: 'Bernard',
-    email: 'sophie.bernard@email.com',
-    lastMeasurementDate: '2024-01-05',
-    measurementCount: 1
+    id: 'pantalon',
+    name: 'Pantalon',
+    description: 'Mesures pour pantalons et jupes',
+    measurementFields: [
+      'tour_de_taille', 'tour_de_hanches', 'longueur_pantalon', 'longueur_entre_jambes',
+      'tour_de_cuisse', 'tour_de_genou', 'tour_de_cheville', 'largeur_pied'
+    ]
+  },
+  {
+    id: 'chemise',
+    name: 'Chemise',
+    description: 'Mesures pour chemises et blouses',
+    measurementFields: [
+      'tour_de_poitrine', 'tour_de_taille', 'longueur_chemise', 'longueur_manche',
+      'tour_de_manche', 'largeur_epaule', 'tour_de_cou', 'tour_de_poignet'
+    ]
+  },
+  {
+    id: 'veste',
+    name: 'Veste',
+    description: 'Mesures pour vestes et blazers',
+    measurementFields: [
+      'tour_de_poitrine', 'tour_de_taille', 'longueur_veste', 'longueur_manche',
+      'tour_de_manche', 'largeur_epaule', 'tour_de_cou', 'largeur_revers'
+    ]
   }
 ];
 
-const mockMeasurements: ClientMeasurement[] = [
+// Labels en français pour les mesures
+const measurementLabels: Record<string, string> = {
+  tour_de_poitrine: 'Tour de poitrine',
+  tour_de_taille: 'Tour de taille',
+  tour_de_hanches: 'Tour de hanches',
+  longueur_robe: 'Longueur robe',
+  longueur_veste: 'Longueur veste',
+  longueur_pantalon: 'Longueur pantalon',
+  longueur_chemise: 'Longueur chemise',
+  longueur_manche: 'Longueur manche',
+  tour_de_manche: 'Tour de manche',
+  largeur_epaule: 'Largeur épaule',
+  tour_de_cou: 'Tour de cou',
+  longueur_entre_jambes: 'Entre-jambes',
+  tour_de_poignet: 'Tour de poignet',
+  largeur_revers: 'Largeur revers',
+  tour_de_cuisse: 'Tour de cuisse',
+  tour_de_genou: 'Tour de genou',
+  tour_de_cheville: 'Tour de cheville',
+  largeur_pied: 'Largeur pied'
+};
+
+// Données simulées
+const mockMeasurements: Measurement[] = [
   {
     id: '1',
-    clientId: '1',
+    clientId: 'client-1',
     clientName: 'Marie Dupont',
-    measurementDate: '2024-01-15',
-    version: 3,
-    bust: 88,
-    waist: 70,
-    hips: 92,
-    shoulderWidth: 38,
-    armLength: 58,
-    legLength: 95,
-    neckCircumference: 36,
-    chestWidth: 42,
-    backWidth: 40,
-    armCircumference: 28,
-    thighCircumference: 52,
-    calfCircumference: 34,
-    isValidated: true,
-    validatedBy: 'Alice Couture',
-    validatedAt: '2024-01-15T16:30:00Z',
-    notes: 'Mesures prises après perte de poids',
-    createdAt: '2024-01-15T14:00:00Z',
-    createdBy: 'Alice Couture',
-    updatedAt: '2024-01-15T16:30:00Z',
-    updatedBy: 'Alice Couture'
+    garmentType: 'robe',
+    measurements: {
+      tour_de_poitrine: 88,
+      tour_de_taille: 70,
+      tour_de_hanches: 92,
+      longueur_robe: 110,
+      longueur_manche: 60,
+      tour_de_manche: 32,
+      largeur_epaule: 38,
+      tour_de_cou: 36,
+      longueur_entre_jambes: 75,
+      tour_de_poignet: 16
+    },
+    notes: 'Client préfère les robes ajustées',
+    takenBy: 'Alice Couture',
+    takenAt: '2024-01-15T10:30:00Z',
+    isActive: true,
+    version: 1
   },
   {
     id: '2',
-    clientId: '2',
+    clientId: 'client-2',
     clientName: 'Jean Martin',
-    measurementDate: '2024-01-10',
-    version: 2,
-    bust: 102,
-    waist: 88,
-    hips: 98,
-    shoulderWidth: 44,
-    armLength: 62,
-    legLength: 100,
-    neckCircumference: 40,
-    chestWidth: 48,
-    backWidth: 46,
-    armCircumference: 32,
-    thighCircumference: 58,
-    calfCircumference: 38,
-    isValidated: true,
-    validatedBy: 'Marc Tailleur',
-    validatedAt: '2024-01-10T15:45:00Z',
-    notes: 'Mesures pour costume 3 pièces',
-    createdAt: '2024-01-10T14:30:00Z',
-    createdBy: 'Marc Tailleur',
-    updatedAt: '2024-01-10T15:45:00Z',
-    updatedBy: 'Marc Tailleur'
+    garmentType: 'costume',
+    measurements: {
+      tour_de_poitrine: 102,
+      tour_de_taille: 88,
+      tour_de_hanches: 98,
+      longueur_veste: 75,
+      longueur_pantalon: 105,
+      longueur_manche: 65,
+      tour_de_manche: 38,
+      largeur_epaule: 45,
+      tour_de_cou: 40,
+      longueur_entre_jambes: 80,
+      tour_de_poignet: 20,
+      largeur_revers: 8
+    },
+    notes: 'Costume classique 3 pièces',
+    takenBy: 'Marc Tailleur',
+    takenAt: '2024-01-16T14:20:00Z',
+    isActive: true,
+    version: 1
   },
   {
     id: '3',
-    clientId: '3',
-    clientName: 'Sophie Bernard',
-    measurementDate: '2024-01-05',
-    version: 1,
-    bust: 85,
-    waist: 68,
-    hips: 90,
-    shoulderWidth: 36,
-    armLength: 56,
-    legLength: 92,
-    neckCircumference: 35,
-    chestWidth: 40,
-    backWidth: 38,
-    armCircumference: 26,
-    thighCircumference: 50,
-    calfCircumference: 32,
-    isValidated: false,
-    notes: 'Nouvelle cliente, première prise de mesures',
-    createdAt: '2024-01-05T10:00:00Z',
-    createdBy: 'Emma Style',
-    updatedAt: '2024-01-05T10:00:00Z',
-    updatedBy: 'Emma Style'
+    clientId: 'client-1',
+    clientName: 'Marie Dupont',
+    garmentType: 'pantalon',
+    measurements: {
+      tour_de_taille: 70,
+      tour_de_hanches: 92,
+      longueur_pantalon: 100,
+      longueur_entre_jambes: 75,
+      tour_de_cuisse: 55,
+      tour_de_genou: 38,
+      tour_de_cheville: 22,
+      largeur_pied: 10
+    },
+    notes: 'Pantalon cigarette',
+    takenBy: 'Alice Couture',
+    takenAt: '2024-01-20T09:15:00Z',
+    isActive: true,
+    version: 1
   }
 ];
 
 export function MeasurementsPage() {
   const { user } = useAuth();
-  const [measurements, setMeasurements] = useState<ClientMeasurement[]>(mockMeasurements);
-  const [clients, setClients] = useState<Client[]>(mockClients);
+  const [activeTab, setActiveTab] = useState('measurements');
   const [searchTerm, setSearchTerm] = useState('');
-  const [validationFilter, setValidationFilter] = useState<'all' | 'validated' | 'pending'>('all');
-  const [selectedMeasurement, setSelectedMeasurement] = useState<ClientMeasurement | null>(null);
+  const [garmentTypeFilter, setGarmentTypeFilter] = useState<string>('all');
+  const [clientFilter, setClientFilter] = useState<string>('all');
+  
+  // États pour la création/modification
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedMeasurement, setSelectedMeasurement] = useState<Measurement | null>(null);
+  const [newMeasurement, setNewMeasurement] = useState<Partial<Measurement>>({
+    garmentType: '',
+    measurements: {},
+    notes: ''
+  });
 
-  // Permissions centralisées
-  const canViewMeasurements = ['owner', 'manager', 'measurements', 'production', 'tailor'].includes(user?.role || '');
-  const canManageMeasurements = ['owner', 'manager', 'measurements'].includes(user?.role || '');
-  const canValidateMeasurements = ['owner', 'manager', 'measurements'].includes(user?.role || '');
+  // Permissions
+  const canViewMeasurements = ['owner', 'manager', 'tailor', 'production'].includes(user?.role || '');
+  const canManageMeasurements = ['owner', 'manager', 'tailor'].includes(user?.role || '');
+
   if (!canViewMeasurements) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -205,7 +220,7 @@ export function MeasurementsPage() {
             <Ruler className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
             <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
+              Vous n'avez pas les permissions nécessaires pour accéder à cette section.
             </p>
           </CardContent>
         </Card>
@@ -213,675 +228,589 @@ export function MeasurementsPage() {
     );
   }
 
-  // Filtrer les mesures
-  const filteredMeasurements = measurements.filter(measurement => {
-    const matchesSearch = 
-      measurement.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filtrage des mesures
+  const filteredMeasurements = mockMeasurements.filter(measurement => {
+    const matchesSearch = measurement.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesGarmentType = garmentTypeFilter === 'all' || measurement.garmentType === garmentTypeFilter;
+    const matchesClient = clientFilter === 'all' || measurement.clientId === clientFilter;
     
-    const matchesValidation = validationFilter === 'all' || 
-      (validationFilter === 'validated' && measurement.isValidated) ||
-      (validationFilter === 'pending' && !measurement.isValidated);
-    
-    return matchesSearch && matchesValidation;
+    return matchesSearch && matchesGarmentType && matchesClient;
   });
 
-  // Calculer les statistiques
-  const totalMeasurements = measurements.length;
-  const validatedMeasurements = measurements.filter(m => m.isValidated).length;
-  const pendingMeasurements = measurements.filter(m => !m.isValidated).length;
-  const recentMeasurements = measurements.filter(m => {
-    const measurementDate = new Date(m.measurementDate);
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    return measurementDate > thirtyDaysAgo;
-  }).length;
+  // Clients uniques pour le filtre
+  const uniqueClients = Array.from(new Set(mockMeasurements.map(m => m.clientId)));
 
-  const handleCreateMeasurement = (measurementData: Partial<ClientMeasurement>) => {
-    const newMeasurement: ClientMeasurement = {
-      id: Date.now().toString(),
-      clientId: measurementData.clientId!,
-      clientName: measurementData.clientName!,
-      measurementDate: new Date().toISOString().split('T')[0],
-      version: 1,
-      isValidated: false,
-      createdAt: new Date().toISOString(),
-      createdBy: `${user?.firstName} ${user?.lastName}`,
-      updatedAt: new Date().toISOString(),
-      updatedBy: `${user?.firstName} ${user?.lastName}`,
-      ...measurementData,
-      bust: typeof measurementData.bust === 'string' ? Number(measurementData.bust) : measurementData.bust,
-      waist: typeof measurementData.waist === 'string' ? Number(measurementData.waist) : measurementData.waist,
-      hips: typeof measurementData.hips === 'string' ? Number(measurementData.hips) : measurementData.hips,
-      shoulderWidth: typeof measurementData.shoulderWidth === 'string' ? Number(measurementData.shoulderWidth) : measurementData.shoulderWidth,
-      armLength: typeof measurementData.armLength === 'string' ? Number(measurementData.armLength) : measurementData.armLength,
-      legLength: typeof measurementData.legLength === 'string' ? Number(measurementData.legLength) : measurementData.legLength,
-      neckCircumference: typeof measurementData.neckCircumference === 'string' ? Number(measurementData.neckCircumference) : measurementData.neckCircumference,
-      chestWidth: typeof measurementData.chestWidth === 'string' ? Number(measurementData.chestWidth) : measurementData.chestWidth,
-      backWidth: typeof measurementData.backWidth === 'string' ? Number(measurementData.backWidth) : measurementData.backWidth,
-      armCircumference: typeof measurementData.armCircumference === 'string' ? Number(measurementData.armCircumference) : measurementData.armCircumference,
-      thighCircumference: typeof measurementData.thighCircumference === 'string' ? Number(measurementData.thighCircumference) : measurementData.thighCircumference,
-      calfCircumference: typeof measurementData.calfCircumference === 'string' ? Number(measurementData.calfCircumference) : measurementData.calfCircumference,
+  // Statistiques
+  const stats = {
+    totalMeasurements: mockMeasurements.length,
+    activeMeasurements: mockMeasurements.filter(m => m.isActive).length,
+    uniqueClients: uniqueClients.length,
+    garmentTypes: garmentTypes.length
+  };
+
+  // Handlers
+  const handleCreateMeasurement = async () => {
+    if (!newMeasurement.garmentType || !newMeasurement.clientName) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un type de vêtement et un client.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validation des mesures
+    const garmentType = garmentTypes.find(gt => gt.id === newMeasurement.garmentType);
+    if (garmentType) {
+      const missingMeasurements = garmentType.measurementFields.filter(
+        field => !newMeasurement.measurements?.[field] || newMeasurement.measurements[field] <= 0
+      );
+      
+      if (missingMeasurements.length > 0) {
+        toast({
+          title: "Erreur",
+          description: `Veuillez remplir toutes les mesures : ${missingMeasurements.map(f => measurementLabels[f]).join(', ')}`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    // Simulation de création
+    const measurement: Measurement = {
+      id: `measurement-${Date.now()}`,
+      clientId: `client-${Date.now()}`,
+      clientName: newMeasurement.clientName!,
+      garmentType: newMeasurement.garmentType!,
+      measurements: newMeasurement.measurements || {},
+      notes: newMeasurement.notes,
+      takenBy: user?.firstName + ' ' + user?.lastName || 'Utilisateur',
+      takenAt: new Date().toISOString(),
+      isActive: true,
+      version: 1
     };
-    
-    setMeasurements(prev => [...prev, newMeasurement]);
-    setIsCreateDialogOpen(false);
-  };
 
-  const handleValidateMeasurement = (measurementId: string) => {
-    setMeasurements(prev => prev.map(measurement => 
-      measurement.id === measurementId 
-        ? { 
-            ...measurement, 
-            isValidated: true,
-            validatedBy: `${user?.firstName} ${user?.lastName}`,
-            validatedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            updatedBy: `${user?.firstName} ${user?.lastName}`
-          }
-        : measurement
-    ));
-  };
+    mockMeasurements.push(measurement);
 
-  const getMeasurementCompleteness = (measurement: ClientMeasurement) => {
-    const requiredFields = ['bust', 'waist', 'hips', 'shoulderWidth', 'armLength', 'legLength', 'neckCircumference'];
-    const filledFields = requiredFields.filter(field => measurement[field as keyof ClientMeasurement]);
-    return (filledFields.length / requiredFields.length) * 100;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR');
-  };
-
-  // Toast handler générique
-  const handleComingSoon = (action: string) => {
     toast({
-      title: 'Fonctionnalité à venir',
-      description: `L'action « ${action} » sera bientôt disponible.`,
+      title: "Succès",
+      description: "Mesures enregistrées avec succès.",
+    });
+
+    setIsCreateDialogOpen(false);
+    setNewMeasurement({
+      garmentType: '',
+      measurements: {},
+      notes: ''
     });
   };
 
+  const handleEditMeasurement = async () => {
+    if (!selectedMeasurement) return;
+
+    // Simulation de mise à jour
+    const index = mockMeasurements.findIndex(m => m.id === selectedMeasurement.id);
+    if (index !== -1) {
+      mockMeasurements[index] = {
+        ...selectedMeasurement,
+        version: selectedMeasurement.version + 1,
+        takenAt: new Date().toISOString(),
+        takenBy: user?.firstName + ' ' + user?.lastName || 'Utilisateur'
+      };
+    }
+
+    toast({
+      title: "Succès",
+      description: "Mesures mises à jour avec succès.",
+    });
+
+    setIsEditDialogOpen(false);
+    setSelectedMeasurement(null);
+  };
+
+  const handleDeleteMeasurement = async (measurementId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ces mesures ?')) {
+      return;
+    }
+
+    const index = mockMeasurements.findIndex(m => m.id === measurementId);
+    if (index !== -1) {
+      mockMeasurements.splice(index, 1);
+    }
+
+    toast({
+      title: "Succès",
+      description: "Mesures supprimées avec succès.",
+    });
+  };
+
+  const handleDuplicateMeasurement = (measurement: Measurement) => {
+    const duplicatedMeasurement: Measurement = {
+      ...measurement,
+      id: `measurement-${Date.now()}`,
+      version: 1,
+      takenAt: new Date().toISOString(),
+      takenBy: user?.firstName + ' ' + user?.lastName || 'Utilisateur'
+    };
+
+    mockMeasurements.push(duplicatedMeasurement);
+
+    toast({
+      title: "Succès",
+      description: "Mesures dupliquées avec succès.",
+    });
+  };
+
+  const handleExportMeasurements = async () => {
+    try {
+      const csvContent = [
+        ['Client', 'Type de vêtement', 'Date prise', 'Prise par', 'Version', 'Notes'],
+        ...filteredMeasurements.map(measurement => [
+          measurement.clientName,
+          garmentTypes.find(gt => gt.id === measurement.garmentType)?.name || measurement.garmentType,
+          new Date(measurement.takenAt).toLocaleDateString('fr-FR'),
+          measurement.takenBy,
+          measurement.version.toString(),
+          measurement.notes || ''
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `mesures_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export terminé",
+        description: "Les mesures ont été exportées avec succès.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'export.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getSelectedGarmentType = () => {
+    return garmentTypes.find(gt => gt.id === newMeasurement.garmentType);
+  };
+
   return (
-    <AccessControl allowedRoles={['owner', 'manager', 'orders', 'customer_service']}>
-      <div className="space-y-6">
-        {/* En-tête */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Gestion des Mesures</h1>
-            <p className="text-muted-foreground">
-              Prise de mesures, validation et suivi des évolutions
-            </p>
+    <div className="space-y-6">
+      {/* En-tête */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des Mesures</h1>
+          <p className="text-muted-foreground">
+            Saisie et suivi des mesures des clients
+          </p>
+        </div>
+        {canManageMeasurements && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportMeasurements}>
+              <Download className="h-4 w-4 mr-2" />
+              Exporter
+            </Button>
           </div>
-          {canManageMeasurements && (
-            <div className="flex gap-2">
-              <Button onClick={() => handleComingSoon('Ajouter des mesures')}>
-                <Plus className="h-4 w-4 mr-2" /> Ajouter des mesures
-              </Button>
-              <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
-                <Download className="h-4 w-4 mr-2" /> Exporter
-              </Button>
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nouvelle mesure
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl">
-                  <DialogHeader>
-                    <DialogTitle>Prendre de nouvelles mesures</DialogTitle>
-                    <DialogDescription>
-                      Saisissez les mesures du client
-                    </DialogDescription>
-                  </DialogHeader>
-                  <MeasurementForm 
-                    clients={clients}
-                    onSubmit={handleCreateMeasurement}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total mesures</p>
-                  <p className="text-2xl font-bold">{totalMeasurements}</p>
-                </div>
-                <Ruler className="h-8 w-8 text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Validées</p>
-                  <p className="text-2xl font-bold text-green-500">{validatedMeasurements}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">En attente</p>
-                  <p className="text-2xl font-bold text-orange-500">{pendingMeasurements}</p>
-                </div>
-                <Clock className="h-8 w-8 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Ce mois</p>
-                  <p className="text-2xl font-bold text-blue-500">{recentMeasurements}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filtres */}
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher par client..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total mesures</p>
+                <p className="text-2xl font-bold">{stats.totalMeasurements}</p>
               </div>
-              <div className="flex gap-2">
-                <select
-                  value={validationFilter}
-                  onChange={(e) => setValidationFilter(e.target.value as 'all' | 'validated' | 'pending')}
-                  className="px-3 py-2 border rounded-md"
-                >
-                  <option value="all">Tous les statuts</option>
-                  <option value="validated">Validées</option>
-                  <option value="pending">En attente</option>
-                </select>
-                <Button variant="outline">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </div>
+              <Ruler className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
-
-        {/* Tableau des mesures */}
         <Card>
-          <CardHeader>
-            <CardTitle>Mesures clients</CardTitle>
-            <CardDescription>
-              {filteredMeasurements.length} mesure(s) trouvée(s)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Date mesure</TableHead>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Complétude</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Validé par</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMeasurements.map((measurement) => {
-                  const completeness = getMeasurementCompleteness(measurement);
-                  return (
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Mesures actives</p>
+                <p className="text-2xl font-bold">{stats.activeMeasurements}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Clients uniques</p>
+                <p className="text-2xl font-bold">{stats.uniqueClients}</p>
+              </div>
+              <User className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Types de vêtements</p>
+                <p className="text-2xl font-bold">{stats.garmentTypes}</p>
+              </div>
+              <FileText className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="measurements">Mesures</TabsTrigger>
+          <TabsTrigger value="templates">Modèles</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="measurements" className="space-y-4">
+          {/* Filtres et recherche */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher par nom de client..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Select value={garmentTypeFilter} onValueChange={setGarmentTypeFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Type de vêtement" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les types</SelectItem>
+                      {garmentTypes.map(type => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={clientFilter} onValueChange={setClientFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les clients</SelectItem>
+                      {uniqueClients.map(clientId => {
+                        const client = mockMeasurements.find(m => m.clientId === clientId);
+                        return (
+                          <SelectItem key={clientId} value={clientId}>
+                            {client?.clientName}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Liste des mesures */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Mesures des Clients</CardTitle>
+                  <CardDescription>Historique des mesures prises</CardDescription>
+                </div>
+                {canManageMeasurements && (
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Nouvelle mesure
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Nouvelle mesure</DialogTitle>
+                        <DialogDescription>
+                          Saisir les mesures d'un client pour un type de vêtement
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="clientName">Nom du client *</Label>
+                            <Input
+                              id="clientName"
+                              value={newMeasurement.clientName || ''}
+                              onChange={(e) => setNewMeasurement(prev => ({ ...prev, clientName: e.target.value }))}
+                              placeholder="Nom et prénom du client"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="garmentType">Type de vêtement *</Label>
+                            <Select value={newMeasurement.garmentType || ''} onValueChange={(value) => setNewMeasurement(prev => ({ ...prev, garmentType: value }))}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionner un type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {garmentTypes.map(type => (
+                                  <SelectItem key={type.id} value={type.id}>
+                                    {type.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        {getSelectedGarmentType() && (
+                          <div className="space-y-4">
+                            <Label>Mesures (en cm) *</Label>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              {getSelectedGarmentType()!.measurementFields.map(field => (
+                                <div key={field}>
+                                  <Label htmlFor={field}>{measurementLabels[field]}</Label>
+                                  <Input
+                                    id={field}
+                                    type="number"
+                                    step="0.5"
+                                    value={newMeasurement.measurements?.[field] || ''}
+                                    onChange={(e) => setNewMeasurement(prev => ({
+                                      ...prev,
+                                      measurements: {
+                                        ...prev.measurements,
+                                        [field]: Number(e.target.value)
+                                      }
+                                    }))}
+                                    placeholder="0"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div>
+                          <Label htmlFor="notes">Notes</Label>
+                          <Input
+                            id="notes"
+                            value={newMeasurement.notes || ''}
+                            onChange={(e) => setNewMeasurement(prev => ({ ...prev, notes: e.target.value }))}
+                            placeholder="Notes sur les mesures, préférences, etc."
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                          Annuler
+                        </Button>
+                        <Button onClick={handleCreateMeasurement}>
+                          Enregistrer
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Type de vêtement</TableHead>
+                    <TableHead>Date prise</TableHead>
+                    <TableHead>Prise par</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredMeasurements.map((measurement) => (
                     <TableRow key={measurement.id}>
                       <TableCell>
                         <div>
                           <p className="font-medium">{measurement.clientName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Version {measurement.version}
-                          </p>
+                          {measurement.notes && (
+                            <p className="text-sm text-muted-foreground">{measurement.notes}</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                          <span className="text-sm">
-                            {formatDate(measurement.measurementDate)}
-                          </span>
-                        </div>
+                        {garmentTypes.find(gt => gt.id === measurement.garmentType)?.name || measurement.garmentType}
                       </TableCell>
+                      <TableCell>
+                        {new Date(measurement.takenAt).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      <TableCell>{measurement.takenBy}</TableCell>
                       <TableCell>
                         <Badge variant="outline">v{measurement.version}</Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="w-24">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span>{Math.round(completeness)}%</span>
-                          </div>
-                          <Progress 
-                            value={completeness} 
-                            className="h-2"
-                          />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={measurement.isValidated ? "default" : "secondary"}>
-                          {measurement.isValidated ? "Validée" : "En attente"}
+                        <Badge variant={measurement.isActive ? "default" : "secondary"}>
+                          {measurement.isActive ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">
-                          {measurement.validatedBy || 'Non validée'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
                         <div className="flex items-center space-x-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl">
-                              <DialogHeader>
-                                <DialogTitle>Mesures de {measurement.clientName}</DialogTitle>
-                              </DialogHeader>
-                              <MeasurementDetails measurement={measurement} />
-                            </DialogContent>
-                          </Dialog>
-                          {canManageMeasurements && (
-                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          )}
-                          {canValidateMeasurements && !measurement.isValidated && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleValidateMeasurement(measurement.id)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              Valider
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
-                            <Trash2 className="h-4 w-4" />
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
                           </Button>
+                          {canManageMeasurements && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDuplicateMeasurement(measurement)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedMeasurement(measurement);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeleteMeasurement(measurement.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </AccessControl>
-  );
-}
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-// Composant formulaire de mesures
-function MeasurementForm({ 
-  clients, 
-  measurement, 
-  onSubmit 
-}: { 
-  clients: Client[];
-  measurement?: ClientMeasurement;
-  onSubmit: (data: Partial<ClientMeasurement>) => void;
-}) {
-  const [formData, setFormData] = useState({
-    clientId: measurement?.clientId || '',
-    clientName: measurement?.clientName || '',
-    // Mesures principales
-    bust: measurement?.bust || '',
-    waist: measurement?.waist || '',
-    hips: measurement?.hips || '',
-    shoulderWidth: measurement?.shoulderWidth || '',
-    armLength: measurement?.armLength || '',
-    legLength: measurement?.legLength || '',
-    neckCircumference: measurement?.neckCircumference || '',
-    // Mesures supplémentaires
-    chestWidth: measurement?.chestWidth || '',
-    backWidth: measurement?.backWidth || '',
-    armCircumference: measurement?.armCircumference || '',
-    thighCircumference: measurement?.thighCircumference || '',
-    calfCircumference: measurement?.calfCircumference || '',
-    notes: measurement?.notes || ''
-  });
+        <TabsContent value="templates" className="space-y-4">
+          {/* Modèles de mesures */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Modèles de Mesures</CardTitle>
+              <CardDescription>Types de vêtements et leurs mesures standard</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {garmentTypes.map((type) => (
+                  <Card key={type.id} className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">{type.name}</h3>
+                      <Badge variant="outline">{type.measurementFields.length} mesures</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-3">{type.description}</p>
+                    <div className="space-y-1">
+                      {type.measurementFields.map(field => (
+                        <div key={field} className="text-xs text-muted-foreground">
+                          • {measurementLabels[field]}
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      ...formData,
-      bust: typeof formData.bust === 'string' ? Number(formData.bust) : formData.bust,
-      waist: typeof formData.waist === 'string' ? Number(formData.waist) : formData.waist,
-      hips: typeof formData.hips === 'string' ? Number(formData.hips) : formData.hips,
-      shoulderWidth: typeof formData.shoulderWidth === 'string' ? Number(formData.shoulderWidth) : formData.shoulderWidth,
-      armLength: typeof formData.armLength === 'string' ? Number(formData.armLength) : formData.armLength,
-      legLength: typeof formData.legLength === 'string' ? Number(formData.legLength) : formData.legLength,
-      neckCircumference: typeof formData.neckCircumference === 'string' ? Number(formData.neckCircumference) : formData.neckCircumference,
-      chestWidth: typeof formData.chestWidth === 'string' ? Number(formData.chestWidth) : formData.chestWidth,
-      backWidth: typeof formData.backWidth === 'string' ? Number(formData.backWidth) : formData.backWidth,
-      armCircumference: typeof formData.armCircumference === 'string' ? Number(formData.armCircumference) : formData.armCircumference,
-      thighCircumference: typeof formData.thighCircumference === 'string' ? Number(formData.thighCircumference) : formData.thighCircumference,
-      calfCircumference: typeof formData.calfCircumference === 'string' ? Number(formData.calfCircumference) : formData.calfCircumference,
-    });
-  };
+      {/* Dialog de modification */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier les mesures</DialogTitle>
+          </DialogHeader>
+          {selectedMeasurement && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Client</Label>
+                  <p className="text-sm font-medium">{selectedMeasurement.clientName}</p>
+                </div>
+                <div>
+                  <Label>Type de vêtement</Label>
+                  <p className="text-sm font-medium">
+                    {garmentTypes.find(gt => gt.id === selectedMeasurement.garmentType)?.name}
+                  </p>
+                </div>
+              </div>
 
-  const handleClientChange = (clientId: string) => {
-    const client = clients.find(c => c.id === clientId);
-    setFormData(prev => ({
-      ...prev,
-      clientId,
-      clientName: client ? `${client.firstName} ${client.lastName}` : ''
-    }));
-  };
+              <div className="space-y-4">
+                <Label>Mesures (en cm)</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {garmentTypes.find(gt => gt.id === selectedMeasurement.garmentType)?.measurementFields.map(field => (
+                    <div key={field}>
+                      <Label htmlFor={`edit-${field}`}>{measurementLabels[field]}</Label>
+                      <Input
+                        id={`edit-${field}`}
+                        type="number"
+                        step="0.5"
+                        value={selectedMeasurement.measurements[field] || ''}
+                        onChange={(e) => setSelectedMeasurement(prev => prev ? {
+                          ...prev,
+                          measurements: {
+                            ...prev.measurements,
+                            [field]: Number(e.target.value)
+                          }
+                        } : null)}
+                        placeholder="0"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Sélection du client */}
-      <div>
-        <Label htmlFor="client">Client *</Label>
-        <select
-          id="client"
-          value={formData.clientId}
-          onChange={(e) => handleClientChange(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
-          required
-        >
-          <option value="">Sélectionner un client</option>
-          {clients.map(client => (
-            <option key={client.id} value={client.id}>
-              {client.firstName} {client.lastName}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Mesures principales */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Mesures principales</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="bust">Tour de poitrine (cm)</Label>
-            <Input
-              id="bust"
-              type="number"
-              step="0.1"
-              value={formData.bust}
-              onChange={(e) => setFormData(prev => ({ ...prev, bust: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="waist">Tour de taille (cm)</Label>
-            <Input
-              id="waist"
-              type="number"
-              step="0.1"
-              value={formData.waist}
-              onChange={(e) => setFormData(prev => ({ ...prev, waist: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="hips">Tour de hanches (cm)</Label>
-            <Input
-              id="hips"
-              type="number"
-              step="0.1"
-              value={formData.hips}
-              onChange={(e) => setFormData(prev => ({ ...prev, hips: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="shoulderWidth">Largeur d'épaules (cm)</Label>
-            <Input
-              id="shoulderWidth"
-              type="number"
-              step="0.1"
-              value={formData.shoulderWidth}
-              onChange={(e) => setFormData(prev => ({ ...prev, shoulderWidth: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="armLength">Longueur de bras (cm)</Label>
-            <Input
-              id="armLength"
-              type="number"
-              step="0.1"
-              value={formData.armLength}
-              onChange={(e) => setFormData(prev => ({ ...prev, armLength: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="legLength">Longueur de jambe (cm)</Label>
-            <Input
-              id="legLength"
-              type="number"
-              step="0.1"
-              value={formData.legLength}
-              onChange={(e) => setFormData(prev => ({ ...prev, legLength: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="neckCircumference">Tour de cou (cm)</Label>
-            <Input
-              id="neckCircumference"
-              type="number"
-              step="0.1"
-              value={formData.neckCircumference}
-              onChange={(e) => setFormData(prev => ({ ...prev, neckCircumference: e.target.value }))}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Mesures supplémentaires */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Mesures supplémentaires</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <Label htmlFor="chestWidth">Largeur de poitrine (cm)</Label>
-            <Input
-              id="chestWidth"
-              type="number"
-              step="0.1"
-              value={formData.chestWidth}
-              onChange={(e) => setFormData(prev => ({ ...prev, chestWidth: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="backWidth">Largeur de dos (cm)</Label>
-            <Input
-              id="backWidth"
-              type="number"
-              step="0.1"
-              value={formData.backWidth}
-              onChange={(e) => setFormData(prev => ({ ...prev, backWidth: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="armCircumference">Tour de bras (cm)</Label>
-            <Input
-              id="armCircumference"
-              type="number"
-              step="0.1"
-              value={formData.armCircumference}
-              onChange={(e) => setFormData(prev => ({ ...prev, armCircumference: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="thighCircumference">Tour de cuisse (cm)</Label>
-            <Input
-              id="thighCircumference"
-              type="number"
-              step="0.1"
-              value={formData.thighCircumference}
-              onChange={(e) => setFormData(prev => ({ ...prev, thighCircumference: e.target.value }))}
-            />
-          </div>
-          <div>
-            <Label htmlFor="calfCircumference">Tour de mollet (cm)</Label>
-            <Input
-              id="calfCircumference"
-              type="number"
-              step="0.1"
-              value={formData.calfCircumference}
-              onChange={(e) => setFormData(prev => ({ ...prev, calfCircumference: e.target.value }))}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Notes */}
-      <div>
-        <Label htmlFor="notes">Notes</Label>
-        <textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-          className="w-full px-3 py-2 border rounded-md"
-          rows={3}
-          placeholder="Notes sur les mesures..."
-        />
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline">
-          Annuler
-        </Button>
-        <Button type="submit">
-          {measurement ? 'Modifier' : 'Enregistrer'}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-// Composant détails des mesures
-function MeasurementDetails({ measurement }: { measurement: ClientMeasurement }) {
-  return (
-    <Tabs defaultValue="measurements" className="w-full">
-      <TabsList>
-        <TabsTrigger value="measurements">Mesures</TabsTrigger>
-        <TabsTrigger value="history">Historique</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="measurements" className="space-y-6">
-        {/* Informations générales */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Client</Label>
-            <p className="text-sm">{measurement.clientName}</p>
-          </div>
-          <div>
-            <Label>Date de mesure</Label>
-            <p className="text-sm">{new Date(measurement.measurementDate).toLocaleDateString('fr-FR')}</p>
-          </div>
-          <div>
-            <Label>Version</Label>
-            <p className="text-sm">{measurement.version}</p>
-          </div>
-          <div>
-            <Label>Statut</Label>
-            <Badge variant={measurement.isValidated ? "default" : "secondary"}>
-              {measurement.isValidated ? "Validée" : "En attente"}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Mesures principales */}
-        <div>
-          <h4 className="font-semibold mb-3">Mesures principales</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Tour de poitrine</Label>
-              <p className="text-sm">{measurement.bust} cm</p>
+              <div>
+                <Label htmlFor="edit-notes">Notes</Label>
+                <Input
+                  id="edit-notes"
+                  value={selectedMeasurement.notes || ''}
+                  onChange={(e) => setSelectedMeasurement(prev => prev ? {
+                    ...prev,
+                    notes: e.target.value
+                  } : null)}
+                  placeholder="Notes sur les mesures"
+                />
+              </div>
             </div>
-            <div>
-              <Label>Tour de taille</Label>
-              <p className="text-sm">{measurement.waist} cm</p>
-            </div>
-            <div>
-              <Label>Tour de hanches</Label>
-              <p className="text-sm">{measurement.hips} cm</p>
-            </div>
-            <div>
-              <Label>Largeur d'épaules</Label>
-              <p className="text-sm">{measurement.shoulderWidth} cm</p>
-            </div>
-            <div>
-              <Label>Longueur de bras</Label>
-              <p className="text-sm">{measurement.armLength} cm</p>
-            </div>
-            <div>
-              <Label>Longueur de jambe</Label>
-              <p className="text-sm">{measurement.legLength} cm</p>
-            </div>
-            <div>
-              <Label>Tour de cou</Label>
-              <p className="text-sm">{measurement.neckCircumference} cm</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Mesures supplémentaires */}
-        <div>
-          <h4 className="font-semibold mb-3">Mesures supplémentaires</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Largeur de poitrine</Label>
-              <p className="text-sm">{measurement.chestWidth} cm</p>
-            </div>
-            <div>
-              <Label>Largeur de dos</Label>
-              <p className="text-sm">{measurement.backWidth} cm</p>
-            </div>
-            <div>
-              <Label>Tour de bras</Label>
-              <p className="text-sm">{measurement.armCircumference} cm</p>
-            </div>
-            <div>
-              <Label>Tour de cuisse</Label>
-              <p className="text-sm">{measurement.thighCircumference} cm</p>
-            </div>
-            <div>
-              <Label>Tour de mollet</Label>
-              <p className="text-sm">{measurement.calfCircumference} cm</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Notes */}
-        {measurement.notes && (
-          <div>
-            <Label>Notes</Label>
-            <p className="text-sm">{measurement.notes}</p>
-          </div>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="history" className="space-y-4">
-        <div className="text-center text-muted-foreground">
-          Historique des versions en cours de développement
-        </div>
-      </TabsContent>
-    </Tabs>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleEditMeasurement}>
+              Mettre à jour
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

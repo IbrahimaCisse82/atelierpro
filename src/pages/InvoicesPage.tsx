@@ -27,31 +27,60 @@ import {
   TrendingUp,
   TrendingDown,
   Edit,
-  Trash2
+  Trash2,
+  Building,
+  Users,
+  Truck,
+  Package,
+  FileText,
+  CreditCard,
+  ArrowRight,
+  Play,
+  Pause,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/components/ui/use-toast';
 import { formatFCFA, formatFCFAWithDecimals } from '@/lib/utils';
 
-// Types pour la facturation
-interface Invoice {
+// Types pour les workflows
+interface WorkflowStep {
   id: string;
-  invoiceNumber: string;
-  orderId: string;
+  name: string;
+  status: 'pending' | 'active' | 'completed' | 'blocked';
+  instruction: string;
+  actionRequired: boolean;
+  completedAt?: string;
+  completedBy?: string;
+  icon: React.ComponentType<any>;
+}
+
+interface ClientWorkflow {
+  id: string;
   orderNumber: string;
   clientName: string;
   clientEmail: string;
-  invoiceDate: string;
-  dueDate: string;
+  orderDate: string;
+  deliveryDate: string;
   totalAmount: number;
-  taxAmount: number;
-  totalWithTax: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
-  isPaid: boolean;
-  paidAt?: string;
-  paidBy?: string;
-  notes?: string;
-  items: InvoiceItem[];
+  advanceAmount: number;
+  remainingAmount: number;
+  steps: WorkflowStep[];
+  currentStep: number;
+  isCompleted: boolean;
+}
+
+interface SupplierWorkflow {
+  id: string;
+  purchaseOrderNumber: string;
+  supplierName: string;
+  supplierEmail: string;
+  orderDate: string;
+  deliveryDate: string;
+  totalAmount: number;
+  steps: WorkflowStep[];
+  currentStep: number;
+  isCompleted: boolean;
 }
 
 interface InvoiceItem {
@@ -62,256 +91,606 @@ interface InvoiceItem {
   totalPrice: number;
 }
 
-interface Order {
-  id: string;
-  orderNumber: string;
-  clientName: string;
-  status: string;
-  deliveryDate: string;
-  totalAmount: number;
-  isDelivered: boolean;
-  deliveredAt?: string;
-}
-
-// Données simulées
-const mockInvoices: Invoice[] = [
+// Données simulées - Workflows clients
+const mockClientWorkflows: ClientWorkflow[] = [
   {
     id: '1',
-    invoiceNumber: 'FACT-2024-001',
-    orderId: '1',
     orderNumber: 'CMD-2024-001',
     clientName: 'Marie Dupont',
     clientEmail: 'marie.dupont@email.com',
-    invoiceDate: '2024-01-15',
-    dueDate: '2024-02-15',
-    totalAmount: 450.00,
-    taxAmount: 90.00,
-    totalWithTax: 540.00,
-    status: 'paid',
-    isPaid: true,
-    paidAt: '2024-01-20',
-    paidBy: 'Marie Dupont',
-    items: [
+    orderDate: '2024-01-15',
+    deliveryDate: '2024-01-25',
+    totalAmount: 45000,
+    advanceAmount: 15000,
+    remainingAmount: 30000,
+    currentStep: 2,
+    isCompleted: false,
+    steps: [
       {
-        id: '1',
-        description: 'Robe de soirée sur mesure',
-        quantity: 1,
-        unitPrice: 450.00,
-        totalPrice: 450.00
+        id: 'order',
+        name: 'Commande',
+        status: 'completed',
+        instruction: 'Commande confirmée et en production',
+        actionRequired: false,
+        completedAt: '2024-01-15T10:30:00Z',
+        completedBy: 'Alice Couture',
+        icon: ShoppingCart
+      },
+      {
+        id: 'delivery',
+        name: 'Livraison',
+        status: 'active',
+        instruction: 'Action requise : Confirmer la livraison pour la commande #CMD-2024-001',
+        actionRequired: true,
+        icon: Truck
+      },
+      {
+        id: 'invoicing',
+        name: 'Facturation',
+        status: 'pending',
+        instruction: 'En attente de la livraison',
+        actionRequired: false,
+        icon: FileText
+      },
+      {
+        id: 'payment',
+        name: 'Paiement',
+        status: 'pending',
+        instruction: 'En attente de la facturation',
+        actionRequired: false,
+        icon: CreditCard
       }
     ]
   },
   {
     id: '2',
-    invoiceNumber: 'FACT-2024-002',
-    orderId: '2',
     orderNumber: 'CMD-2024-002',
     clientName: 'Jean Martin',
     clientEmail: 'jean.martin@email.com',
-    invoiceDate: '2024-01-16',
-    dueDate: '2024-02-16',
-    totalAmount: 320.00,
-    taxAmount: 64.00,
-    totalWithTax: 384.00,
-    status: 'sent',
-    isPaid: false,
-    items: [
+    orderDate: '2024-01-16',
+    deliveryDate: '2024-01-28',
+    totalAmount: 32000,
+    advanceAmount: 0,
+    remainingAmount: 32000,
+    currentStep: 3,
+    isCompleted: false,
+    steps: [
       {
-        id: '2',
-        description: 'Costume 3 pièces',
-        quantity: 1,
-        unitPrice: 320.00,
-        totalPrice: 320.00
+        id: 'order',
+        name: 'Commande',
+        status: 'completed',
+        instruction: 'Commande confirmée et en production',
+        actionRequired: false,
+        completedAt: '2024-01-16T14:20:00Z',
+        completedBy: 'Marc Tailleur',
+        icon: ShoppingCart
+      },
+      {
+        id: 'delivery',
+        name: 'Livraison',
+        status: 'completed',
+        instruction: 'Livraison confirmée',
+        actionRequired: false,
+        completedAt: '2024-01-25T16:45:00Z',
+        completedBy: 'Marc Tailleur',
+        icon: Truck
+      },
+      {
+        id: 'invoicing',
+        name: 'Facturation',
+        status: 'active',
+        instruction: 'Action requise : Générer la facture pour la livraison #LIV-2024-002',
+        actionRequired: true,
+        icon: FileText
+      },
+      {
+        id: 'payment',
+        name: 'Paiement',
+        status: 'pending',
+        instruction: 'En attente de la facturation',
+        actionRequired: false,
+        icon: CreditCard
       }
     ]
   },
   {
     id: '3',
-    invoiceNumber: 'FACT-2024-003',
-    orderId: '3',
     orderNumber: 'CMD-2024-003',
     clientName: 'Sophie Bernard',
     clientEmail: 'sophie.bernard@email.com',
-    invoiceDate: '2024-01-12',
-    dueDate: '2024-02-12',
-    totalAmount: 280.00,
-    taxAmount: 56.00,
-    totalWithTax: 336.00,
-    status: 'overdue',
-    isPaid: false,
-    items: [
+    orderDate: '2024-01-10',
+    deliveryDate: '2024-01-20',
+    totalAmount: 28000,
+    advanceAmount: 10000,
+    remainingAmount: 18000,
+    currentStep: 4,
+    isCompleted: true,
+    steps: [
       {
-        id: '3',
-        description: 'Retouches veste',
-        quantity: 1,
-        unitPrice: 280.00,
-        totalPrice: 280.00
+        id: 'order',
+        name: 'Commande',
+        status: 'completed',
+        instruction: 'Commande confirmée et en production',
+        actionRequired: false,
+        completedAt: '2024-01-10T09:15:00Z',
+        completedBy: 'Emma Style',
+        icon: ShoppingCart
+      },
+      {
+        id: 'delivery',
+        name: 'Livraison',
+        status: 'completed',
+        instruction: 'Livraison confirmée',
+        actionRequired: false,
+        completedAt: '2024-01-20T11:30:00Z',
+        completedBy: 'Emma Style',
+        icon: Truck
+      },
+      {
+        id: 'invoicing',
+        name: 'Facturation',
+        status: 'completed',
+        instruction: 'Facture générée et envoyée',
+        actionRequired: false,
+        completedAt: '2024-01-21T15:20:00Z',
+        completedBy: 'Emma Style',
+        icon: FileText
+      },
+      {
+        id: 'payment',
+        name: 'Paiement',
+        status: 'completed',
+        instruction: 'Paiement reçu',
+        actionRequired: false,
+        completedAt: '2024-01-22T10:45:00Z',
+        completedBy: 'Sophie Bernard',
+        icon: CreditCard
       }
     ]
   }
 ];
 
-const mockOrdersReadyForInvoicing: Order[] = [
+// Données simulées - Workflows fournisseurs
+const mockSupplierWorkflows: SupplierWorkflow[] = [
   {
-    id: '4',
-    orderNumber: 'CMD-2024-004',
-    clientName: 'Paul Durand',
-    status: 'delivered',
-    deliveryDate: '2024-01-18',
-    totalAmount: 580.00,
-    isDelivered: true,
-    deliveredAt: '2024-01-18T14:30:00Z'
+    id: '1',
+    purchaseOrderNumber: 'ACH-2024-001',
+    supplierName: 'Tissus Premium SARL',
+    supplierEmail: 'contact@tissuspremium.com',
+    orderDate: '2024-01-10',
+    deliveryDate: '2024-01-20',
+    totalAmount: 125000,
+    currentStep: 2,
+    isCompleted: false,
+    steps: [
+      {
+        id: 'purchase',
+        name: 'Achat',
+        status: 'completed',
+        instruction: 'Commande d\'achat confirmée',
+        actionRequired: false,
+        completedAt: '2024-01-10T08:30:00Z',
+        completedBy: 'AtelierPro',
+        icon: ShoppingCart
+      },
+      {
+        id: 'delivery',
+        name: 'Livraison',
+        status: 'active',
+        instruction: 'Action requise : Confirmer la réception pour l\'achat #ACH-2024-001',
+        actionRequired: true,
+        icon: Package
+      },
+      {
+        id: 'invoicing',
+        name: 'Facturation',
+        status: 'pending',
+        instruction: 'En attente de la réception',
+        actionRequired: false,
+        icon: FileText
+      },
+      {
+        id: 'payment',
+        name: 'Paiement',
+        status: 'pending',
+        instruction: 'En attente de la facturation',
+        actionRequired: false,
+        icon: CreditCard
+      }
+    ]
   },
   {
-    id: '5',
-    orderNumber: 'CMD-2024-005',
-    clientName: 'Lisa Chen',
-    status: 'delivered',
-    deliveryDate: '2024-01-19',
-    totalAmount: 420.00,
-    isDelivered: true,
-    deliveredAt: '2024-01-19T10:15:00Z'
+    id: '2',
+    purchaseOrderNumber: 'ACH-2024-002',
+    supplierName: 'Accessoires Couture',
+    supplierEmail: 'info@accessoirescouture.com',
+    orderDate: '2024-01-15',
+    deliveryDate: '2024-01-25',
+    totalAmount: 45000,
+    currentStep: 3,
+    isCompleted: false,
+    steps: [
+      {
+        id: 'purchase',
+        name: 'Achat',
+        status: 'completed',
+        instruction: 'Commande d\'achat confirmée',
+        actionRequired: false,
+        completedAt: '2024-01-15T11:20:00Z',
+        completedBy: 'AtelierPro',
+        icon: ShoppingCart
+      },
+      {
+        id: 'delivery',
+        name: 'Livraison',
+        status: 'completed',
+        instruction: 'Réception confirmée',
+        actionRequired: false,
+        completedAt: '2024-01-22T14:15:00Z',
+        completedBy: 'AtelierPro',
+        icon: Package
+      },
+      {
+        id: 'invoicing',
+        name: 'Facturation',
+        status: 'active',
+        instruction: 'Action requise : Enregistrer la facture fournisseur pour l\'achat #ACH-2024-002',
+        actionRequired: true,
+        icon: FileText
+      },
+      {
+        id: 'payment',
+        name: 'Paiement',
+        status: 'pending',
+        instruction: 'En attente de la facturation',
+        actionRequired: false,
+        icon: CreditCard
+      }
+    ]
   }
 ];
 
 export function InvoicesPage() {
   const { user } = useAuth();
-  const [invoices, setInvoices] = useState<Invoice[]>(mockInvoices);
-  const [ordersReadyForInvoicing, setOrdersReadyForInvoicing] = useState<Order[]>(mockOrdersReadyForInvoicing);
+  const [clientWorkflows, setClientWorkflows] = useState<ClientWorkflow[]>(mockClientWorkflows);
+  const [supplierWorkflows, setSupplierWorkflows] = useState<SupplierWorkflow[]>(mockSupplierWorkflows);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedTab, setSelectedTab] = useState('invoices');
+  const [activeTab, setActiveTab] = useState('client');
 
   // Permissions
-  const canManageInvoices = ['owner', 'orders'].includes(user?.role || '');
-  const canViewInvoices = ['owner', 'orders', 'customer_service'].includes(user?.role || '');
+  const canManageInvoices = ['owner', 'orders', 'finance'].includes(user?.role || '');
+  const canViewInvoices = ['owner', 'orders', 'customer_service', 'finance'].includes(user?.role || '');
 
-  // Filtrer les factures
-  const filteredInvoices = invoices.filter(invoice => {
+  // Filtrer les workflows
+  const filteredClientWorkflows = clientWorkflows.filter(workflow => {
     const matchesSearch = 
-      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      workflow.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workflow.clientName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && !workflow.isCompleted) ||
+      (statusFilter === 'completed' && workflow.isCompleted);
     
     return matchesSearch && matchesStatus;
   });
 
-  // Calculer les statistiques
-  const totalInvoices = invoices.length;
-  const paidInvoices = invoices.filter(i => i.isPaid).length;
-  const pendingInvoices = invoices.filter(i => !i.isPaid && i.status !== 'cancelled').length;
-  const overdueInvoices = invoices.filter(i => i.status === 'overdue').length;
-  const totalRevenue = invoices.filter(i => i.isPaid).reduce((sum, i) => sum + i.totalWithTax, 0);
-  const pendingRevenue = invoices.filter(i => !i.isPaid && i.status !== 'cancelled').reduce((sum, i) => sum + i.totalWithTax, 0);
-
-  const getStatusInfo = (status: string) => {
-    const statusConfig = {
-      draft: { label: 'Brouillon', color: 'bg-gray-500', variant: 'secondary' as const },
-      sent: { label: 'Envoyée', color: 'bg-blue-500', variant: 'default' as const },
-      paid: { label: 'Payée', color: 'bg-green-500', variant: 'default' as const },
-      overdue: { label: 'En retard', color: 'bg-red-500', variant: 'destructive' as const },
-      cancelled: { label: 'Annulée', color: 'bg-gray-500', variant: 'secondary' as const }
-    };
-    return statusConfig[status as keyof typeof statusConfig] || { label: status, color: 'bg-gray-500', variant: 'secondary' as const };
-  };
-
-  const handleCreateInvoice = (order: Order) => {
-    const newInvoice: Invoice = {
-      id: Date.now().toString(),
-      invoiceNumber: `FACT-2024-${String(invoices.length + 1).padStart(3, '0')}`,
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      clientName: order.clientName,
-      clientEmail: `${order.clientName.toLowerCase().replace(' ', '.')}@email.com`,
-      invoiceDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // +30 jours
-      totalAmount: order.totalAmount,
-      taxAmount: order.totalAmount * 0.20, // 20% de TVA
-      totalWithTax: order.totalAmount * 1.20,
-      status: 'draft',
-      isPaid: false,
-      items: [
-        {
-          id: '1',
-          description: `Commande ${order.orderNumber}`,
-          quantity: 1,
-          unitPrice: order.totalAmount,
-          totalPrice: order.totalAmount
-        }
-      ]
-    };
+  const filteredSupplierWorkflows = supplierWorkflows.filter(workflow => {
+    const matchesSearch = 
+      workflow.purchaseOrderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workflow.supplierName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    setInvoices(prev => [...prev, newInvoice]);
-    setOrdersReadyForInvoicing(prev => prev.filter(o => o.id !== order.id));
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && !workflow.isCompleted) ||
+      (statusFilter === 'completed' && workflow.isCompleted);
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Handlers pour les workflows clients
+  const handleClientStepAction = (workflowId: string, stepId: string) => {
+    const workflow = mockClientWorkflows.find(w => w.id === workflowId);
+    if (!workflow) return;
+
+    const step = workflow.steps.find(s => s.id === stepId);
+    if (!step || !step.actionRequired) return;
+
+    // Traitement selon l'étape
+    switch (stepId) {
+      case 'delivery':
+        // Confirmer la livraison
+        step.status = 'completed';
+        step.completedAt = new Date().toISOString();
+        step.completedBy = user?.email || 'Utilisateur';
+        workflow.currentStep = 3;
+        
+        // Activer l'étape suivante
+        const invoicingStep = workflow.steps.find(s => s.id === 'invoicing');
+        if (invoicingStep) {
+          invoicingStep.status = 'active';
+          invoicingStep.actionRequired = true;
+          invoicingStep.instruction = `Action requise : Générer la facture pour la livraison #${workflow.orderNumber}`;
+        }
+        
+        toast({
+          title: "Livraison confirmée",
+          description: `La livraison pour ${workflow.clientName} a été confirmée.`,
+        });
+        break;
+
+      case 'invoicing':
+        // Générer la facture
+        step.status = 'completed';
+        step.completedAt = new Date().toISOString();
+        step.completedBy = user?.email || 'Utilisateur';
+        workflow.currentStep = 4;
+        
+        // Activer l'étape suivante
+        const paymentStep = workflow.steps.find(s => s.id === 'payment');
+        if (paymentStep) {
+          paymentStep.status = 'active';
+          paymentStep.actionRequired = true;
+          paymentStep.instruction = `Action requise : Enregistrer le paiement pour la facture #FAC-${workflow.orderNumber}`;
+        }
+        
+        toast({
+          title: "Facture générée",
+          description: `La facture pour ${workflow.clientName} a été générée avec succès.`,
+        });
+        break;
+
+      case 'payment':
+        // Enregistrer le paiement
+        step.status = 'completed';
+        step.completedAt = new Date().toISOString();
+        step.completedBy = user?.email || 'Utilisateur';
+        workflow.currentStep = 5;
+        workflow.isCompleted = true;
+        
+        toast({
+          title: "Paiement enregistré",
+          description: `Le paiement pour ${workflow.clientName} a été enregistré avec succès.`,
+        });
+        break;
+    }
   };
 
-  const handleSendInvoice = (invoiceId: string) => {
-    setInvoices(prev => prev.map(invoice => 
-      invoice.id === invoiceId 
-        ? { ...invoice, status: 'sent' }
-        : invoice
-    ));
+  // Handlers pour les workflows fournisseurs
+  const handleSupplierStepAction = (workflowId: string, stepId: string) => {
+    const workflow = mockSupplierWorkflows.find(w => w.id === workflowId);
+    if (!workflow) return;
+
+    const step = workflow.steps.find(s => s.id === stepId);
+    if (!step || !step.actionRequired) return;
+
+    // Traitement selon l'étape
+    switch (stepId) {
+      case 'delivery':
+        // Confirmer la réception
+        step.status = 'completed';
+        step.completedAt = new Date().toISOString();
+        step.completedBy = user?.email || 'Utilisateur';
+        workflow.currentStep = 3;
+        
+        // Activer l'étape suivante
+        const invoicingStep = workflow.steps.find(s => s.id === 'invoicing');
+        if (invoicingStep) {
+          invoicingStep.status = 'active';
+          invoicingStep.actionRequired = true;
+          invoicingStep.instruction = `Action requise : Traiter la facture fournisseur #${workflow.purchaseOrderNumber}`;
+        }
+        
+        toast({
+          title: "Réception confirmée",
+          description: `La réception de ${workflow.supplierName} a été confirmée.`,
+        });
+        break;
+
+      case 'invoicing':
+        // Traiter la facture fournisseur
+        step.status = 'completed';
+        step.completedAt = new Date().toISOString();
+        step.completedBy = user?.email || 'Utilisateur';
+        workflow.currentStep = 4;
+        
+        // Activer l'étape suivante
+        const paymentStep = workflow.steps.find(s => s.id === 'payment');
+        if (paymentStep) {
+          paymentStep.status = 'active';
+          paymentStep.actionRequired = true;
+          paymentStep.instruction = `Action requise : Effectuer le paiement à ${workflow.supplierName}`;
+        }
+        
+        toast({
+          title: "Facture traitée",
+          description: `La facture de ${workflow.supplierName} a été traitée avec succès.`,
+        });
+        break;
+
+      case 'payment':
+        // Effectuer le paiement
+        step.status = 'completed';
+        step.completedAt = new Date().toISOString();
+        step.completedBy = user?.email || 'Utilisateur';
+        workflow.currentStep = 5;
+        workflow.isCompleted = true;
+        
+        toast({
+          title: "Paiement effectué",
+          description: `Le paiement à ${workflow.supplierName} a été effectué avec succès.`,
+        });
+        break;
+    }
   };
 
-  const handleMarkAsPaid = (invoiceId: string) => {
-    setInvoices(prev => prev.map(invoice => 
-      invoice.id === invoiceId 
-        ? { 
-            ...invoice, 
-            status: 'paid', 
-            isPaid: true, 
-            paidAt: new Date().toISOString(),
-            paidBy: user?.firstName + ' ' + user?.lastName
-          }
-        : invoice
-    ));
+  // Export des workflows
+  const exportWorkflows = (type: 'client' | 'supplier') => {
+    try {
+      const workflows = type === 'client' ? mockClientWorkflows : mockSupplierWorkflows;
+      const csvContent = [
+        ['N° Commande', 'Client/Fournisseur', 'Date commande', 'Date livraison', 'Montant', 'Étape actuelle', 'Statut'],
+        ...workflows.map(workflow => [
+          type === 'client' ? workflow.orderNumber : workflow.purchaseOrderNumber,
+          type === 'client' ? workflow.clientName : workflow.supplierName,
+          workflow.orderDate,
+          workflow.deliveryDate,
+          formatFCFA(workflow.totalAmount),
+          workflow.currentStep.toString(),
+          workflow.isCompleted ? 'Terminé' : 'En cours'
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${type}_workflows_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Export terminé",
+        description: `Les workflows ${type === 'client' ? 'clients' : 'fournisseurs'} ont été exportés.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'export.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Toast handler générique
-  const handleComingSoon = (action: string) => {
+  // Générer facture PDF
+  const generateInvoicePDF = (workflowId: string, type: 'client' | 'supplier') => {
+    const workflow = type === 'client' 
+      ? mockClientWorkflows.find(w => w.id === workflowId)
+      : mockSupplierWorkflows.find(w => w.id === workflowId);
+    
+    if (!workflow) return;
+
+    // Simulation de génération PDF
     toast({
-      title: 'Fonctionnalité à venir',
-      description: `L'action « ${action} » sera bientôt disponible.`,
+      title: "PDF généré",
+      description: `Facture PDF générée pour ${type === 'client' ? workflow.clientName : workflow.supplierName}.`,
     });
   };
 
+  // Envoyer facture par email
+  const sendInvoiceEmail = (workflowId: string, type: 'client' | 'supplier') => {
+    const workflow = type === 'client' 
+      ? mockClientWorkflows.find(w => w.id === workflowId)
+      : mockSupplierWorkflows.find(w => w.id === workflowId);
+    
+    if (!workflow) return;
+
+    // Simulation d'envoi email
+    toast({
+      title: "Email envoyé",
+      description: `Facture envoyée par email à ${type === 'client' ? workflow.clientEmail : workflow.supplierEmail}.`,
+    });
+  };
+
+  const getStepIcon = (step: WorkflowStep) => {
+    const IconComponent = step.icon;
+    return <IconComponent className="h-4 w-4" />;
+  };
+
+  const getStepStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'text-green-600 bg-green-100';
+      case 'active': return 'text-blue-600 bg-blue-100';
+      case 'pending': return 'text-gray-400 bg-gray-100';
+      case 'blocked': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-400 bg-gray-100';
+    }
+  };
+
+  const getStepStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'active': return <Play className="h-4 w-4" />;
+      case 'pending': return <Clock className="h-4 w-4" />;
+      case 'blocked': return <X className="h-4 w-4" />;
+      default: return <Clock className="h-4 w-4" />;
+    }
+  };
+
+  // Statistiques
+  const clientStats = {
+    total: clientWorkflows.length,
+    active: clientWorkflows.filter(w => !w.isCompleted).length,
+    completed: clientWorkflows.filter(w => w.isCompleted).length,
+    totalAmount: clientWorkflows.reduce((sum, w) => sum + w.totalAmount, 0)
+  };
+
+  const supplierStats = {
+    total: supplierWorkflows.length,
+    active: supplierWorkflows.filter(w => !w.isCompleted).length,
+    completed: supplierWorkflows.filter(w => w.isCompleted).length,
+    totalAmount: supplierWorkflows.reduce((sum, w) => sum + w.totalAmount, 0)
+  };
+
   return (
-    <AccessControl allowedRoles={['owner', 'manager']}>
       <div className="space-y-6">
         {/* En-tête */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Facturation</h1>
+          <h1 className="text-3xl font-bold">Système de Facturation</h1>
             <p className="text-muted-foreground">
-              Gestion des factures et suivi des paiements
+            Workflows clients et fournisseurs avec étapes séquentielles
             </p>
           </div>
           {canManageInvoices && (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
+            <Button variant="outline" onClick={() => exportWorkflows('client')}>
                 <Download className="h-4 w-4 mr-2" />
-                Exporter
+                Exporter Workflows Clients
               </Button>
-              <Button onClick={() => handleComingSoon('Créer une facture')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle facture
+            <Button variant="outline" onClick={() => exportWorkflows('supplier')}>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter Workflows Fournisseurs
               </Button>
             </div>
           )}
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="client" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Workflows Clients ({clientWorkflows.length})
+          </TabsTrigger>
+          <TabsTrigger value="supplier" className="flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            Workflows Fournisseurs ({supplierWorkflows.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="client" className="space-y-4">
+          {/* Statistiques workflows clients */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total factures</p>
-                  <p className="text-2xl font-bold">{totalInvoices}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Total workflows</p>
+                    <p className="text-2xl font-bold">{clientStats.total}</p>
+                  </div>
+                  <ShoppingCart className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <Receipt className="h-8 w-8 text-muted-foreground" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">En cours</p>
+                    <p className="text-2xl font-bold text-blue-600">{clientStats.active}</p>
+                  </div>
+                  <Play className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -319,10 +698,10 @@ export function InvoicesPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Payées</p>
-                  <p className="text-2xl font-bold text-green-500">{paidInvoices}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                    <p className="text-sm font-medium text-muted-foreground">Terminés</p>
+                    <p className="text-2xl font-bold text-green-600">{clientStats.completed}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -330,10 +709,163 @@ export function InvoicesPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">En attente</p>
-                  <p className="text-2xl font-bold text-orange-500">{pendingInvoices}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Montant total</p>
+                    <p className="text-2xl font-bold">{formatFCFA(clientStats.totalAmount)}</p>
+                  </div>
+                  <DollarSign className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <Clock className="h-8 w-8 text-orange-500" />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filtres et recherche */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher par numéro de commande ou client..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <select
+                    className="border rounded px-2 py-1"
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                  >
+                    <option value="all">Tous les statuts</option>
+                    <option value="active">En cours</option>
+                    <option value="completed">Terminés</option>
+                  </select>
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Liste des workflows clients */}
+          <div className="space-y-4">
+            {filteredClientWorkflows.map((workflow) => (
+              <Card key={workflow.id} className={cn(
+                "transition-all duration-200",
+                workflow.isCompleted ? "border-green-200 bg-green-50/50" : "border-blue-200 bg-blue-50/50"
+              )}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {workflow.orderNumber}
+                        {workflow.isCompleted && (
+                          <Badge variant="default" className="bg-green-600">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Terminé
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        Client: {workflow.clientName} • {workflow.clientEmail}
+                      </CardDescription>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold">{formatFCFA(workflow.totalAmount)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Avance: {formatFCFA(workflow.advanceAmount)}
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Workflow Steps */}
+                  <div className="space-y-4">
+                    {workflow.steps.map((step, index) => (
+                      <div key={step.id} className="flex items-center gap-4">
+                        {/* Step Icon */}
+                        <div className={cn(
+                          "flex items-center justify-center w-10 h-10 rounded-full",
+                          getStepStatusColor(step.status)
+                        )}>
+                          {getStepStatusIcon(step.status)}
+                        </div>
+
+                        {/* Step Content */}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium flex items-center gap-2">
+                                {getStepIcon(step)}
+                                {step.name}
+                                {step.actionRequired && (
+                                  <Badge variant="destructive" className="ml-2">
+                                    Action requise
+                                  </Badge>
+                                )}
+                              </h4>
+                              <p className={cn(
+                                "text-sm mt-1",
+                                step.status === 'active' ? "text-blue-700 font-medium" : "text-muted-foreground"
+                              )}>
+                                {step.instruction}
+                              </p>
+                              {step.completedAt && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Terminé le {new Date(step.completedAt).toLocaleDateString('fr-FR')} par {step.completedBy}
+                                </p>
+                              )}
+                            </div>
+                            {step.actionRequired && (
+                              <Button 
+                                size="sm"
+                                onClick={() => handleClientStepAction(workflow.id, step.id)}
+                              >
+                                Valider
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Arrow */}
+                        {index < workflow.steps.length - 1 && (
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="supplier" className="space-y-4">
+          {/* Statistiques workflows fournisseurs */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-muted-foreground">Total workflows</p>
+                    <p className="text-2xl font-bold">{supplierStats.total}</p>
+                  </div>
+                  <ShoppingCart className="h-8 w-8 text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">En cours</p>
+                    <p className="text-2xl font-bold text-blue-600">{supplierStats.active}</p>
+                  </div>
+                  <Play className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -341,19 +873,19 @@ export function InvoicesPage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">En retard</p>
-                  <p className="text-2xl font-bold text-red-500">{overdueInvoices}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Terminés</p>
+                    <p className="text-2xl font-bold text-green-600">{supplierStats.completed}</p>
+                  </div>
+                  <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">CA encaissé</p>
-                  <p className="text-2xl font-bold">{formatFCFA(totalRevenue)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Montant total</p>
+                    <p className="text-2xl font-bold">{formatFCFA(supplierStats.totalAmount)}</p>
                 </div>
                 <DollarSign className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -361,17 +893,7 @@ export function InvoicesPage() {
           </Card>
         </div>
 
-        {/* Onglets */}
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="invoices">Factures</TabsTrigger>
-            <TabsTrigger value="ready-to-invoice">Prêtes à facturer</TabsTrigger>
-            <TabsTrigger value="reports">Rapports</TabsTrigger>
-          </TabsList>
-
-          {/* Onglet Factures */}
-          <TabsContent value="invoices" className="space-y-4">
-            {/* Filtres */}
+          {/* Filtres et recherche */}
             <Card>
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -379,7 +901,7 @@ export function InvoicesPage() {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Rechercher une facture..."
+                      placeholder="Rechercher par numéro d'achat ou fournisseur..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -388,16 +910,13 @@ export function InvoicesPage() {
                   </div>
                   <div className="flex gap-2">
                     <select
+                    className="border rounded px-2 py-1"
                       value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-3 py-2 border rounded-md"
+                    onChange={e => setStatusFilter(e.target.value)}
                     >
                       <option value="all">Tous les statuts</option>
-                      <option value="draft">Brouillon</option>
-                      <option value="sent">Envoyée</option>
-                      <option value="paid">Payée</option>
-                      <option value="overdue">En retard</option>
-                      <option value="cancelled">Annulée</option>
+                    <option value="active">En cours</option>
+                    <option value="completed">Terminés</option>
                     </select>
                     <Button variant="outline">
                       <Filter className="h-4 w-4" />
@@ -407,308 +926,99 @@ export function InvoicesPage() {
               </CardContent>
             </Card>
 
-            {/* Tableau des factures */}
-            <Card>
+          {/* Liste des workflows fournisseurs */}
+          <div className="space-y-4">
+            {filteredSupplierWorkflows.map((workflow) => (
+              <Card key={workflow.id} className={cn(
+                "transition-all duration-200",
+                workflow.isCompleted ? "border-green-200 bg-green-50/50" : "border-blue-200 bg-blue-50/50"
+              )}>
               <CardHeader>
-                <CardTitle>Liste des factures</CardTitle>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        {workflow.purchaseOrderNumber}
+                        {workflow.isCompleted && (
+                          <Badge variant="default" className="bg-green-600">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Terminé
+                          </Badge>
+                        )}
+                      </CardTitle>
                 <CardDescription>
-                  {filteredInvoices.length} facture(s) trouvée(s)
+                        Fournisseur: {workflow.supplierName} • {workflow.supplierEmail}
                 </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Facture</TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Commande</TableHead>
-                      <TableHead>Date facture</TableHead>
-                      <TableHead>Échéance</TableHead>
-                      <TableHead>Montant</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredInvoices.map((invoice) => {
-                      const statusInfo = getStatusInfo(invoice.status);
-                      const isOverdue = new Date(invoice.dueDate) < new Date() && !invoice.isPaid;
-                      
-                      return (
-                        <TableRow key={invoice.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{invoice.invoiceNumber}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {invoice.isPaid && `Payée le ${new Date(invoice.paidAt!).toLocaleDateString('fr-FR')}`}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{invoice.clientName}</p>
-                              <p className="text-sm text-muted-foreground">{invoice.clientEmail}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">{invoice.orderNumber}</span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-1 text-muted-foreground" />
-                              <span className={cn(
-                                "text-sm",
-                                isOverdue ? "text-red-500 font-medium" : ""
-                              )}>
-                                {new Date(invoice.dueDate).toLocaleDateString('fr-FR')}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <span className="font-medium">{formatFCFA(invoice.totalWithTax)}</span>
-                              <p className="text-xs text-muted-foreground">
-                                HT: {formatFCFA(invoice.totalAmount)}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={statusInfo.variant}>
-                              {statusInfo.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-4xl">
-                                  <DialogHeader>
-                                    <DialogTitle>Facture {invoice.invoiceNumber}</DialogTitle>
-                                  </DialogHeader>
-                                  <InvoiceDetails invoice={invoice} />
-                                </DialogContent>
-                              </Dialog>
-                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Exporter')}>
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              {canManageInvoices && invoice.status === 'draft' && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleSendInvoice(invoice.id)}
-                                >
-                                  <Send className="h-4 w-4 mr-1" />
-                                  Envoyer
-                                </Button>
-                              )}
-                              {canManageInvoices && invoice.status === 'sent' && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => handleMarkAsPaid(invoice.id)}
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                  Marquer payée
-                                </Button>
-                              )}
-                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Onglet Prêtes à facturer */}
-          <TabsContent value="ready-to-invoice" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Commandes prêtes à facturer</CardTitle>
-                <CardDescription>
-                  Commandes livrées en attente de facturation automatique
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {ordersReadyForInvoicing.length === 0 ? (
-                  <div className="text-center py-8">
-                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Aucune commande en attente</h3>
-                    <p className="text-muted-foreground">
-                      Toutes les commandes livrées ont été facturées
-                    </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold">{formatFCFA(workflow.totalAmount)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Date commande: {new Date(workflow.orderDate).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Commande</TableHead>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Date livraison</TableHead>
-                        <TableHead>Montant</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {ordersReadyForInvoicing.map((order) => (
-                        <TableRow key={order.id}>
-                          <TableCell>
-                            <p className="font-medium">{order.orderNumber}</p>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">{order.clientName}</span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {new Date(order.deliveredAt!).toLocaleDateString('fr-FR')}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-medium">{formatFCFA(order.totalAmount)}</span>
-                          </TableCell>
-                          <TableCell>
-                            {canManageInvoices && (
+              </CardHeader>
+              <CardContent>
+                  {/* Workflow Steps */}
+                  <div className="space-y-4">
+                    {workflow.steps.map((step, index) => (
+                      <div key={step.id} className="flex items-center gap-4">
+                        {/* Step Icon */}
+                        <div className={cn(
+                          "flex items-center justify-center w-10 h-10 rounded-full",
+                          getStepStatusColor(step.status)
+                        )}>
+                          {getStepStatusIcon(step.status)}
+                        </div>
+
+                        {/* Step Content */}
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium flex items-center gap-2">
+                                {getStepIcon(step)}
+                                {step.name}
+                                {step.actionRequired && (
+                                  <Badge variant="destructive" className="ml-2">
+                                    Action requise
+                                  </Badge>
+                                )}
+                              </h4>
+                              <p className={cn(
+                                "text-sm mt-1",
+                                step.status === 'active' ? "text-blue-700 font-medium" : "text-muted-foreground"
+                              )}>
+                                {step.instruction}
+                              </p>
+                              {step.completedAt && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Terminé le {new Date(step.completedAt).toLocaleDateString('fr-FR')} par {step.completedBy}
+                                </p>
+                              )}
+                            </div>
+                            {step.actionRequired && (
                               <Button 
-                                variant="outline" 
                                 size="sm"
-                                onClick={() => handleCreateInvoice(order)}
+                                onClick={() => handleSupplierStepAction(workflow.id, step.id)}
                               >
-                                <Receipt className="h-4 w-4 mr-1" />
-                                Créer facture
+                                Valider
                               </Button>
                             )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                          </div>
+                        </div>
 
-          {/* Onglet Rapports */}
-          <TabsContent value="reports" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Chiffre d'affaires</CardTitle>
-                  <CardDescription>
-                    Évolution des encaissements
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    Graphique en cours de développement
+                        {/* Arrow */}
+                        {index < workflow.steps.length - 1 && (
+                          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        )}
+                  </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Délais de paiement</CardTitle>
-                  <CardDescription>
-                    Analyse des retards de paiement
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    Graphique en cours de développement
-                  </div>
-                </CardContent>
-              </Card>
+            ))}
             </div>
           </TabsContent>
         </Tabs>
-      </div>
-    </AccessControl>
-  );
-}
-
-// Composant détails facture
-function InvoiceDetails({ invoice }: { invoice: Invoice }) {
-  return (
-    <div className="space-y-6">
-      {/* En-tête facture */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label>Client</Label>
-          <p className="text-sm">{invoice.clientName}</p>
-          <p className="text-sm text-muted-foreground">{invoice.clientEmail}</p>
-        </div>
-        <div className="text-right">
-          <Label>Facture</Label>
-          <p className="text-sm font-medium">{invoice.invoiceNumber}</p>
-          <p className="text-sm text-muted-foreground">
-            {new Date(invoice.invoiceDate).toLocaleDateString('fr-FR')}
-          </p>
-        </div>
-      </div>
-
-      {/* Lignes de facture */}
-      <div>
-        <Label>Détail</Label>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead className="text-right">Quantité</TableHead>
-              <TableHead className="text-right">Prix unitaire</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invoice.items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.description}</TableCell>
-                <TableCell className="text-right">{item.quantity}</TableCell>
-                <TableCell className="text-right">{formatFCFAWithDecimals(item.unitPrice)}</TableCell>
-                <TableCell className="text-right">{formatFCFAWithDecimals(item.totalPrice)}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Totaux */}
-      <div className="space-y-2 text-right">
-        <div className="flex justify-between">
-          <span>Total HT:</span>
-          <span>{formatFCFAWithDecimals(invoice.totalAmount)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>TVA (20%):</span>
-          <span>{formatFCFAWithDecimals(invoice.taxAmount)}</span>
-        </div>
-        <div className="flex justify-between font-bold text-lg">
-          <span>Total TTC:</span>
-          <span>{formatFCFAWithDecimals(invoice.totalWithTax)}</span>
-        </div>
-      </div>
-
-      {/* Notes */}
-      {invoice.notes && (
-        <div>
-          <Label>Notes</Label>
-          <p className="text-sm">{invoice.notes}</p>
-        </div>
-      )}
     </div>
   );
 }

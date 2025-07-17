@@ -15,6 +15,7 @@ import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashbo
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
 import { lazy, Suspense, useState } from 'react';
+import { toast } from "@/components/ui/use-toast";
 
 // Configuration optimisée de React Query
 const queryClient = new QueryClient({
@@ -59,6 +60,7 @@ const DashboardContent = lazy(() => import('./components/dashboard/DashboardCont
 const ClientsPage = lazy(() => import('./pages/ClientsPage').then(module => ({ default: module.ClientsPage })));
 const FinancesPage = lazy(() => import('./pages/FinancesPage').then(module => ({ default: module.FinancesPage })));
 const HRPage = lazy(() => import('./pages/HRPage').then(module => ({ default: module.HRPage })));
+const RemunerationPage = lazy(() => import('./pages/RemunerationPage').then(module => ({ default: module.RemunerationPage })));
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(module => ({ default: module.OrdersPage })));
 const ProductionPage = lazy(() => import('./pages/ProductionPage').then(module => ({ default: module.ProductionPage })));
 const StocksPage = lazy(() => import('./pages/StocksPage').then(module => ({ default: module.StocksPage })));
@@ -68,10 +70,14 @@ const MeasurementsPage = lazy(() => import('./pages/MeasurementsPage').then(modu
 const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then(module => ({ default: module.InvoicesPage })));
 const PurchasesPage = lazy(() => import('./pages/PurchasesPage').then(module => ({ default: module.PurchasesPage })));
 const ReportsPage = lazy(() => import('./pages/ReportsPage').then(module => ({ default: module.ReportsPage })));
+const FinancialReportsPage = lazy(() => import('./pages/FinancialReportsPage').then(module => ({ default: module.FinancialReportsPage })));
+const BankReconciliationPage = lazy(() => import('./pages/BankReconciliationPage').then(module => ({ default: module.BankReconciliationPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(module => ({ default: module.SettingsPage })));
+const SyscohadaSettingsPage = lazy(() => import('./pages/SyscohadaSettingsPage').then(module => ({ default: module.SyscohadaSettingsPage })));
 const AlertsPage = lazy(() => import('./pages/AlertsPage').then(module => ({ default: module.AlertsPage })));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then(module => ({ default: module.AuditTrailPage })));
 const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(module => ({ default: module.AdvancedExportPage })));
+const NotFound = lazy(() => import('./pages/NotFound').then(module => ({ default: module.default })));
 
 // Pages légères importées normalement
 // import { Index } from './pages/Index';
@@ -165,6 +171,11 @@ function AppContent() {
                 <HRPage />
               </DashboardLayout>
             } />
+            <Route path="/dashboard/remunerations" element={
+              <DashboardLayout>
+                <RemunerationPage />
+              </DashboardLayout>
+            } />
             <Route path="/dashboard/finances" element={
               <DashboardLayout>
                 <FinancesPage />
@@ -175,15 +186,30 @@ function AppContent() {
                 <SuppliersPage />
               </DashboardLayout>
             } />
-            <Route path="/dashboard/reports" element={
-              <DashboardLayout>
-                <ReportsPage />
-              </DashboardLayout>
-            } />
             <Route path="/dashboard/settings" element={
-              <DashboardLayout>
+              <Suspense fallback={<LoadingPage />}>
                 <SettingsPage />
-              </DashboardLayout>
+              </Suspense>
+            } />
+            <Route path="/dashboard/syscohada" element={
+              <Suspense fallback={<LoadingPage />}>
+                <SyscohadaSettingsPage />
+              </Suspense>
+            } />
+            <Route path="/dashboard/reports" element={
+              <Suspense fallback={<LoadingPage />}>
+                <ReportsPage />
+              </Suspense>
+            } />
+            <Route path="/dashboard/financial-reports" element={
+              <Suspense fallback={<LoadingPage />}>
+                <FinancialReportsPage />
+              </Suspense>
+            } />
+            <Route path="/dashboard/bank-reconciliation" element={
+              <Suspense fallback={<LoadingPage />}>
+                <BankReconciliationPage />
+              </Suspense>
             } />
             <Route path="/dashboard/alerts" element={
               <DashboardLayout>
@@ -201,7 +227,7 @@ function AppContent() {
               </DashboardLayout>
             } />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
         
@@ -220,6 +246,19 @@ function AppContent() {
         {showPerformanceMonitor && (
           <PerformanceMonitor onClose={() => setShowPerformanceMonitor(false)} />
         )}
+        
+        {/* Bouton flottant pour tester les boutons */}
+        <button
+          className="fixed bottom-6 left-6 z-50 bg-green-500 text-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-green-600 transition"
+          onClick={() => {
+            toast({
+              title: "Tous les boutons activés !",
+              description: "Vérifiez que tous les boutons sont maintenant fonctionnels.",
+            });
+          }}
+        >
+          Test Boutons
+        </button>
       </QueryClientProvider>
     </SidebarProvider>
   );

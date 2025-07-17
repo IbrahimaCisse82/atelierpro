@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AccessControl } from '@/components/common/AccessControl';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,63 +6,56 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
 import { 
+  Scissors, 
   Plus, 
   Search, 
-  Filter, 
   Eye, 
   Edit, 
+  Trash2,
   Download,
   Upload,
   FileText,
   Image,
-  Folder,
-  Tag,
-  Calendar,
-  User,
-  Star,
-  Share2,
-  Trash2,
+  File,
   Copy,
+  CheckCircle,
+  Clock,
+  User,
+  Calendar,
+  Tag,
+  Layers,
   History,
-  Settings,
-  Grid,
-  List
+  Star
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 
-// Types pour les modèles/patrons
+// Types pour les patrons
 interface Pattern {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   category: string;
-  subcategory?: string;
-  tags: string[];
-  fileType: 'pdf' | 'image' | 'vector' | 'other';
-  fileSize: number;
-  fileName: string;
+  garmentType: string;
+  difficulty: 'facile' | 'moyen' | 'difficile';
+  version: string;
   fileUrl: string;
-  thumbnailUrl?: string;
-  version: number;
+  fileType: 'pdf' | 'image' | 'other';
+  fileSize: number;
+  tags: string[];
+  isActive: boolean;
   isPublic: boolean;
-  isTemplate: boolean;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert';
-  estimatedTime: number; // en heures
-  materials: string[];
-  instructions?: string;
-  // Métadonnées
-  createdAt: string;
-  createdBy: string;
-  updatedAt: string;
-  updatedBy: string;
   downloadCount: number;
   rating: number;
-  reviewCount: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  associatedOrders: string[];
+  notes?: string;
 }
 
 interface PatternCategory {
@@ -71,164 +63,148 @@ interface PatternCategory {
   name: string;
   description: string;
   icon: string;
-  patternCount: number;
-  subcategories: string[];
 }
 
-// Données simulées
-const mockCategories: PatternCategory[] = [
-  {
-    id: '1',
-    name: 'Vêtements femmes',
-    description: 'Robes, jupes, blouses, pantalons',
-    icon: '👗',
-    patternCount: 45,
-    subcategories: ['Robes', 'Jupes', 'Blouses', 'Pantalons', 'Vestes']
-  },
-  {
-    id: '2',
-    name: 'Vêtements hommes',
-    description: 'Costumes, chemises, pantalons',
-    icon: '👔',
-    patternCount: 32,
-    subcategories: ['Costumes', 'Chemises', 'Pantalons', 'Vestes', 'Cravates']
-  },
-  {
-    id: '3',
-    name: 'Accessoires',
-    description: 'Sacs, chapeaux, bijoux',
-    icon: '👜',
-    patternCount: 28,
-    subcategories: ['Sacs', 'Chapeaux', 'Bijoux', 'Écharpes', 'Gants']
-  },
-  {
-    id: '4',
-    name: 'Lingerie',
-    description: 'Sous-vêtements, maillots',
-    icon: '👙',
-    patternCount: 15,
-    subcategories: ['Soutiens-gorge', 'Culottes', 'Maillots', 'Pyjamas']
-  },
-  {
-    id: '5',
-    name: 'Enfants',
-    description: 'Vêtements pour enfants',
-    icon: '👶',
-    patternCount: 22,
-    subcategories: ['0-6 mois', '6-12 mois', '1-3 ans', '3-6 ans', '6-12 ans']
-  }
+// Catégories de patrons
+const patternCategories: PatternCategory[] = [
+  { id: 'robes', name: 'Robes', description: 'Patrons de robes', icon: '👗' },
+  { id: 'costumes', name: 'Costumes', description: 'Patrons de costumes', icon: '👔' },
+  { id: 'pantalons', name: 'Pantalons', description: 'Patrons de pantalons', icon: '👖' },
+  { id: 'chemises', name: 'Chemises', description: 'Patrons de chemises', icon: '👕' },
+  { id: 'vestes', name: 'Vestes', description: 'Patrons de vestes', icon: '🧥' },
+  { id: 'jupes', name: 'Jupes', description: 'Patrons de jupes', icon: '👗' },
+  { id: 'accessoires', name: 'Accessoires', description: 'Patrons d\'accessoires', icon: '👜' }
 ];
 
+// Données simulées
 const mockPatterns: Pattern[] = [
   {
     id: '1',
-    name: 'Robe d\'été élégante',
-    description: 'Robe légère parfaite pour l\'été avec détails floraux',
-    category: 'Vêtements femmes',
-    subcategory: 'Robes',
-    tags: ['été', 'élégant', 'floral', 'léger'],
+    name: 'Robe d\'été classique',
+    description: 'Patron pour une robe d\'été élégante et confortable',
+    category: 'robes',
+    garmentType: 'robe',
+    difficulty: 'moyen',
+    version: '2.1',
+    fileUrl: '/patterns/robe-ete-classique-v2.1.pdf',
     fileType: 'pdf',
     fileSize: 2048576, // 2MB
-    fileName: 'robe_ete_elegante_v2.pdf',
-    fileUrl: '/patterns/robe_ete_elegante_v2.pdf',
-    thumbnailUrl: '/thumbnails/robe_ete_elegante.jpg',
-    version: 2,
+    tags: ['été', 'élégant', 'confortable', 'polyvalent'],
+    isActive: true,
     isPublic: true,
-    isTemplate: false,
-    difficulty: 'intermediate',
-    estimatedTime: 8,
-    materials: ['Tissu coton', 'Fil assorti', 'Fermeture éclair'],
-    instructions: 'Instructions détaillées incluses dans le PDF',
-    createdAt: '2024-01-10T10:00:00Z',
-    createdBy: 'Alice Couture',
-    updatedAt: '2024-01-15T14:30:00Z',
-    updatedBy: 'Alice Couture',
-    downloadCount: 156,
+    downloadCount: 45,
     rating: 4.5,
-    reviewCount: 23
+    createdBy: 'Alice Couture',
+    createdAt: '2024-01-10T09:00:00Z',
+    updatedAt: '2024-01-15T14:30:00Z',
+    associatedOrders: ['order-1', 'order-3'],
+    notes: 'Patron très populaire, adapté pour tous les âges'
   },
   {
     id: '2',
-    name: 'Costume 3 pièces classique',
-    description: 'Costume traditionnel pour homme avec veste, pantalon et gilet',
-    category: 'Vêtements hommes',
-    subcategory: 'Costumes',
-    tags: ['classique', 'formel', 'costume', '3-pièces'],
+    name: 'Costume 3 pièces homme',
+    description: 'Patron complet pour costume 3 pièces professionnel',
+    category: 'costumes',
+    garmentType: 'costume',
+    difficulty: 'difficile',
+    version: '1.5',
+    fileUrl: '/patterns/costume-3-pieces-v1.5.pdf',
     fileType: 'pdf',
     fileSize: 3145728, // 3MB
-    fileName: 'costume_3_pieces_classique_v1.pdf',
-    fileUrl: '/patterns/costume_3_pieces_classique_v1.pdf',
-    thumbnailUrl: '/thumbnails/costume_3_pieces.jpg',
-    version: 1,
-    isPublic: true,
-    isTemplate: true,
-    difficulty: 'advanced',
-    estimatedTime: 20,
-    materials: ['Tissu laine', 'Doublure', 'Boutons', 'Fil de couture'],
-    instructions: 'Patron de base avec instructions de montage',
-    createdAt: '2024-01-05T09:00:00Z',
-    createdBy: 'Marc Tailleur',
-    updatedAt: '2024-01-05T09:00:00Z',
-    updatedBy: 'Marc Tailleur',
-    downloadCount: 89,
+    tags: ['professionnel', 'élégant', 'classique', 'sur-mesure'],
+    isActive: true,
+    isPublic: false,
+    downloadCount: 12,
     rating: 4.8,
-    reviewCount: 15
+    createdBy: 'Marc Tailleur',
+    createdAt: '2024-01-05T11:00:00Z',
+    updatedAt: '2024-01-12T16:45:00Z',
+    associatedOrders: ['order-2'],
+    notes: 'Patron complexe nécessitant une expertise avancée'
   },
   {
     id: '3',
-    name: 'Sac bandoulière moderne',
-    description: 'Sac tendance avec bandoulière ajustable',
-    category: 'Accessoires',
-    subcategory: 'Sacs',
-    tags: ['sac', 'bandoulière', 'moderne', 'cuir'],
-    fileType: 'vector',
+    name: 'Pantalon cigarette femme',
+    description: 'Patron pour pantalon cigarette ajusté',
+    category: 'pantalons',
+    garmentType: 'pantalon',
+    difficulty: 'facile',
+    version: '1.0',
+    fileUrl: '/patterns/pantalon-cigarette-v1.0.jpg',
+    fileType: 'image',
     fileSize: 1048576, // 1MB
-    fileName: 'sac_bandouliere_moderne.ai',
-    fileUrl: '/patterns/sac_bandouliere_moderne.ai',
-    thumbnailUrl: '/thumbnails/sac_bandouliere.jpg',
-    version: 1,
-    isPublic: false,
-    isTemplate: false,
-    difficulty: 'intermediate',
-    estimatedTime: 6,
-    materials: ['Cuir', 'Fermeture', 'Anneaux métalliques', 'Fil de cuir'],
-    instructions: 'Fichier vectoriel avec gabarits',
-    createdAt: '2024-01-12T16:00:00Z',
-    createdBy: 'Emma Style',
-    updatedAt: '2024-01-12T16:00:00Z',
-    updatedBy: 'Emma Style',
-    downloadCount: 34,
+    tags: ['moderne', 'ajusté', 'polyvalent', 'tendance'],
+    isActive: true,
+    isPublic: true,
+    downloadCount: 78,
     rating: 4.2,
-    reviewCount: 8
+    createdBy: 'Emma Style',
+    createdAt: '2024-01-08T10:30:00Z',
+    updatedAt: '2024-01-08T10:30:00Z',
+    associatedOrders: ['order-4', 'order-5'],
+    notes: 'Patron simple et efficace'
+  },
+  {
+    id: '4',
+    name: 'Chemise cintrée',
+    description: 'Patron pour chemise cintrée élégante',
+    category: 'chemises',
+    garmentType: 'chemise',
+    difficulty: 'moyen',
+    version: '1.2',
+    fileUrl: '/patterns/chemise-cintree-v1.2.pdf',
+    fileType: 'pdf',
+    fileSize: 1572864, // 1.5MB
+    tags: ['élégant', 'cintré', 'professionnel', 'féminin'],
+    isActive: true,
+    isPublic: true,
+    downloadCount: 34,
+    rating: 4.6,
+    createdBy: 'Sophie Mode',
+    createdAt: '2024-01-12T13:15:00Z',
+    updatedAt: '2024-01-14T09:20:00Z',
+    associatedOrders: ['order-6'],
+    notes: 'Patron adapté pour tous les types de morphologie'
   }
 ];
 
 export function PatternsPage() {
   const { user } = useAuth();
-  const [patterns, setPatterns] = useState<Pattern[]>(mockPatterns);
-  const [categories] = useState<PatternCategory[]>(mockCategories);
+  const [activeTab, setActiveTab] = useState('patterns');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedPattern, setSelectedPattern] = useState<Pattern | null>(null);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  // États pour la création/modification
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [selectedPattern, setSelectedPattern] = useState<Pattern | null>(null);
+  const [newPattern, setNewPattern] = useState<Partial<Pattern>>({
+    name: '',
+    description: '',
+    category: '',
+    garmentType: '',
+    difficulty: 'moyen',
+    tags: [],
+    isPublic: false,
+    notes: ''
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // Permissions centralisées (désactivées pour activer tous les boutons)
-  const canViewPatterns = true;
-  const canManagePatterns = true;
-  // const canViewPatterns = ['owner', 'manager', 'patterns', 'production'].includes(user?.role || '');
-  // const canManagePatterns = ['owner', 'manager', 'patterns'].includes(user?.role || '');
+  // Permissions
+  const canViewPatterns = ['owner', 'manager', 'tailor', 'production'].includes(user?.role || '');
+  const canManagePatterns = ['owner', 'manager', 'tailor'].includes(user?.role || '');
+
   if (!canViewPatterns) {
     return (
       <div className="flex items-center justify-center h-64">
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <Scissors className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
             <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
+              Vous n'avez pas les permissions nécessaires pour accéder à cette section.
             </p>
           </CardContent>
         </Card>
@@ -236,65 +212,170 @@ export function PatternsPage() {
     );
   }
 
-  // Filtrer les patrons
-  const filteredPatterns = patterns.filter(pattern => {
-    const matchesSearch = 
-      pattern.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pattern.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pattern.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Filtrage des patrons
+  const filteredPatterns = mockPatterns.filter(pattern => {
+    const matchesSearch = pattern.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         pattern.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         pattern.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = categoryFilter === 'all' || pattern.category === categoryFilter;
+    const matchesDifficulty = difficultyFilter === 'all' || pattern.difficulty === difficultyFilter;
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && pattern.isActive) ||
+                         (statusFilter === 'inactive' && !pattern.isActive);
     
-    const matchesCategory = selectedCategory === 'all' || pattern.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
+    return matchesSearch && matchesCategory && matchesDifficulty && matchesStatus;
   });
 
-  // Calculer les statistiques
-  const totalPatterns = patterns.length;
-  const publicPatterns = patterns.filter(p => p.isPublic).length;
-  const templatePatterns = patterns.filter(p => p.isTemplate).length;
-  const recentPatterns = patterns.filter(p => {
-    const patternDate = new Date(p.createdAt);
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    return patternDate > thirtyDaysAgo;
-  }).length;
+  // Statistiques
+  const stats = {
+    totalPatterns: mockPatterns.length,
+    activePatterns: mockPatterns.filter(p => p.isActive).length,
+    publicPatterns: mockPatterns.filter(p => p.isPublic).length,
+    totalDownloads: mockPatterns.reduce((sum, p) => sum + p.downloadCount, 0),
+    averageRating: mockPatterns.reduce((sum, p) => sum + p.rating, 0) / mockPatterns.length
+  };
 
-  const handleUploadPattern = (patternData: Partial<Pattern>) => {
-    const newPattern: Pattern = {
-      id: Date.now().toString(),
-      name: patternData.name!,
-      description: patternData.description,
-      category: patternData.category!,
-      subcategory: patternData.subcategory,
-      tags: patternData.tags || [],
-      fileType: patternData.fileType!,
-      fileSize: patternData.fileSize!,
-      fileName: patternData.fileName!,
-      fileUrl: patternData.fileUrl!,
-      thumbnailUrl: patternData.thumbnailUrl,
-      version: 1,
-      isPublic: patternData.isPublic || false,
-      isTemplate: patternData.isTemplate || false,
-      difficulty: patternData.difficulty!,
-      estimatedTime: patternData.estimatedTime!,
-      materials: patternData.materials || [],
-      instructions: patternData.instructions,
-      createdAt: new Date().toISOString(),
-      createdBy: `${user?.firstName} ${user?.lastName}`,
-      updatedAt: new Date().toISOString(),
-      updatedBy: `${user?.firstName} ${user?.lastName}`,
+  // Handlers
+  const handleCreatePattern = async () => {
+    if (!newPattern.name || !newPattern.category || !selectedFile) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires et sélectionner un fichier.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Simulation de création
+    const pattern: Pattern = {
+      id: `pattern-${Date.now()}`,
+      name: newPattern.name!,
+      description: newPattern.description || '',
+      category: newPattern.category!,
+      garmentType: newPattern.garmentType || newPattern.category!,
+      difficulty: newPattern.difficulty || 'moyen',
+      version: '1.0',
+      fileUrl: `/patterns/${selectedFile.name}`,
+      fileType: selectedFile.type.includes('pdf') ? 'pdf' : 
+                selectedFile.type.includes('image') ? 'image' : 'other',
+      fileSize: selectedFile.size,
+      tags: newPattern.tags || [],
+      isActive: true,
+      isPublic: newPattern.isPublic || false,
       downloadCount: 0,
       rating: 0,
-      reviewCount: 0
+      createdBy: user?.firstName + ' ' + user?.lastName || 'Utilisateur',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      associatedOrders: [],
+      notes: newPattern.notes
     };
-    
-    setPatterns(prev => [...prev, newPattern]);
-    setIsUploadDialogOpen(false);
+
+    mockPatterns.push(pattern);
+
+    toast({
+      title: "Succès",
+      description: "Patron créé avec succès.",
+    });
+
+    setIsCreateDialogOpen(false);
+    setNewPattern({
+      name: '',
+      description: '',
+      category: '',
+      garmentType: '',
+      difficulty: 'moyen',
+      tags: [],
+      isPublic: false,
+      notes: ''
+    });
+    setSelectedFile(null);
+  };
+
+  const handleEditPattern = async () => {
+    if (!selectedPattern) return;
+
+    // Simulation de mise à jour
+    const index = mockPatterns.findIndex(p => p.id === selectedPattern.id);
+    if (index !== -1) {
+      mockPatterns[index] = {
+        ...selectedPattern,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    toast({
+      title: "Succès",
+      description: "Patron mis à jour avec succès.",
+    });
+
+    setIsEditDialogOpen(false);
+    setSelectedPattern(null);
+  };
+
+  const handleDeletePattern = async (patternId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce patron ?')) {
+      return;
+    }
+
+    const index = mockPatterns.findIndex(p => p.id === patternId);
+    if (index !== -1) {
+      mockPatterns.splice(index, 1);
+    }
+
+    toast({
+      title: "Succès",
+      description: "Patron supprimé avec succès.",
+    });
+  };
+
+  const handleDuplicatePattern = (pattern: Pattern) => {
+    const duplicatedPattern: Pattern = {
+      ...pattern,
+      id: `pattern-${Date.now()}`,
+      name: `${pattern.name} (copie)`,
+      version: '1.0',
+      downloadCount: 0,
+      rating: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      associatedOrders: []
+    };
+
+    mockPatterns.push(duplicatedPattern);
+
+    toast({
+      title: "Succès",
+      description: "Patron dupliqué avec succès.",
+    });
   };
 
   const handleDownloadPattern = (pattern: Pattern) => {
-    // Simuler le téléchargement
-    console.log(`Téléchargement de ${pattern.fileName}`);
-    // Ici on incrémenterait le compteur de téléchargements
+    // Simulation de téléchargement
+    const link = document.createElement('a');
+    link.href = pattern.fileUrl;
+    link.download = `${pattern.name}-v${pattern.version}.${pattern.fileType}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Incrémenter le compteur de téléchargements
+    const index = mockPatterns.findIndex(p => p.id === pattern.id);
+    if (index !== -1) {
+      mockPatterns[index].downloadCount++;
+    }
+
+    toast({
+      title: "Téléchargement",
+      description: "Patron téléchargé avec succès.",
+    });
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
   };
 
   const formatFileSize = (bytes: number) => {
@@ -305,31 +386,21 @@ export function PatternsPage() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-orange-100 text-orange-800';
-      case 'expert': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getFileTypeIcon = (fileType: string) => {
+  const getFileIcon = (fileType: string) => {
     switch (fileType) {
       case 'pdf': return <FileText className="h-4 w-4" />;
       case 'image': return <Image className="h-4 w-4" />;
-      case 'vector': return <FileText className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+      default: return <File className="h-4 w-4" />;
     }
   };
 
-  // Toast handler générique
-  const handleComingSoon = (action: string) => {
-    toast({
-      title: 'Fonctionnalité à venir',
-      description: `L'action « ${action} » sera bientôt disponible.`,
-    });
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'facile': return 'bg-green-100 text-green-800';
+      case 'moyen': return 'bg-yellow-100 text-yellow-800';
+      case 'difficile': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -337,54 +408,42 @@ export function PatternsPage() {
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Modèles & Patrons</h1>
+          <h1 className="text-3xl font-bold">Gestion des Patrons</h1>
           <p className="text-muted-foreground">
-            Gestion des patrons, modèles et gabarits
+            Bibliothèque de patrons de couture et modèles
           </p>
         </div>
         {canManagePatterns && (
           <div className="flex gap-2">
-            <Button onClick={() => handleComingSoon('Créer un patron')}>
-              <Plus className="h-4 w-4 mr-2" /> Nouveau patron
+            <Button variant="outline">
+              <Upload className="h-4 w-4 mr-2" />
+              Importer
             </Button>
-            <Button variant="outline" onClick={() => handleComingSoon('Exporter')}>
-              <Download className="h-4 w-4 mr-2" /> Exporter
-            </Button>
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Nouveau patron
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                  <DialogTitle>Ajouter un nouveau patron</DialogTitle>
-                  <DialogDescription>
-                    Uploadez un fichier et ajoutez les informations
-                  </DialogDescription>
-                </DialogHeader>
-                <PatternUploadForm 
-                  categories={categories}
-                  onSubmit={handleUploadPattern}
-                  uploadProgress={uploadProgress}
-                />
-              </DialogContent>
-            </Dialog>
           </div>
         )}
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total patrons</p>
-                <p className="text-2xl font-bold">{totalPatterns}</p>
+                <p className="text-2xl font-bold">{stats.totalPatterns}</p>
               </div>
-              <Folder className="h-8 w-8 text-muted-foreground" />
+              <Scissors className="h-8 w-8 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Actifs</p>
+                <p className="text-2xl font-bold">{stats.activePatterns}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -393,9 +452,9 @@ export function PatternsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Publics</p>
-                <p className="text-2xl font-bold text-blue-500">{publicPatterns}</p>
+                <p className="text-2xl font-bold">{stats.publicPatterns}</p>
               </div>
-              <Share2 className="h-8 w-8 text-blue-500" />
+              <Star className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -403,10 +462,10 @@ export function PatternsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Templates</p>
-                <p className="text-2xl font-bold text-green-500">{templatePatterns}</p>
+                <p className="text-sm font-medium text-muted-foreground">Téléchargements</p>
+                <p className="text-2xl font-bold">{stats.totalDownloads}</p>
               </div>
-              <Copy className="h-8 w-8 text-green-500" />
+              <Download className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -414,636 +473,529 @@ export function PatternsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Ce mois</p>
-                <p className="text-2xl font-bold text-purple-500">{recentPatterns}</p>
+                <p className="text-sm font-medium text-muted-foreground">Note moyenne</p>
+                <p className="text-2xl font-bold">{stats.averageRating.toFixed(1)}</p>
               </div>
-              <Calendar className="h-8 w-8 text-purple-500" />
+              <Star className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtres et recherche */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher des patrons..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="patterns">Patrons</TabsTrigger>
+          <TabsTrigger value="categories">Catégories</TabsTrigger>
+          <TabsTrigger value="history">Historique</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="patterns" className="space-y-4">
+          {/* Filtres et recherche */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Rechercher par nom, description ou tags..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Catégorie" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes catégories</SelectItem>
+                      {patternCategories.map(category => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Difficulté" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes difficultés</SelectItem>
+                      <SelectItem value="facile">Facile</SelectItem>
+                      <SelectItem value="moyen">Moyen</SelectItem>
+                      <SelectItem value="difficile">Difficile</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous statuts</SelectItem>
+                      <SelectItem value="active">Actifs</SelectItem>
+                      <SelectItem value="inactive">Inactifs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Liste des patrons */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Bibliothèque de Patrons</CardTitle>
+                  <CardDescription>{filteredPatterns.length} patron(s) trouvé(s)</CardDescription>
+                </div>
+                {canManagePatterns && (
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Nouveau patron
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>Nouveau patron</DialogTitle>
+                        <DialogDescription>
+                          Ajouter un nouveau patron à la bibliothèque
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="patternName">Nom du patron *</Label>
+                            <Input
+                              id="patternName"
+                              value={newPattern.name || ''}
+                              onChange={(e) => setNewPattern(prev => ({ ...prev, name: e.target.value }))}
+                              placeholder="Nom du patron"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="patternCategory">Catégorie *</Label>
+                            <Select value={newPattern.category || ''} onValueChange={(value) => setNewPattern(prev => ({ ...prev, category: value }))}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sélectionner une catégorie" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {patternCategories.map(category => (
+                                  <SelectItem key={category.id} value={category.id}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="patternDescription">Description</Label>
+                          <Textarea
+                            id="patternDescription"
+                            value={newPattern.description || ''}
+                            onChange={(e) => setNewPattern(prev => ({ ...prev, description: e.target.value }))}
+                            placeholder="Description du patron"
+                            rows={3}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="patternDifficulty">Difficulté</Label>
+                            <Select value={newPattern.difficulty || 'moyen'} onValueChange={(value) => setNewPattern(prev => ({ ...prev, difficulty: value as any }))}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="facile">Facile</SelectItem>
+                                <SelectItem value="moyen">Moyen</SelectItem>
+                                <SelectItem value="difficile">Difficile</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="patternFile">Fichier *</Label>
+                            <Input
+                              id="patternFile"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.gif"
+                              onChange={handleFileSelect}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="patternTags">Tags</Label>
+                          <Input
+                            id="patternTags"
+                            value={newPattern.tags?.join(', ') || ''}
+                            onChange={(e) => setNewPattern(prev => ({ 
+                              ...prev, 
+                              tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                            }))}
+                            placeholder="Tags séparés par des virgules"
+                          />
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="isPublic"
+                            checked={newPattern.isPublic || false}
+                            onChange={(e) => setNewPattern(prev => ({ ...prev, isPublic: e.target.checked }))}
+                          />
+                          <Label htmlFor="isPublic">Patron public</Label>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="patternNotes">Notes</Label>
+                          <Textarea
+                            id="patternNotes"
+                            value={newPattern.notes || ''}
+                            onChange={(e) => setNewPattern(prev => ({ ...prev, notes: e.target.value }))}
+                            placeholder="Notes sur le patron"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                          Annuler
+                        </Button>
+                        <Button onClick={handleCreatePattern}>
+                          Créer
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Patron</TableHead>
+                    <TableHead>Catégorie</TableHead>
+                    <TableHead>Difficulté</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead>Statistiques</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPatterns.map((pattern) => (
+                    <TableRow key={pattern.id}>
+                      <TableCell>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            {getFileIcon(pattern.fileType)}
+                            <div>
+                              <p className="font-medium">{pattern.name}</p>
+                              <p className="text-sm text-muted-foreground">{pattern.description}</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {pattern.tags.slice(0, 3).map(tag => (
+                                  <Badge key={tag} variant="secondary" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {pattern.tags.length > 3 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    +{pattern.tags.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span>{patternCategories.find(c => c.id === pattern.category)?.icon}</span>
+                          <span>{patternCategories.find(c => c.id === pattern.category)?.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getDifficultyColor(pattern.difficulty)}>
+                          {pattern.difficulty}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">v{pattern.version}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Badge variant={pattern.isActive ? "default" : "secondary"}>
+                            {pattern.isActive ? "Actif" : "Inactif"}
+                          </Badge>
+                          {pattern.isPublic && (
+                            <Badge variant="outline" className="text-xs">
+                              Public
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div className="flex items-center gap-1">
+                            <Download className="h-3 w-3" />
+                            <span>{pattern.downloadCount}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Star className="h-3 w-3" />
+                            <span>{pattern.rating}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDownloadPattern(pattern)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {canManagePatterns && (
+                            <>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDuplicatePattern(pattern)}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPattern(pattern);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeletePattern(pattern.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="categories" className="space-y-4">
+          {/* Catégories de patrons */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Catégories de Patrons</CardTitle>
+              <CardDescription>Organisation des patrons par type de vêtement</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {patternCategories.map((category) => {
+                  const categoryPatterns = mockPatterns.filter(p => p.category === category.id);
+                  return (
+                    <Card key={category.id} className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{category.icon}</span>
+                          <h3 className="font-semibold">{category.name}</h3>
+                        </div>
+                        <Badge variant="outline">{categoryPatterns.length} patrons</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">{category.description}</p>
+                      <div className="space-y-1">
+                        <div className="text-xs text-muted-foreground">
+                          Téléchargements: {categoryPatterns.reduce((sum, p) => sum + p.downloadCount, 0)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Note moyenne: {categoryPatterns.length > 0 ? 
+                            (categoryPatterns.reduce((sum, p) => sum + p.rating, 0) / categoryPatterns.length).toFixed(1) : 
+                            'N/A'}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          {/* Historique des versions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Historique des Versions</CardTitle>
+              <CardDescription>Suivi des modifications des patrons</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {mockPatterns.map((pattern) => (
+                  <div key={pattern.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">{pattern.name}</h3>
+                      <Badge variant="outline">v{pattern.version}</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground">
+                      <div>
+                        <span className="font-medium">Créé le:</span> {new Date(pattern.createdAt).toLocaleDateString('fr-FR')}
+                      </div>
+                      <div>
+                        <span className="font-medium">Modifié le:</span> {new Date(pattern.updatedAt).toLocaleDateString('fr-FR')}
+                      </div>
+                      <div>
+                        <span className="font-medium">Par:</span> {pattern.createdBy}
+                      </div>
+                      <div>
+                        <span className="font-medium">Taille:</span> {formatFileSize(pattern.fileSize)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Dialog de modification */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le patron</DialogTitle>
+          </DialogHeader>
+          {selectedPattern && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editName">Nom du patron</Label>
+                  <Input
+                    id="editName"
+                    value={selectedPattern.name}
+                    onChange={(e) => setSelectedPattern(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="editCategory">Catégorie</Label>
+                  <Select value={selectedPattern.category} onValueChange={(value) => setSelectedPattern(prev => prev ? { ...prev, category: value } : null)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patternCategories.map(category => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="editDescription">Description</Label>
+                <Textarea
+                  id="editDescription"
+                  value={selectedPattern.description}
+                  onChange={(e) => setSelectedPattern(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editDifficulty">Difficulté</Label>
+                  <Select value={selectedPattern.difficulty} onValueChange={(value) => setSelectedPattern(prev => prev ? { ...prev, difficulty: value as any } : null)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="facile">Facile</SelectItem>
+                      <SelectItem value="moyen">Moyen</SelectItem>
+                      <SelectItem value="difficile">Difficile</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="editTags">Tags</Label>
+                  <Input
+                    id="editTags"
+                    value={selectedPattern.tags.join(', ')}
+                    onChange={(e) => setSelectedPattern(prev => prev ? { 
+                      ...prev, 
+                      tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
+                    } : null)}
+                    placeholder="Tags séparés par des virgules"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="editIsActive"
+                    checked={selectedPattern.isActive}
+                    onChange={(e) => setSelectedPattern(prev => prev ? { ...prev, isActive: e.target.checked } : null)}
+                  />
+                  <Label htmlFor="editIsActive">Actif</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="editIsPublic"
+                    checked={selectedPattern.isPublic}
+                    onChange={(e) => setSelectedPattern(prev => prev ? { ...prev, isPublic: e.target.checked } : null)}
+                  />
+                  <Label htmlFor="editIsPublic">Public</Label>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="editNotes">Notes</Label>
+                <Textarea
+                  id="editNotes"
+                  value={selectedPattern.notes || ''}
+                  onChange={(e) => setSelectedPattern(prev => prev ? { ...prev, notes: e.target.value } : null)}
+                  rows={2}
                 />
               </div>
             </div>
-            <div className="flex gap-2">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-3 py-2 border rounded-md"
-              >
-                <option value="all">Toutes les catégories</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.name}>
-                    {category.name} ({category.patternCount})
-                  </option>
-                ))}
-              </select>
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Affichage des patrons */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredPatterns.map((pattern) => (
-            <Card key={pattern.id} className="overflow-hidden">
-              <div className="aspect-video bg-muted flex items-center justify-center">
-                {pattern.thumbnailUrl ? (
-                  <img 
-                    src={pattern.thumbnailUrl} 
-                    alt={pattern.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="text-muted-foreground">
-                    {getFileTypeIcon(pattern.fileType)}
-                  </div>
-                )}
-              </div>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-sm line-clamp-2">{pattern.name}</h3>
-                  <Badge variant={pattern.isPublic ? "default" : "secondary"} className="text-xs">
-                    {pattern.isPublic ? "Public" : "Privé"}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                  {pattern.description}
-                </p>
-                <div className="flex items-center justify-between mb-3">
-                  <Badge 
-                    variant="outline" 
-                    className={cn("text-xs", getDifficultyColor(pattern.difficulty))}
-                  >
-                    {pattern.difficulty}
-                  </Badge>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                    {pattern.rating.toFixed(1)}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                  <span>{formatFileSize(pattern.fileSize)}</span>
-                  <span>v{pattern.version}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleDownloadPattern(pattern)}
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Télécharger
-                  </Button>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => handleComingSoon('Voir')}>
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>{pattern.name}</DialogTitle>
-                      </DialogHeader>
-                      <PatternDetails pattern={pattern} />
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Liste des patrons</CardTitle>
-            <CardDescription>
-              {filteredPatterns.length} patron(s) trouvé(s)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Patron</TableHead>
-                  <TableHead>Catégorie</TableHead>
-                  <TableHead>Difficulté</TableHead>
-                  <TableHead>Fichier</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Note</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatterns.map((pattern) => (
-                  <TableRow key={pattern.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{pattern.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {pattern.description}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{pattern.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant="outline" 
-                        className={getDifficultyColor(pattern.difficulty)}
-                      >
-                        {pattern.difficulty}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        {getFileTypeIcon(pattern.fileType)}
-                        <span className="ml-2 text-sm">{formatFileSize(pattern.fileSize)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={pattern.isPublic ? "default" : "secondary"}>
-                        {pattern.isPublic ? "Public" : "Privé"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 mr-1 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm">{pattern.rating.toFixed(1)}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDownloadPattern(pattern)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Voir')}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-4xl">
-                            <DialogHeader>
-                              <DialogTitle>{pattern.name}</DialogTitle>
-                            </DialogHeader>
-                            <PatternDetails pattern={pattern} />
-                          </DialogContent>
-                        </Dialog>
-                        {canManagePatterns && (
-                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Modifier')}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canManagePatterns && (
-                          <Button variant="ghost" size="sm" onClick={() => handleComingSoon('Supprimer')}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleEditPattern}>
+              Mettre à jour
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
-}
-
-// Composant formulaire d'upload
-function PatternUploadForm({ 
-  categories, 
-  onSubmit, 
-  uploadProgress 
-}: { 
-  categories: PatternCategory[];
-  onSubmit: (data: Partial<Pattern>) => void;
-  uploadProgress: number;
-}) {
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    category: '',
-    subcategory: '',
-    tags: [] as string[],
-    fileType: 'pdf' as 'pdf' | 'image' | 'vector' | 'other',
-    fileSize: 0,
-    fileName: '',
-    fileUrl: '',
-    thumbnailUrl: '',
-    isPublic: false,
-    isTemplate: false,
-    difficulty: 'intermediate' as 'beginner' | 'intermediate' | 'advanced' | 'expert',
-    estimatedTime: 1,
-    materials: [] as string[],
-    instructions: ''
-  });
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [tagInput, setTagInput] = useState('');
-  const [materialInput, setMaterialInput] = useState('');
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setFormData(prev => ({
-        ...prev,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: getFileTypeFromName(file.name)
-      }));
-    }
-  };
-
-  const getFileTypeFromName = (fileName: string): 'pdf' | 'image' | 'vector' | 'other' => {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') return 'pdf';
-    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) return 'image';
-    if (['ai', 'svg', 'eps'].includes(ext || '')) return 'vector';
-    return 'other';
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
-      setTagInput('');
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  const handleAddMaterial = () => {
-    if (materialInput.trim() && !formData.materials.includes(materialInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        materials: [...prev.materials, materialInput.trim()]
-      }));
-      setMaterialInput('');
-    }
-  };
-
-  const handleRemoveMaterial = (materialToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      materials: prev.materials.filter(material => material !== materialToRemove)
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedFile) {
-      // Simuler l'upload
-      const fileUrl = URL.createObjectURL(selectedFile);
-      onSubmit({
-        ...formData,
-        fileUrl
-      });
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Upload de fichier */}
-      <div>
-        <Label htmlFor="file">Fichier du patron *</Label>
-        <div className="mt-2">
-          <Input
-            id="file"
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.gif,.ai,.svg,.eps"
-            onChange={handleFileSelect}
-            required
-          />
-        </div>
-        {selectedFile && (
-          <div className="mt-2 p-3 bg-muted rounded-md">
-            <p className="text-sm font-medium">{selectedFile.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-            </p>
-            {uploadProgress > 0 && (
-              <Progress value={uploadProgress} className="mt-2" />
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Informations de base */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="name">Nom du patron *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="category">Catégorie *</Label>
-          <select
-            id="category"
-            value={formData.category}
-            onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-            className="w-full px-3 py-2 border rounded-md"
-            required
-          >
-            <option value="">Sélectionner une catégorie</option>
-            {categories.map(category => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <Label htmlFor="description">Description</Label>
-        <textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-          className="w-full px-3 py-2 border rounded-md"
-          rows={3}
-        />
-      </div>
-
-      {/* Tags */}
-      <div>
-        <Label>Tags</Label>
-        <div className="flex gap-2 mt-2">
-          <Input
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            placeholder="Ajouter un tag..."
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-          />
-          <Button type="button" onClick={handleAddTag}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        {formData.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.tags.map(tag => (
-              <Badge key={tag} variant="secondary">
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  className="ml-1"
-                >
-                  ×
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Paramètres */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label htmlFor="difficulty">Difficulté</Label>
-          <select
-            id="difficulty"
-            value={formData.difficulty}
-            onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
-              difficulty: e.target.value as 'beginner' | 'intermediate' | 'advanced' | 'expert' 
-            }))}
-            className="w-full px-3 py-2 border rounded-md"
-          >
-            <option value="beginner">Débutant</option>
-            <option value="intermediate">Intermédiaire</option>
-            <option value="advanced">Avancé</option>
-            <option value="expert">Expert</option>
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="estimatedTime">Temps estimé (heures)</Label>
-          <Input
-            id="estimatedTime"
-            type="number"
-            min="0.5"
-            step="0.5"
-            value={formData.estimatedTime}
-            onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
-              estimatedTime: parseFloat(e.target.value) 
-            }))}
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <input
-            id="isPublic"
-            type="checkbox"
-            checked={formData.isPublic}
-            onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))}
-          />
-          <Label htmlFor="isPublic">Public</Label>
-        </div>
-      </div>
-
-      {/* Matériaux */}
-      <div>
-        <Label>Matériaux nécessaires</Label>
-        <div className="flex gap-2 mt-2">
-          <Input
-            value={materialInput}
-            onChange={(e) => setMaterialInput(e.target.value)}
-            placeholder="Ajouter un matériau..."
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddMaterial())}
-          />
-          <Button type="button" onClick={handleAddMaterial}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-        {formData.materials.length > 0 && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.materials.map(material => (
-              <Badge key={material} variant="outline">
-                {material}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveMaterial(material)}
-                  className="ml-1"
-                >
-                  ×
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline">
-          Annuler
-        </Button>
-        <Button type="submit">
-          <Upload className="h-4 w-4 mr-2" />
-          Uploader
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-// Composant détails du patron
-function PatternDetails({ pattern }: { pattern: Pattern }) {
-  return (
-    <Tabs defaultValue="info" className="w-full">
-      <TabsList>
-        <TabsTrigger value="info">Informations</TabsTrigger>
-        <TabsTrigger value="materials">Matériaux</TabsTrigger>
-        <TabsTrigger value="history">Historique</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="info" className="space-y-6">
-        {/* Informations générales */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label>Nom</Label>
-            <p className="text-sm">{pattern.name}</p>
-          </div>
-          <div>
-            <Label>Catégorie</Label>
-            <p className="text-sm">{pattern.category}</p>
-          </div>
-          <div>
-            <Label>Difficulté</Label>
-            <Badge variant="outline">{pattern.difficulty}</Badge>
-          </div>
-          <div>
-            <Label>Temps estimé</Label>
-            <p className="text-sm">{pattern.estimatedTime} heures</p>
-          </div>
-          <div>
-            <Label>Version</Label>
-            <p className="text-sm">{pattern.version}</p>
-          </div>
-          <div>
-            <Label>Statut</Label>
-            <Badge variant={pattern.isPublic ? "default" : "secondary"}>
-              {pattern.isPublic ? "Public" : "Privé"}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Description */}
-        {pattern.description && (
-          <div>
-            <Label>Description</Label>
-            <p className="text-sm">{pattern.description}</p>
-          </div>
-        )}
-
-        {/* Tags */}
-        {pattern.tags.length > 0 && (
-          <div>
-            <Label>Tags</Label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {pattern.tags.map(tag => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Statistiques */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold">{pattern.downloadCount}</p>
-            <p className="text-xs text-muted-foreground">Téléchargements</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">{pattern.rating.toFixed(1)}</p>
-            <p className="text-xs text-muted-foreground">Note moyenne</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">{pattern.reviewCount}</p>
-            <p className="text-xs text-muted-foreground">Avis</p>
-          </div>
-        </div>
-      </TabsContent>
-      
-      <TabsContent value="materials" className="space-y-4">
-        <div>
-          <Label>Matériaux nécessaires</Label>
-          <div className="mt-2">
-            {pattern.materials.length > 0 ? (
-              <ul className="list-disc list-inside space-y-1">
-                {pattern.materials.map(material => (
-                  <li key={material} className="text-sm">{material}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">Aucun matériau spécifié</p>
-            )}
-          </div>
-        </div>
-
-        {pattern.instructions && (
-          <div>
-            <Label>Instructions</Label>
-            <p className="text-sm mt-2">{pattern.instructions}</p>
-          </div>
-        )}
-      </TabsContent>
-      
-      <TabsContent value="history" className="space-y-4">
-        <div className="text-center text-muted-foreground">
-          Historique des versions en cours de développement
-        </div>
-      </TabsContent>
-    </Tabs>
   );
 }
