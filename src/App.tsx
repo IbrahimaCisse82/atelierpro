@@ -17,6 +17,7 @@ import { LoadingPage } from "@/components/ui/loading";
 import { lazy, Suspense, useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
+import Index from './pages/Index';
 
 // Configuration optimisée de React Query
 const queryClient = new QueryClient({
@@ -108,8 +109,16 @@ function AppContent() {
     return <LoadingPage />;
   }
 
+  // Affiche la landing page si l'utilisateur n'est pas connecté
   if (!user) {
-    return <AuthLayout />;
+    return (
+      <Suspense fallback={<LoadingPage />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    );
   }
 
   return (
@@ -227,7 +236,6 @@ function AppContent() {
                 <AdvancedExportPage />
               </DashboardLayout>
             } />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
