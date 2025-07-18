@@ -56,14 +56,17 @@ vercel
 | `VITE_SUPABASE_URL` | URL de ton projet Supabase | `https://xxx.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | Clé publique Supabase | `eyJhbGciOiJIUzI1NiIs...` |
 
-### Optimisations Actives
+## 🚀 Optimisations Actives
 
-- ✅ **Bundle Splitting** : Code divisé par fonctionnalité
-- ✅ **Lazy Loading** : Pages chargées à la demande
-- ✅ **Image Optimization** : Images compressées
-- ✅ **Minification** : Code minifié avec Terser
-- ✅ **Cache Headers** : Assets mis en cache 1 an
-- ✅ **Security Headers** : Protection XSS, Clickjacking, etc.
+- Découpage du bundle (bundle splitting)
+- Lazy loading des modules
+- Monitoring Sentry (erreurs, performance)
+- Sécurité avancée Supabase (RLS, triggers, fonctions)
+- Conformité RGPD (logs, anonymisation, documentation)
+- Tests automatisés (scripts, audit, performance)
+- Documentation intégrée (modules, API, sécurité)
+- UI/UX harmonisée et responsive
+- Maintenance proactive (scripts, audit, surveillance)
 
 ### Monitoring et Analytics
 
@@ -124,6 +127,20 @@ npm run start:prod   # Serveur de production local
 - Toutes les routes sont redirigées vers `index.html`
 - Les assets sont optimisés et mis en cache
 - Les variables d'environnement sont sécurisées
+
+## 🗂️ Roadmap & To-Do
+
+- Surveillance continue (monitoring, alertes)
+- Optimisation des performances
+- Mise à jour régulière des dépendances
+- Renforcement de la sécurité (audit, patchs)
+- Documentation et guides utilisateurs
+- Conformité RGPD et sécurité des données
+- Ajout de nouveaux modules métier
+- Amélioration de la gestion multi-tenant
+- Automatisation du déploiement et des migrations
+- Gestion avancée des rôles/permissions
+- Tests E2E et unitaires sur tous les modules
 
 ## 🆘 Support
 

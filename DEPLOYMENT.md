@@ -151,6 +151,21 @@ pm2 logs atelierpro-production
 pm2 monit
 ```
 
+## ❓ FAQ / Dépannage
+
+- **Erreur de migration SQL / trigger** : Vérifier l'ordre des migrations, la présence des colonnes nécessaires avant la création des triggers.
+- **Problème d'authentification Supabase** : Vérifier les variables d'environnement et la configuration du projet Supabase.
+- **Déploiement Vercel échoué** : Contrôler les logs Vercel, la configuration des variables, et la synchronisation GitHub.
+- **Problème de rôles/permissions** : Vérifier la configuration RLS et les triggers Supabase.
+- **Tests automatisés** : Utiliser les scripts présents dans le dossier `scripts/` pour valider la sécurité, la performance et l'intégrité des modules.
+
+## 🔎 Surveillance & Maintenance
+
+- Utiliser Sentry pour le monitoring des erreurs et de la performance.
+- Lancer régulièrement les scripts d'audit et de test.
+- Mettre à jour les dépendances et appliquer les correctifs de sécurité.
+- Vérifier la conformité RGPD et la traçabilité des actions.
+
 ## 📈 Performance
 
 ### Optimisations Actives
@@ -200,4 +215,4 @@ En cas de problème :
 1. Vérifiez les logs dans `logs/`
 2. Consultez la section dépannage
 3. Vérifiez les prérequis
-4. Relancez le script de déploiement 
+4. Relancez le script de déploiement

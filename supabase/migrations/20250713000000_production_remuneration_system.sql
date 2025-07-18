@@ -1,6 +1,15 @@
 -- Migration pour le système de production et rémunération
 -- Date: 2025-07-13
 
+-- Ajouter la colonne user_id à la table employees si elle n'existe pas
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                  WHERE table_name = 'employees' AND column_name = 'user_id') THEN
+        ALTER TABLE employees ADD COLUMN user_id UUID REFERENCES auth.users(id);
+    END IF;
+END $$;
+
 -- Table des commandes (orders)
 CREATE TABLE IF NOT EXISTS orders (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -83,7 +92,8 @@ CREATE TABLE IF NOT EXISTS employee_payment_types (
 CREATE INDEX IF NOT EXISTS idx_orders_company_id ON orders(company_id);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_client_id ON orders(client_id);
-CREATE INDEX IF NOT EXISTS idx_orders_due_date ON orders(due_date);
+-- Index sur due_date supprimé pour éviter l'erreur si la colonne n'existe pas
+-- CREATE INDEX IF NOT EXISTS idx_orders_due_date ON orders(due_date);
 
 CREATE INDEX IF NOT EXISTS idx_production_tasks_company_id ON production_tasks(company_id);
 CREATE INDEX IF NOT EXISTS idx_production_tasks_order_id ON production_tasks(order_id);
@@ -214,93 +224,121 @@ CREATE TRIGGER trigger_calculate_remuneration
 -- Politiques RLS pour les commandes
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view orders from their company" ON orders
-    FOR SELECT USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid()
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'orders' AND policyname = 'Users can view orders from their company'
+    ) THEN
+        CREATE POLICY "Users can view orders from their company" ON orders
+            FOR SELECT USING (company_id = public.get_user_company_id());
+    END IF;
+END $$;
 
-CREATE POLICY "Managers can manage orders from their company" ON orders
-    FOR ALL USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid() AND role IN ('owner', 'manager')
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'orders' AND policyname = 'Managers can manage orders from their company'
+    ) THEN
+        CREATE POLICY "Managers can manage orders from their company" ON orders
+            FOR ALL USING (
+                company_id = public.get_user_company_id() 
+                AND (public.has_role('owner') OR public.has_role('manager'))
+            );
+    END IF;
+END $$;
 
 -- Politiques RLS pour les tâches de production
 ALTER TABLE production_tasks ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view production tasks from their company" ON production_tasks
-    FOR SELECT USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid()
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'production_tasks' AND policyname = 'Users can view production tasks from their company'
+    ) THEN
+        CREATE POLICY "Users can view production tasks from their company" ON production_tasks
+            FOR SELECT USING (company_id = public.get_user_company_id());
+    END IF;
+END $$;
 
-CREATE POLICY "Managers can manage production tasks from their company" ON production_tasks
-    FOR ALL USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid() AND role IN ('owner', 'manager')
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'production_tasks' AND policyname = 'Managers can manage production tasks from their company'
+    ) THEN
+        CREATE POLICY "Managers can manage production tasks from their company" ON production_tasks
+            FOR ALL USING (
+                company_id = public.get_user_company_id() 
+                AND (public.has_role('owner') OR public.has_role('manager'))
+            );
+    END IF;
+END $$;
 
-CREATE POLICY "Employees can update their own tasks" ON production_tasks
-    FOR UPDATE USING (
-        employee_id IN (
-            SELECT id FROM employees WHERE user_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'production_tasks' AND policyname = 'Employees can update their own tasks'
+    ) THEN
+        CREATE POLICY "Employees can update their own tasks" ON production_tasks
+            FOR UPDATE USING (
+                company_id = public.get_user_company_id()
+                AND employee_id IN (
+                    SELECT id FROM employees WHERE user_id = auth.uid()
+                )
+            );
+    END IF;
+END $$;
 
 -- Politiques RLS pour les rémunérations
 ALTER TABLE remunerations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view remunerations from their company" ON remunerations
-    FOR SELECT USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid()
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'remunerations' AND policyname = 'Users can view remunerations from their company'
+    ) THEN
+        CREATE POLICY "Users can view remunerations from their company" ON remunerations
+            FOR SELECT USING (company_id = public.get_user_company_id());
+    END IF;
+END $$;
 
-CREATE POLICY "Managers can manage remunerations from their company" ON remunerations
-    FOR ALL USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid() AND role IN ('owner', 'manager')
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'remunerations' AND policyname = 'Managers can manage remunerations from their company'
+    ) THEN
+        CREATE POLICY "Managers can manage remunerations from their company" ON remunerations
+            FOR ALL USING (
+                company_id = public.get_user_company_id() 
+                AND (public.has_role('owner') OR public.has_role('manager'))
+            );
+    END IF;
+END $$;
 
 -- Politiques RLS pour les types de paiement des employés
 ALTER TABLE employee_payment_types ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view employee payment types from their company" ON employee_payment_types
-    FOR SELECT USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid()
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'employee_payment_types' AND policyname = 'Users can view employee payment types from their company'
+    ) THEN
+        CREATE POLICY "Users can view employee payment types from their company" ON employee_payment_types
+            FOR SELECT USING (company_id = public.get_user_company_id());
+    END IF;
+END $$;
 
-CREATE POLICY "Managers can manage employee payment types from their company" ON employee_payment_types
-    FOR ALL USING (
-        company_id IN (
-            SELECT company_id FROM employees WHERE user_id = auth.uid() AND role IN ('owner', 'manager')
-            UNION
-            SELECT id FROM companies WHERE owner_id = auth.uid()
-        )
-    );
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies WHERE tablename = 'employee_payment_types' AND policyname = 'Managers can manage employee payment types from their company'
+    ) THEN
+        CREATE POLICY "Managers can manage employee payment types from their company" ON employee_payment_types
+            FOR ALL USING (
+                company_id = public.get_user_company_id() 
+                AND (public.has_role('owner') OR public.has_role('manager'))
+            );
+    END IF;
+END $$;
 
 -- Fonction pour obtenir les statistiques de production
 CREATE OR REPLACE FUNCTION get_production_stats(p_company_id UUID)
@@ -366,25 +404,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Données de test pour les types de paiement
-INSERT INTO employee_payment_types (company_id, employee_id, payment_type, fixed_salary, task_rate, effective_date, is_active)
-SELECT 
-    e.company_id,
-    e.id,
-    CASE 
-        WHEN e.role = 'tailor' THEN 'task'
-        ELSE 'fixed'
-    END,
-    CASE 
-        WHEN e.role = 'tailor' THEN 0
-        ELSE 150000 -- Salaire fixe pour les autres rôles
-    END,
-    CASE 
-        WHEN e.role = 'tailor' THEN 2500 -- 2500 FCFA par heure pour les tailleurs
-        ELSE 0
-    END,
-    CURRENT_DATE,
-    true
-FROM employees e
-WHERE e.company_id IS NOT NULL
-ON CONFLICT DO NOTHING; 
+-- Données de test pour les types de paiement supprimées 
+-- (peuvent être ajoutées manuellement selon les besoins)

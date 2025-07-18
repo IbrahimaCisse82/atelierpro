@@ -1,3 +1,12 @@
+-- Ajout de la colonne due_date à la table orders si elle n'existe pas
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS due_date DATE;
+
+-- Ajout de la colonne is_paid à la table work_hours si elle n'existe pas
+ALTER TABLE public.work_hours ADD COLUMN IF NOT EXISTS is_paid BOOLEAN NOT NULL DEFAULT false;
+
+-- Ajout de la colonne user_id à la table employees si elle n'existe pas
+ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS user_id UUID;
+
 -- Migration pour la génération automatique des écritures comptables
 -- Date: 2025-07-12
 
@@ -405,7 +414,7 @@ BEGIN
   ELSIF NEW.movement_type = 'out' THEN
     -- Sortie de stock
     INSERT INTO public.accounting_entries (
-      company_id, journal_id, entry_number, entry_date, description, 
+      company_id, journal_id, v_entry_number, entry_date, description, 
       total_debit, total_credit, source_type, source_id, created_by, updated_by
     ) VALUES (
       v_company_id, v_journal_id, v_entry_number, CURRENT_DATE, 
@@ -453,7 +462,7 @@ CREATE TRIGGER trigger_generate_sales_entry
 CREATE TRIGGER trigger_generate_treasury_entry
   AFTER INSERT ON public.customer_invoices
   FOR EACH ROW
-  WHEN (NEW.payment_status = 'paid')
+  WHEN (NEW.is_paid = true)
   EXECUTE FUNCTION public.generate_treasury_entry();
 
 -- Trigger pour les salaires
@@ -557,4 +566,7 @@ COMMENT ON FUNCTION public.generate_treasury_entry() IS 'Génère automatiquemen
 COMMENT ON FUNCTION public.generate_payroll_entry() IS 'Génère automatiquement l''écriture de paie lors du versement d''un salaire';
 COMMENT ON FUNCTION public.generate_stock_entry() IS 'Génère automatiquement l''écriture de stock lors d''un mouvement';
 COMMENT ON FUNCTION public.reverse_accounting_entry(UUID) IS 'Annule une écriture en créant une écriture d''annulation';
-COMMENT ON FUNCTION public.check_entry_balance(UUID) IS 'Vérifie l''équilibre débit/crédit d''une écriture'; 
+COMMENT ON FUNCTION public.check_entry_balance(UUID) IS 'Vérifie l''équilibre débit/crédit d''une écriture';
+
+-- Index sur due_date supprimé pour éviter l'erreur si la colonne n'existe pas
+-- CREATE INDEX IF NOT EXISTS idx_orders_due_date ON orders(due_date);

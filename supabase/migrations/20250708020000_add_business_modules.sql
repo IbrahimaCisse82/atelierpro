@@ -398,7 +398,8 @@ CREATE TABLE IF NOT EXISTS public.employees (
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   created_by UUID NOT NULL REFERENCES public.profiles(id),
-  updated_by UUID NOT NULL REFERENCES public.profiles(id)
+  updated_by UUID NOT NULL REFERENCES public.profiles(id),
+  user_id UUID
 );
 
 -- Table des heures travaillées
@@ -720,4 +721,4 @@ CREATE INDEX idx_purchase_orders_status ON public.purchase_orders(status);
 CREATE INDEX idx_alerts_company_id ON public.alerts(company_id);
 CREATE INDEX idx_alerts_is_read ON public.alerts(is_read);
 CREATE INDEX idx_production_tracking_order_id ON public.production_tracking(order_id);
-CREATE INDEX idx_production_tracking_status_date ON public.production_tracking(status_date); 
+CREATE INDEX idx_production_tracking_status_date ON public.production_tracking(status_date);
