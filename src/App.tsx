@@ -16,6 +16,7 @@ import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
 import { lazy, Suspense, useState } from 'react';
 import { toast } from "@/components/ui/use-toast";
+import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
 
 // Configuration optimisée de React Query
 const queryClient = new QueryClient({
@@ -266,8 +267,13 @@ function AppContent() {
 
 // Composant racine avec tous les providers
 function App() {
+  // Ajout des flags React Router v7 pour anticiper la migration
+  const future = {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  };
   return (
-    <Router>
+    <Router future={future}>
       <AuthProvider>
         <TooltipProvider>
           <AppContent />

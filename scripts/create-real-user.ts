@@ -13,11 +13,22 @@ console.log('');
 // Client Supabase
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-async function createRealUser() {
-  // Utiliser un email valide (vous devrez le remplacer par votre vrai email)
-  const email = 'votre-email@gmail.com'; // À remplacer
-  const password = 'Demo123456!';
+// Utilisation des arguments de la ligne de commande pour personnaliser l'email et le mot de passe
+const args = process.argv.slice(2);
+let email = 'votre-email@gmail.com';
+let password = 'Demo123456!';
 
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--email' && args[i + 1]) {
+    email = args[i + 1];
+  }
+  if (args[i] === '--password' && args[i + 1]) {
+    password = args[i + 1];
+  }
+}
+
+async function createRealUser() {
+  // Utiliser l'email et le mot de passe passés en argument ou par défaut
   console.log('🔧 Création d\'utilisateur...');
   console.log(`📧 Email: ${email}`);
   console.log(`🔑 Mot de passe: ${password}`);
@@ -112,4 +123,4 @@ async function main() {
 }
 
 // Exécution
-main().catch(console.error); 
+main().catch(console.error);
