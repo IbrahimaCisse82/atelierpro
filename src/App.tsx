@@ -187,29 +187,29 @@ function AppContent() {
               </DashboardLayout>
             } />
             <Route path="/dashboard/settings" element={
-              <Suspense fallback={<LoadingPage />}>
+              <DashboardLayout>
                 <SettingsPage />
-              </Suspense>
+              </DashboardLayout>
             } />
             <Route path="/dashboard/syscohada" element={
-              <Suspense fallback={<LoadingPage />}>
+              <DashboardLayout>
                 <SyscohadaSettingsPage />
-              </Suspense>
+              </DashboardLayout>
             } />
             <Route path="/dashboard/reports" element={
-              <Suspense fallback={<LoadingPage />}>
+              <DashboardLayout>
                 <ReportsPage />
-              </Suspense>
+              </DashboardLayout>
             } />
             <Route path="/dashboard/financial-reports" element={
-              <Suspense fallback={<LoadingPage />}>
+              <DashboardLayout>
                 <FinancialReportsPage />
-              </Suspense>
+              </DashboardLayout>
             } />
             <Route path="/dashboard/bank-reconciliation" element={
-              <Suspense fallback={<LoadingPage />}>
+              <DashboardLayout>
                 <BankReconciliationPage />
-              </Suspense>
+              </DashboardLayout>
             } />
             <Route path="/dashboard/alerts" element={
               <DashboardLayout>

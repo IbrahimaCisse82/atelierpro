@@ -130,17 +130,19 @@ npm run start:prod   # Serveur de production local
 
 ## 🗂️ Roadmap & To-Do
 
-- Surveillance continue (monitoring, alertes)
-- Optimisation des performances
-- Mise à jour régulière des dépendances
-- Renforcement de la sécurité (audit, patchs)
-- Documentation et guides utilisateurs
-- Conformité RGPD et sécurité des données
-- Ajout de nouveaux modules métier
-- Amélioration de la gestion multi-tenant
-- Automatisation du déploiement et des migrations
-- Gestion avancée des rôles/permissions
-- Tests E2E et unitaires sur tous les modules
+- [x] Surveillance continue (monitoring, alertes)
+- [x] Optimisation des performances
+- [x] Mise à jour régulière des dépendances
+- [x] Renforcement de la sécurité (audit, patchs, RLS, search_path)
+- [x] Automatisation du déploiement et des migrations (Supabase CLI, scripts)
+- [x] Gestion avancée des rôles/permissions (RLS, policies)
+- [x] Tests E2E et unitaires sur les modules principaux
+- [x] Documentation et guides utilisateurs (README, guides Supabase)
+- [x] Conformité RGPD et sécurité des données (logs, anonymisation)
+- [ ] Ajout de nouveaux modules métier
+- [ ] Amélioration de la gestion multi-tenant
+
+> Dernière mise à jour : 18/07/2025 — la plupart des points critiques sont réalisés. Voir l’historique des migrations et la documentation pour les détails.
 
 ## 🆘 Support
 
