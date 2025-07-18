@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Search, Filter, Eye, Edit, Package, ShoppingCart, DollarSign, Download, Trash2, CheckCircle, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AccessControl } from '@/components/common/AccessControl';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { formatFCFA } from '@/lib/utils';
 import { useSupabaseQuery } from '@/hooks/use-supabase-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

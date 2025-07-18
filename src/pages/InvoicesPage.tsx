@@ -40,7 +40,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { formatFCFA, formatFCFAWithDecimals } from '@/lib/utils';
 
 // Types pour les workflows

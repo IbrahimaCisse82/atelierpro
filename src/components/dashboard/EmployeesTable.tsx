@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertTriangle, Users, DollarSign, Calendar, CheckCircle, Edit, Trash2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { PayrollBarChart, PayrollDonutChart } from './PayrollCharts';
 
 // Types employés
@@ -33,7 +33,6 @@ interface WorkHour {
 
 export function EmployeesTable() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null);
@@ -538,7 +537,6 @@ function PlanningForm({ employeeId, onSaved, initial }: { employeeId: string, on
   });
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
   const isEdit = !!initial;
 
   useEffect(() => {

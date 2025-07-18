@@ -15,7 +15,7 @@ import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashbo
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
 import { lazy, Suspense, useState } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
 import Index from './pages/Index';
 
