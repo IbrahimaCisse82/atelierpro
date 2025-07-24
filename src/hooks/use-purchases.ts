@@ -1,15 +1,12 @@
 import { useCallback } from 'react';
 import { useSupabaseQuery, useSupabaseMutation } from './use-supabase-query';
-import { Tables, Enums } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
 import { toast } from './use-toast';
 
-type PurchaseOrder = Tables<'purchase_orders'>;
-type PurchaseOrderInsert = Tables<'purchase_orders'>['Insert'];
-type PurchaseOrderUpdate = Tables<'purchase_orders'>['Update'];
-type PurchaseOrderItem = Tables<'purchase_order_items'>;
-type Reception = Tables<'receptions'>;
-type ReceptionInsert = Tables<'receptions'>['Insert'];
-type PurchaseStatus = Enums<'purchase_status'>;
+type PurchaseOrder = Database['public']['Tables']['purchase_orders']['Row'];
+type PurchaseOrderInsert = Database['public']['Tables']['purchase_orders']['Insert'];
+type PurchaseOrderUpdate = Database['public']['Tables']['purchase_orders']['Update'];
+type PurchaseStatus = Database['public']['Enums']['purchase_status'];
 
 export function usePurchases() {
   const {
@@ -23,18 +20,7 @@ export function usePurchases() {
     orderBy: { column: 'created_at', ascending: false }
   });
 
-  const {
-    data: receptions,
-    loading: receptionsLoading,
-    refetch: refetchReceptions
-  } = useSupabaseQuery<Reception>({
-    table: 'receptions',
-    select: '*',
-    orderBy: { column: 'created_at', ascending: false }
-  });
-
   const { create, update, remove, loading: mutationLoading } = useSupabaseMutation<PurchaseOrder>('purchase_orders');
-  const { create: createReception, update: updateReception } = useSupabaseMutation<Reception>('receptions');
 
   // Créer un bon de commande
   const createPurchaseOrder = useCallback(async (purchaseData: Omit<PurchaseOrderInsert, 'company_id' | 'created_by' | 'updated_by'>) => {
@@ -130,57 +116,6 @@ export function usePurchases() {
     }
   }, [remove, refetch]);
 
-  // Créer une réception
-  const createReception = useCallback(async (receptionData: Omit<ReceptionInsert, 'company_id' | 'created_by'>) => {
-    try {
-      const result = await createReception(receptionData);
-      toast({
-        title: "Réception créée",
-        description: "La réception a été créée avec succès.",
-      });
-      refetchReceptions();
-      return result;
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de créer la réception.",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  }, [createReception, refetchReceptions]);
-
-  // Valider une réception
-  const validateReception = useCallback(async (receptionId: string, validatedBy: string) => {
-    try {
-      await updateReception(receptionId, {
-        is_validated: true,
-        validated_by: validatedBy,
-        validated_at: new Date().toISOString()
-      });
-
-      // Mettre à jour le statut du bon de commande
-      const reception = receptions?.find(r => r.id === receptionId);
-      if (reception) {
-        await update(reception.purchase_order_id, { status: 'received' as PurchaseStatus });
-      }
-
-      toast({
-        title: "Réception validée",
-        description: "La réception a été validée avec succès.",
-      });
-      refetchReceptions();
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de valider la réception.",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  }, [updateReception, receptions, update, refetchReceptions, refetch]);
-
   // Utilitaires
   const getPurchaseOrderById = useCallback((id: string) => {
     return purchaseOrders?.find(purchase => purchase.id === id);
@@ -208,18 +143,6 @@ export function usePurchases() {
   const getReceivedPurchaseOrders = useCallback(() => {
     return purchaseOrders?.filter(purchase => purchase.status === 'received') || [];
   }, [purchaseOrders]);
-
-  const getReceptionByPurchaseOrder = useCallback((purchaseOrderId: string) => {
-    return receptions?.find(reception => reception.purchase_order_id === purchaseOrderId);
-  }, [receptions]);
-
-  const getValidatedReceptions = useCallback(() => {
-    return receptions?.filter(reception => reception.is_validated) || [];
-  }, [receptions]);
-
-  const getPendingReceptions = useCallback(() => {
-    return receptions?.filter(reception => !reception.is_validated) || [];
-  }, [receptions]);
 
   const searchPurchaseOrders = useCallback((searchTerm: string) => {
     if (!purchaseOrders) return [];
@@ -249,25 +172,19 @@ export function usePurchases() {
 
   return {
     purchaseOrders: purchaseOrders || [],
-    receptions: receptions || [],
-    loading: loading || receptionsLoading || mutationLoading,
+    loading: loading || mutationLoading,
     error,
     createPurchaseOrder,
     updatePurchaseStatus,
     updatePurchaseOrder,
     deletePurchaseOrder,
-    createReception,
-    validateReception,
     getPurchaseOrderById,
     getPurchaseOrdersByStatus,
     getPurchaseOrdersBySupplier,
     getActivePurchaseOrders,
     getReceivedPurchaseOrders,
-    getReceptionByPurchaseOrder,
-    getValidatedReceptions,
-    getPendingReceptions,
     searchPurchaseOrders,
     getPurchaseStats,
     refetch
   };
-} 
+}

@@ -48,9 +48,9 @@ export function useSupabaseQuery<T = any>({
 
     try {
       let query = supabase
-        .from(table)
+        .from(table as any)
         .select(select)
-        .eq('company_id', userProfile.company_id);
+        .eq('company_id', userProfile.companyId);
 
       // Appliquer les filtres
       Object.entries(filters).forEach(([key, value]) => {
@@ -79,8 +79,8 @@ export function useSupabaseQuery<T = any>({
         throw new Error(queryError.message);
       }
 
-      setData(result);
-      onSuccess?.(result);
+      setData(result as T[]);
+      onSuccess?.(result as T[]);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Erreur inconnue');
       setError(error);
@@ -126,10 +126,10 @@ export function useSupabaseMutation<T = any>(table: string) {
     setLoading(true);
     try {
       const { data: result, error } = await supabase
-        .from(table)
+        .from(table as any)
         .insert({
           ...data,
-          company_id: userProfile.company_id,
+          company_id: userProfile.companyId,
           created_by: userProfile.id,
           updated_by: userProfile.id
         })
@@ -151,14 +151,14 @@ export function useSupabaseMutation<T = any>(table: string) {
     setLoading(true);
     try {
       const { data: result, error } = await supabase
-        .from(table)
+        .from(table as any)
         .update({
           ...data,
           updated_by: userProfile.id,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
-        .eq('company_id', userProfile.company_id)
+        .eq('company_id', userProfile.companyId)
         .select()
         .single();
 
@@ -177,10 +177,10 @@ export function useSupabaseMutation<T = any>(table: string) {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from(table)
+        .from(table as any)
         .delete()
         .eq('id', id)
-        .eq('company_id', userProfile.company_id);
+        .eq('company_id', userProfile.companyId);
 
       if (error) throw error;
     } finally {
@@ -194,4 +194,4 @@ export function useSupabaseMutation<T = any>(table: string) {
     remove,
     loading
   };
-} 
+}

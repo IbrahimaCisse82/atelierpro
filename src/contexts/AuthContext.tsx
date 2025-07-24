@@ -118,6 +118,7 @@ interface AuthContextValue extends AuthState {
   retryCount: number;
   handleRetry: () => void;
   clearError: () => void;
+  userProfile: User | null;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -471,7 +472,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     switchRole,
     retryCount,
     handleRetry,
-    clearError
+    clearError,
+    userProfile: state.user
   };
 
   // Ajout du message d'attente intelligent dans le provider
@@ -484,7 +486,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       switchRole,
       retryCount,
       handleRetry,
-      clearError
+      clearError,
+      userProfile: state.user
     }}>
       {state.loading ? (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50">

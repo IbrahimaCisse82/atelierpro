@@ -1,13 +1,14 @@
 import { useCallback } from 'react';
 import { useSupabaseQuery, useSupabaseMutation } from './use-supabase-query';
-import { Tables } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
 import { toast } from './use-toast';
 
-type Product = Tables<'products'>;
-type ProductInsert = Tables<'products'>['Insert'];
-type ProductUpdate = Tables<'products'>['Update'];
-type ProductCategory = Tables<'product_categories'>;
-type StockMovement = Tables<'stock_movements'>;
+type Product = Database['public']['Tables']['products']['Row'];
+type ProductInsert = Database['public']['Tables']['products']['Insert'];
+type ProductUpdate = Database['public']['Tables']['products']['Update'];
+type ProductCategory = Database['public']['Tables']['product_categories']['Row'];
+type ProductCategoryInsert = Database['public']['Tables']['product_categories']['Insert'];
+type ProductCategoryUpdate = Database['public']['Tables']['product_categories']['Update'];
 
 export function useProducts() {
   const {
@@ -32,8 +33,7 @@ export function useProducts() {
   });
 
   const { create, update, remove, loading: mutationLoading } = useSupabaseMutation<Product>('products');
-  const { create: createCategory, update: updateCategory, remove: removeCategory } = useSupabaseMutation<ProductCategory>('product_categories');
-  const { create: createMovement } = useSupabaseMutation<StockMovement>('stock_movements');
+  const { create: createCategory, update: updateCategoryMutation, remove: removeCategory } = useSupabaseMutation<ProductCategory>('product_categories');
 
   // Opérations sur les produits
   const addProduct = useCallback(async (productData: Omit<ProductInsert, 'company_id' | 'created_by' | 'updated_by'>) => {
@@ -91,7 +91,7 @@ export function useProducts() {
   }, [remove, refetch]);
 
   // Opérations sur les catégories
-  const addCategory = useCallback(async (categoryData: Omit<ProductCategory['Insert'], 'company_id' | 'created_by' | 'updated_by'>) => {
+  const addCategory = useCallback(async (categoryData: Omit<ProductCategoryInsert, 'company_id' | 'created_by' | 'updated_by'>) => {
     try {
       await createCategory(categoryData);
       toast({
@@ -109,9 +109,9 @@ export function useProducts() {
     }
   }, [createCategory, refetchCategories]);
 
-  const updateCategory = useCallback(async (id: string, categoryData: Partial<ProductCategory['Update']>) => {
+  const updateCategory = useCallback(async (id: string, categoryData: Partial<ProductCategoryUpdate>) => {
     try {
-      await updateCategory(id, categoryData);
+      await updateCategoryMutation(id, categoryData);
       toast({
         title: "Catégorie modifiée",
         description: "La catégorie a été modifiée avec succès.",
@@ -125,7 +125,7 @@ export function useProducts() {
       });
       throw error;
     }
-  }, [updateCategory, refetchCategories]);
+  }, [updateCategoryMutation, refetchCategories]);
 
   const deleteCategory = useCallback(async (id: string) => {
     try {
@@ -144,40 +144,6 @@ export function useProducts() {
       throw error;
     }
   }, [removeCategory, refetchCategories]);
-
-  // Opérations sur le stock
-  const updateStock = useCallback(async (productId: string, quantity: number, movementType: string, reference?: string, notes?: string) => {
-    try {
-      await createMovement({
-        product_id: productId,
-        movement_type: movementType,
-        quantity: Math.abs(quantity),
-        reference,
-        notes,
-        movement_date: new Date().toISOString()
-      });
-
-      // Mettre à jour le stock du produit
-      const product = products?.find(p => p.id === productId);
-      if (product) {
-        const newStock = movementType === 'in' ? product.current_stock + quantity : product.current_stock - quantity;
-        await update(productId, { current_stock: Math.max(0, newStock) });
-      }
-
-      toast({
-        title: "Stock mis à jour",
-        description: "Le stock a été mis à jour avec succès.",
-      });
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le stock.",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  }, [createMovement, products, update, refetch]);
 
   // Utilitaires
   const getProductById = useCallback((id: string) => {
@@ -218,7 +184,6 @@ export function useProducts() {
     addCategory,
     updateCategory,
     deleteCategory,
-    updateStock,
     getProductById,
     getActiveProducts,
     getProductsByCategory,
@@ -226,4 +191,4 @@ export function useProducts() {
     searchProducts,
     refetch
   };
-} 
+}

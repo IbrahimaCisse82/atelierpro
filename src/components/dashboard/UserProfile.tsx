@@ -17,7 +17,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { ROLE_PERMISSIONS } from '@/types/auth';
+import { ROLE_PERMISSIONS, UserRole } from '@/types/auth';
 import { cn } from '@/lib/utils';
 
 export function UserProfile() {
@@ -224,7 +224,7 @@ export function UserProfile() {
                   <label className="text-sm font-medium">Changer de rôle</label>
                   <select
                     value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
+                    onChange={(e) => setSelectedRole(e.target.value as UserRole)}
                     className="w-full mt-1 p-2 border rounded-md"
                   >
                     {Object.entries(ROLE_PERMISSIONS).map(([role, info]) => (

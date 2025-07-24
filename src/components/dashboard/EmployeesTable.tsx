@@ -117,8 +117,8 @@ export function EmployeesTable() {
       setFinanceLoading(false);
       if (error) return;
       let caSum = 0, unpaidSum = 0;
-      (data || []).forEach((inv: Record<string, unknown>) => {
-        const amount = inv.amount as number;
+      (data || []).forEach((inv: any) => {
+        const amount = inv.total_with_tax as number || 0;
         const isPaid = inv.is_paid as boolean;
         if (isPaid) caSum += amount;
         else unpaidSum += amount;

@@ -1,11 +1,11 @@
 import { useCallback } from 'react';
 import { useSupabaseQuery, useSupabaseMutation } from './use-supabase-query';
-import { Tables } from '@/integrations/supabase/types';
+import { Database } from '@/integrations/supabase/types';
 import { toast } from './use-toast';
 
-type Supplier = Tables<'suppliers'>;
-type SupplierInsert = Tables<'suppliers'>['Insert'];
-type SupplierUpdate = Tables<'suppliers'>['Update'];
+type Supplier = Database['public']['Tables']['suppliers']['Row'];
+type SupplierInsert = Database['public']['Tables']['suppliers']['Insert'];
+type SupplierUpdate = Database['public']['Tables']['suppliers']['Update'];
 
 export function useSuppliers() {
   const {
@@ -107,4 +107,4 @@ export function useSuppliers() {
     searchSuppliers,
     refetch
   };
-} 
+}
