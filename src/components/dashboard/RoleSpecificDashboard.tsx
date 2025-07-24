@@ -717,7 +717,7 @@ export function RoleSpecificDashboard() {
         </Card>
       )}
 
-      {userRole === 'production' && (
+      {userRole === 'tailor' && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">

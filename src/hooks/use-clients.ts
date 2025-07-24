@@ -1,122 +1,118 @@
-// Hook métier pour la gestion des clients : CRUD, recherche, filtrage, feedback utilisateur toast.
-import { useCallback } from 'react';
-import { useSupabaseQuery, useSupabaseMutation } from './use-supabase-query';
-import { Tables } from '@/integrations/supabase/types';
-import { toast } from './use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { Database } from "@/integrations/supabase/types";
 
-type Client = Tables<'clients'>;
-type ClientInsert = Tables<'clients'>['Insert'];
-type ClientUpdate = Tables<'clients'>['Update'];
+type Client = Database['public']['Tables']['clients']['Row'];
+type ClientInsert = Database['public']['Tables']['clients']['Insert'];
+type ClientUpdate = Database['public']['Tables']['clients']['Update'];
 
-// Centralisation du pattern de gestion d’erreur/toast
-function showErrorToast(message: string) {
-  toast({
-    title: "Erreur",
-    description: message,
-    variant: "destructive"
-  });
-}
+export const useClients = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-export function useClients(): {
-  clients: Client[];
-  loading: boolean;
-  error: any;
-  addClient: (clientData: Omit<ClientInsert, 'company_id' | 'created_by' | 'updated_by'>) => Promise<void>;
-  updateClient: (id: string, clientData: Partial<ClientUpdate>) => Promise<void>;
-  deleteClient: (id: string) => Promise<void>;
-  getClientById: (id: string) => Client | undefined;
-  getActiveClients: () => Client[];
-  searchClients: (searchTerm: string) => Client[];
-  refetch: () => void;
-} {
+  const getClients = async (): Promise<Client[]> => {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erreur lors de la récupération des clients:', error);
+      throw error;
+    }
+
+    return data || [];
+  };
+
+  const createClient = async (clientData: Omit<ClientInsert, 'id' | 'created_at' | 'updated_at'>): Promise<Client> => {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert(clientData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erreur lors de la création du client:', error);
+      throw error;
+    }
+
+    return data;
+  };
+
+  const updateClient = async (id: string, updates: Partial<ClientUpdate>): Promise<Client> => {
+    const { data, error } = await supabase
+      .from('clients')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erreur lors de la mise à jour du client:', error);
+      throw error;
+    }
+
+    return data;
+  };
+
+  // Queries
   const {
-    data: clients,
-    loading,
-    error,
-    refetch
-  } = useSupabaseQuery<Client>({
-    table: 'clients',
-    select: '*',
-    orderBy: { column: 'created_at', ascending: false }
+    data: clients = [],
+    isLoading: isLoadingClients,
+    error: clientsError
+  } = useQuery({
+    queryKey: ['clients'],
+    queryFn: getClients,
   });
 
-  const { create, update, remove, loading: mutationLoading } = useSupabaseMutation<Client>('clients');
-
-  // Ajout d’un client avec feedback utilisateur
-  const addClient = useCallback(async (clientData: Omit<ClientInsert, 'company_id' | 'created_by' | 'updated_by'>) => {
-    try {
-      await create(clientData);
+  // Mutations
+  const createClientMutation = useMutation({
+    mutationFn: createClient,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast({
-        title: "Client ajouté",
-        description: "Le client a été ajouté avec succès.",
+        title: "Client créé",
+        description: "Le client a été créé avec succès",
       });
-      refetch();
-    } catch (error) {
-      showErrorToast("Impossible d'ajouter le client.");
-      throw error;
-    }
-  }, [create, refetch]);
-
-  // Mise à jour d’un client
-  const updateClient = useCallback(async (id: string, clientData: Partial<ClientUpdate>) => {
-    try {
-      await update(id, clientData);
+    },
+    onError: (error) => {
       toast({
-        title: "Client modifié",
-        description: "Le client a été modifié avec succès.",
+        title: "Erreur",
+        description: "Impossible de créer le client",
+        variant: "destructive",
       });
-      refetch();
-    } catch (error) {
-      showErrorToast("Impossible de modifier le client.");
-      throw error;
-    }
-  }, [update, refetch]);
+      console.error('Erreur lors de la création du client:', error);
+    },
+  });
 
-  // Suppression d’un client
-  const deleteClient = useCallback(async (id: string) => {
-    try {
-      await remove(id);
+  const updateClientMutation = useMutation({
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<ClientUpdate> }) =>
+      updateClient(id, updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
       toast({
-        title: "Client supprimé",
-        description: "Le client a été supprimé avec succès.",
+        title: "Client mis à jour",
+        description: "Le client a été mis à jour avec succès",
       });
-      refetch();
-    } catch (error) {
-      showErrorToast("Impossible de supprimer le client.");
-      throw error;
-    }
-  }, [remove, refetch]);
-
-  // Recherche et utilitaires
-  const getClientById = useCallback((id: string) => {
-    return clients?.find(client => client.id === id);
-  }, [clients]);
-
-  const getActiveClients = useCallback(() => {
-    return clients?.filter(client => client.is_active) || [];
-  }, [clients]);
-
-  const searchClients = useCallback((searchTerm: string) => {
-    if (!clients) return [];
-    const term = searchTerm.toLowerCase();
-    return clients.filter(client => 
-      client.first_name.toLowerCase().includes(term) ||
-      client.last_name.toLowerCase().includes(term) ||
-      client.email?.toLowerCase().includes(term) ||
-      client.phone?.includes(term)
-    );
-  }, [clients]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le client",
+        variant: "destructive",
+      });
+      console.error('Erreur lors de la mise à jour du client:', error);
+    },
+  });
 
   return {
-    clients: clients || [],
-    loading: loading || mutationLoading,
-    error,
-    addClient,
-    updateClient,
-    deleteClient,
-    getClientById,
-    getActiveClients,
-    searchClients,
-    refetch
+    clients,
+    isLoadingClients,
+    clientsError,
+    createClient: createClientMutation.mutate,
+    updateClient: updateClientMutation.mutate,
+    isCreatingClient: createClientMutation.isPending,
+    isUpdatingClient: updateClientMutation.isPending,
   };
-} 
+};
