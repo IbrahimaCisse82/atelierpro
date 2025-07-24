@@ -24,8 +24,6 @@
     "prebuild": "npm run clean",
     "postbuild": "echo 'Build terminé. Ouvrez dist/stats.html pour analyser le bundle.'"
   },
-  
-  },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
