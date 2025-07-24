@@ -574,7 +574,7 @@ export function InvoicesPage() {
     // Simulation de génération PDF
     toast({
       title: "PDF généré",
-      description: `Facture PDF générée pour ${type === 'client' ? workflow.clientName : workflow.supplierName}.`,
+      description: `Facture PDF générée pour ${type === 'client' ? (workflow as any).clientName : (workflow as any).supplierName}.`,
     });
   };
 
@@ -589,7 +589,7 @@ export function InvoicesPage() {
     // Simulation d'envoi email
     toast({
       title: "Email envoyé",
-      description: `Facture envoyée par email à ${type === 'client' ? workflow.clientEmail : workflow.supplierEmail}.`,
+      description: `Facture envoyée par email à ${type === 'client' ? (workflow as any).clientEmail : (workflow as any).supplierEmail}.`,
     });
   };
 

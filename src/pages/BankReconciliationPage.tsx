@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { exportToPDF, exportToExcel, exportBankReconciliation } from '@/lib/export-utils';
+import { exportToPDF as exportPDF, exportToExcel as exportExcel, exportBankReconciliation } from '@/lib/export-utils';
 
 // Types pour le rapprochement bancaire
 interface TreasuryAccount {
@@ -334,7 +334,7 @@ export function BankReconciliationPage() {
       const accountName = treasuryAccounts?.find((a: TreasuryAccount) => a.id === selectedAccount)?.account_name || 'Compte';
       const exportData = exportBankReconciliation(bankStatements, accountingEntries, accountName);
       
-      exportToPDF(exportData, `rapprochement-${accountName}-${new Date().toISOString().split('T')[0]}.pdf`);
+      exportPDF(exportData, `rapprochement-${accountName}-${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast({
         title: "Export PDF réussi",
@@ -365,7 +365,7 @@ export function BankReconciliationPage() {
       const accountName = treasuryAccounts?.find((a: TreasuryAccount) => a.id === selectedAccount)?.account_name || 'Compte';
       const exportData = exportBankReconciliation(bankStatements, accountingEntries, accountName);
       
-      exportToExcel(exportData, `rapprochement-${accountName}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      exportExcel(exportData, `rapprochement-${accountName}-${new Date().toISOString().split('T')[0]}.xlsx`);
       
       toast({
         title: "Export Excel réussi",

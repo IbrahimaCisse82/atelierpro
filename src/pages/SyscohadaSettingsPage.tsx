@@ -114,7 +114,7 @@ export function SyscohadaSettingsPage() {
   });
 
   // Récupération des données
-  const { data: accounts, isLoading: accountsLoading, refetch: refetchAccounts } = useSupabaseQuery(
+  const { data: accounts, loading: accountsLoading, refetch: refetchAccounts } = useSupabaseQuery(
     'syscohada_accounts',
     {
       select: '*',
@@ -122,7 +122,7 @@ export function SyscohadaSettingsPage() {
     }
   );
 
-  const { data: treasuryAccounts, isLoading: treasuryLoading, refetch: refetchTreasury } = useSupabaseQuery(
+  const { data: treasuryAccounts, loading: treasuryLoading, refetch: refetchTreasury } = useSupabaseQuery(
     'treasury_accounts',
     {
       select: '*',
@@ -130,7 +130,7 @@ export function SyscohadaSettingsPage() {
     }
   );
 
-  const { data: journals, isLoading: journalsLoading } = useSupabaseQuery(
+  const { data: journals, loading: journalsLoading } = useSupabaseQuery(
     'accounting_journals',
     {
       select: '*',
@@ -139,25 +139,10 @@ export function SyscohadaSettingsPage() {
   );
 
   // Mutations
-  const { mutate: updateAccount, isLoading: updatingAccount } = useSupabaseMutation(
-    'syscohada_accounts',
-    'update'
-  );
-
-  const { mutate: createAccount, isLoading: creatingAccount } = useSupabaseMutation(
-    'syscohada_accounts',
-    'insert'
-  );
-
-  const { mutate: updateTreasury, isLoading: updatingTreasury } = useSupabaseMutation(
-    'treasury_accounts',
-    'update'
-  );
-
-  const { mutate: createTreasury, isLoading: creatingTreasury } = useSupabaseMutation(
-    'treasury_accounts',
-    'insert'
-  );
+  const { update: updateAccount, loading: updatingAccount } = useSupabaseMutation('syscohada_accounts');
+  const { create: createAccount, loading: creatingAccount } = useSupabaseMutation('syscohada_accounts');
+  const { update: updateTreasury, loading: updatingTreasury } = useSupabaseMutation('treasury_accounts');
+  const { create: createTreasury, loading: creatingTreasury } = useSupabaseMutation('treasury_accounts');
 
   // Filtrage des comptes
   const filteredAccounts = accounts?.filter((account: SyscohadaAccount) => {
@@ -173,7 +158,7 @@ export function SyscohadaSettingsPage() {
     setEditForm({
       account_number: account.account_number,
       account_name: account.account_name,
-      account_type: account.account_type,
+      account_type: account.account_type as 'asset',
       account_category: account.account_category,
       is_active: account.is_active
     });
@@ -181,8 +166,7 @@ export function SyscohadaSettingsPage() {
 
   const handleSaveAccount = async (accountId: string) => {
     try {
-      await updateAccount({
-        id: accountId,
+      await updateAccount(accountId, {
         ...editForm,
         updated_by: user?.id
       });
@@ -244,7 +228,7 @@ export function SyscohadaSettingsPage() {
     setEditingTreasury(treasury.id);
     setTreasuryForm({
       account_name: treasury.account_name,
-      account_type: treasury.account_type,
+      account_type: treasury.account_type as 'cash',
       account_number: treasury.account_number || '',
       bank_name: treasury.bank_name || '',
       branch_code: treasury.branch_code || '',
@@ -256,8 +240,7 @@ export function SyscohadaSettingsPage() {
 
   const handleSaveTreasury = async (treasuryId: string) => {
     try {
-      await updateTreasury({
-        id: treasuryId,
+      await updateTreasury(treasuryId, {
         ...treasuryForm,
         updated_by: user?.id
       });

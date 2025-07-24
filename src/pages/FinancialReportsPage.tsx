@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { exportToPDF, exportToExcel, exportBalanceSheet, exportGeneralLedger, exportIncomeStatement, exportJournalEntries } from '@/lib/export-utils';
+import { exportToPDF as exportPDF, exportToExcel as exportExcel, exportBalanceSheet, exportGeneralLedger, exportIncomeStatement, exportJournalEntries } from '@/lib/export-utils';
 
 // Types pour les rapports financiers
 interface AccountBalance {
@@ -378,7 +378,7 @@ export function FinancialReportsPage() {
           return;
       }
 
-      exportToPDF(exportData, `rapport-${activeTab}-${new Date().toISOString().split('T')[0]}.pdf`);
+      exportPDF(exportData, `rapport-${activeTab}-${new Date().toISOString().split('T')[0]}.pdf`);
       
       toast({
         title: "Export PDF réussi",
@@ -416,7 +416,7 @@ export function FinancialReportsPage() {
           return;
       }
 
-      exportToExcel(exportData, `rapport-${activeTab}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      exportExcel(exportData, `rapport-${activeTab}-${new Date().toISOString().split('T')[0]}.xlsx`);
       
       toast({
         title: "Export Excel réussi",

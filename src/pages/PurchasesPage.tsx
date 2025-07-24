@@ -127,8 +127,7 @@ export function PurchasesPage() {
   };
 
   // Récupération des produits stockés
-  const { data: products = [] } = useSupabaseQuery({
-    table: 'products',
+  const { data: products = [] } = useSupabaseQuery('products', {
     select: 'id, name, unit, unit_price',
   });
 
