@@ -567,6 +567,7 @@ export type Database = {
           created_by: string
           email: string | null
           first_name: string
+          gender: string | null
           id: string
           is_active: boolean
           last_name: string
@@ -582,6 +583,7 @@ export type Database = {
           created_by: string
           email?: string | null
           first_name: string
+          gender?: string | null
           id?: string
           is_active?: boolean
           last_name: string
@@ -597,6 +599,7 @@ export type Database = {
           created_by?: string
           email?: string | null
           first_name?: string
+          gender?: string | null
           id?: string
           is_active?: boolean
           last_name?: string

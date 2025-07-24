@@ -7,11 +7,7 @@ export function initSentry() {
     Sentry.init({
       dsn: import.meta.env.VITE_SENTRY_DSN || "https://your-sentry-dsn@your-project.ingest.sentry.io/your-project-id",
       integrations: [
-        new BrowserTracing({
-          routingInstrumentation: Sentry.reactRouterV6Instrumentation(
-            (history) => history.listen
-          ),
-        }),
+        new BrowserTracing(),
       ],
       // Performance monitoring
       tracesSampleRate: 0.1, // 10% des transactions

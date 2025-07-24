@@ -358,7 +358,7 @@ export function ClientsPage() {
       totalOrders: 0,
       totalSpent: 0,
       satisfaction: 0,
-      gender: '' // Default to empty for new clients
+      gender: 'homme' as const // Default to 'homme' for new clients
     };
     setClients(prev => [...prev, newClient]);
     setIsCreateDialogOpen(false);
