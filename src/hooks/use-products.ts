@@ -16,8 +16,7 @@ export function useProducts() {
     loading,
     error,
     refetch
-  } = useSupabaseQuery<Product>({
-    table: 'products',
+  } = useSupabaseQuery<Product>('products', {
     select: '*',
     orderBy: { column: 'created_at', ascending: false }
   });
@@ -26,8 +25,7 @@ export function useProducts() {
     data: categories,
     loading: categoriesLoading,
     refetch: refetchCategories
-  } = useSupabaseQuery<ProductCategory>({
-    table: 'product_categories',
+  } = useSupabaseQuery<ProductCategory>('product_categories', {
     select: '*',
     orderBy: { column: 'name', ascending: true }
   });

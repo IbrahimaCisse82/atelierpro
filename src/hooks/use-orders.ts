@@ -54,8 +54,7 @@ export function useOrders(): {
     loading,
     error,
     refetch
-  } = useSupabaseQuery<Order>({
-    table: 'orders',
+  } = useSupabaseQuery<Order>('orders', {
     select: '*',
     orderBy: { column: 'created_at', ascending: false }
   });

@@ -13,8 +13,7 @@ export function useSuppliers() {
     loading,
     error,
     refetch
-  } = useSupabaseQuery<Supplier>({
-    table: 'suppliers',
+  } = useSupabaseQuery<Supplier>('suppliers', {
     select: '*',
     orderBy: { column: 'created_at', ascending: false }
   });

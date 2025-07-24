@@ -106,15 +106,8 @@ export function BankReconciliationPage() {
   );
 
   // Mutations
-  const { mutate: createReconciliation } = useSupabaseMutation(
-    'bank_reconciliations',
-    'insert'
-  );
-
-  const { mutate: updateReconciliation } = useSupabaseMutation(
-    'bank_reconciliations',
-    'update'
-  );
+  const { create: createReconciliation } = useSupabaseMutation('bank_reconciliations');
+  const { update: updateReconciliation } = useSupabaseMutation('bank_reconciliations');
 
   // Charger les données de rapprochement
   const loadReconciliationData = async () => {

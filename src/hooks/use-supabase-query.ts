@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
 interface UseSupabaseQueryOptions<T> {
-  table: string;
   select?: string;
   filters?: Record<string, any>;
   orderBy?: { column: string; ascending?: boolean };
@@ -22,16 +21,20 @@ interface UseSupabaseQueryResult<T> {
   mutate: (data: T[]) => void;
 }
 
-export function useSupabaseQuery<T = any>({
-  table,
-  select = '*',
-  filters = {},
-  orderBy,
-  limit,
-  enabled = true,
-  onSuccess,
-  onError
-}: UseSupabaseQueryOptions<T>): UseSupabaseQueryResult<T> {
+export function useSupabaseQuery<T = any>(
+  table: string,
+  options: UseSupabaseQueryOptions<T> = {}
+): UseSupabaseQueryResult<T> {
+  const {
+    select = '*',
+    filters = {},
+    orderBy,
+    limit,
+    enabled = true,
+    onSuccess,
+    onError
+  } = options;
+
   const [data, setData] = useState<T[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -192,6 +195,9 @@ export function useSupabaseMutation<T = any>(table: string) {
     create,
     update,
     remove,
-    loading
+    loading,
+    // Alias pour compatibilité
+    mutate: create,
+    isLoading: loading
   };
 }

@@ -14,8 +14,7 @@ export function usePurchases() {
     loading,
     error,
     refetch
-  } = useSupabaseQuery<PurchaseOrder>({
-    table: 'purchase_orders',
+  } = useSupabaseQuery<PurchaseOrder>('purchase_orders', {
     select: '*',
     orderBy: { column: 'created_at', ascending: false }
   });

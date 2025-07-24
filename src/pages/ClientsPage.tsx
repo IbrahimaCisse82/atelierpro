@@ -142,7 +142,7 @@ export function ClientsPage() {
           totalSpent: 0,
           satisfaction: 0,
           lastOrderDate: '',
-          gender: c.gender || ''
+          gender: (c.gender as 'homme' | 'femme' | 'enfant') || 'homme'
         })));
         setLoading(false);
       });
@@ -194,7 +194,7 @@ export function ClientsPage() {
           totalSpent: 0,
           satisfaction: 0,
           lastOrderDate: '',
-          gender: data[0].gender || 'homme'
+          gender: (data[0].gender as 'homme' | 'femme' | 'enfant') || 'homme'
         };
         
         setClients(prev => [...prev, newClientData]);
@@ -724,7 +724,7 @@ function ClientForm({
       return;
     }
     setError(null);
-    onSubmit(formData);
+    onSubmit(formData as Partial<Client>);
   };
 
   return (
