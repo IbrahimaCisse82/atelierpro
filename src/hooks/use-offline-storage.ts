@@ -17,10 +17,18 @@ interface OfflineStorageState {
   lastSync: Date | null;
 }
 
+interface PWAFeatures {
+  isInstallable: boolean;
+  isInstalled: boolean;
+  notificationPermission: NotificationPermission;
+  canInstall: boolean;
+}
+
 // Configuration IndexedDB
 const DB_NAME = 'AtelierProOffline';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'pendingActions';
+const CACHE_STORE = 'cacheData';
 
 class OfflineStorage {
   private db: IDBDatabase | null = null;
@@ -38,10 +46,17 @@ class OfflineStorage {
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
         
+        // Store pour les actions en attente
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
           store.createIndex('timestamp', 'timestamp', { unique: false });
           store.createIndex('synced', 'synced', { unique: false });
+        }
+
+        // Store pour les données en cache
+        if (!db.objectStoreNames.contains(CACHE_STORE)) {
+          const cacheStore = db.createObjectStore(CACHE_STORE, { keyPath: 'key' });
+          cacheStore.createIndex('expiry', 'expiry', { unique: false });
         }
       };
     });

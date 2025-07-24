@@ -652,7 +652,7 @@ BEGIN
 
   RETURN v_entry_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Fonction pour poster une écriture comptable
 CREATE OR REPLACE FUNCTION public.post_accounting_entry(p_entry_id UUID)
@@ -769,7 +769,7 @@ BEGIN
   FROM public.orders
   WHERE company_id = public.get_user_company_id();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE OR REPLACE FUNCTION public.get_employee_remunerations()
 RETURNS TABLE (
@@ -790,7 +790,7 @@ BEGIN
   WHERE e.company_id = public.get_user_company_id()
   GROUP BY e.id, e.name, to_char(r.period_start, 'MM/YYYY');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 COMMENT ON FUNCTION public.generate_sales_entry() IS 'Génère automatiquement l''écriture de vente lors de la livraison d''une commande - SÉCURISÉ';
 COMMENT ON FUNCTION public.generate_treasury_entry() IS 'Génère automatiquement l''écriture de trésorerie lors d''un paiement client - SÉCURISÉ';

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('AtelierPro - Parcours complet', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5175');
+    await page.goto('http://localhost:5173');
   });
 
   test('Tous les boutons sont actifs et affichent un toast', async ({ page }) => {
@@ -49,9 +49,9 @@ test.describe('AtelierPro - Parcours complet', () => {
 
   test('Connexion/déconnexion et création de compte', async ({ page }) => {
     // Aller sur la page d'auth
-    await page.goto('http://localhost:5175');
+    await page.goto('http://localhost:5173');
     // Test login (adaptez les sélecteurs selon votre UI)
-    await page.getByPlaceholder('Votre email').fill('test@atelierpro.com');
+    await page.getByPlaceholder('votre@email.fr').fill('test@atelierpro.com');
     await page.getByPlaceholder('Votre mot de passe').fill('test1234');
     await page.getByRole('button', { name: /se connecter/i }).click();
     // Vérifier l'accès au dashboard

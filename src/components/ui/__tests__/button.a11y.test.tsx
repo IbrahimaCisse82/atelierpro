@@ -2,6 +2,7 @@ import React from "react";
 import { render } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { Button } from "../button";
+import { describe, it, expect } from 'vitest';
 
 // Importer l’extension dans le setup global, pas ici
 

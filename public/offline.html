@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AtelierPro - Hors ligne</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .offline-container {
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .offline-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        h1 {
+            font-size: 2em;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .cached-data {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: left;
+        }
+        
+        .cached-data h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        
+        .cached-data ul {
+            list-style: none;
+        }
+        
+        .cached-data li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .cached-data li:before {
+            content: "📋";
+            position: absolute;
+            left: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .offline-container {
+                margin: 20px;
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            p {
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1>Vous êtes hors ligne</h1>
+        <p>
+            Pas de panique ! AtelierPro continue de fonctionner même sans connexion internet. 
+            Vos données sont sauvegardées localement et se synchroniseront automatiquement 
+            dès que la connexion sera rétablie.
+        </p>
+        
+        <button class="retry-btn" onclick="checkConnection()">
+            Réessayer la connexion
+        </button>
+        
+        <div class="cached-data">
+            <h3>🏠 Données disponibles hors ligne :</h3>
+            <ul>
+                <li>Dashboard principal</li>
+                <li>Liste des clients</li>
+                <li>Commandes récentes</li>
+                <li>Données financières</li>
+                <li>Informations des employés</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkConnection() {
+            if (navigator.onLine) {
+                // Tenter de charger une ressource pour vérifier la vraie connectivité
+                fetch('/', { cache: 'no-cache' })
+                    .then(() => {
+                        window.location.href = '/';
+                    })
+                    .catch(() => {
+                        alert('La connexion semble toujours instable. Veuillez réessayer dans quelques instants.');
+                    });
+            } else {
+                alert('Aucune connexion internet détectée. Vérifiez votre connexion et réessayez.');
+            }
+        }
+        
+        // Vérification automatique de la connexion toutes les 30 secondes
+        setInterval(() => {
+            if (navigator.onLine) {
+                fetch('/', { cache: 'no-cache' })
+                    .then(() => {
+                        // Afficher une notification de reconnexion
+                        const notification = document.createElement('div');
+                        notification.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: #4CAF50;
+                            color: white;
+                            padding: 15px 20px;
+                            border-radius: 10px;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                            z-index: 1000;
+                            animation: slideIn 0.3s ease;
+                        `;
+                        notification.innerHTML = `
+                            <strong>🌐 Connexion rétablie !</strong><br>
+                            Redirection automatique...
+                        `;
+                        document.body.appendChild(notification);
+                        
+                        // Rediriger après 2 secondes
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 2000);
+                    })
+                    .catch(() => {
+                        // Connexion toujours instable
+                    });
+            }
+        }, 30000);
+        
+        // Animation CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

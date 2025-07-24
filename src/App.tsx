@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AuthDebug } from "@/components/debug/AuthDebug";
 import { PerformanceMonitor } from "@/components/debug/PerformanceMonitor";
 import { PWAInstallPrompt } from "@/components/ui/pwa-install-prompt";
+import MobileNavigation from "@/components/common/MobileNavigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
@@ -245,29 +246,38 @@ function AppContent() {
         
         {/* Composants PWA */}
         <PWAInstallPrompt />
-        {/* Bouton flottant pour afficher/masquer le panneau de performance */}
-        <button
-          className="fixed bottom-6 right-6 z-50 bg-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-gray-100 transition"
-          onClick={() => setShowPerformanceMonitor((v) => !v)}
-        >
-          {showPerformanceMonitor ? 'Masquer' : 'Performance'}
-        </button>
-        {showPerformanceMonitor && (
-          <PerformanceMonitor onClose={() => setShowPerformanceMonitor(false)} />
-        )}
         
-        {/* Bouton flottant pour tester les boutons */}
-        <button
-          className="fixed bottom-6 left-6 z-50 bg-green-500 text-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-green-600 transition"
-          onClick={() => {
-            toast({
-              title: "Tous les boutons activés !",
-              description: "Vérifiez que tous les boutons sont maintenant fonctionnels.",
-            });
-          }}
-        >
-          Test Boutons
-        </button>
+        {/* Navigation mobile */}
+        <MobileNavigation />
+        
+        {/* Debug et monitoring uniquement en dev */}
+        {import.meta.env.DEV && (
+          <>
+            {/* Bouton flottant pour afficher/masquer le panneau de performance */}
+            <button
+              className="fixed bottom-6 right-6 z-50 bg-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-gray-100 transition"
+              onClick={() => setShowPerformanceMonitor((v) => !v)}
+            >
+              {showPerformanceMonitor ? 'Masquer' : 'Performance'}
+            </button>
+            {showPerformanceMonitor && (
+              <PerformanceMonitor onClose={() => setShowPerformanceMonitor(false)} />
+            )}
+            
+            {/* Bouton flottant pour tester les boutons */}
+            <button
+              className="fixed bottom-6 left-6 z-50 bg-green-500 text-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-green-600 transition"
+              onClick={() => {
+                toast({
+                  title: "Tous les boutons activés !",
+                  description: "Vérifiez que tous les boutons sont maintenant fonctionnels.",
+                });
+              }}
+            >
+              Test Boutons
+            </button>
+          </>
+        )}
       </QueryClientProvider>
     </SidebarProvider>
   );

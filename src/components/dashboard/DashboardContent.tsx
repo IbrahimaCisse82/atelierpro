@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatFCFA } from '@/lib/utils';
+import { ButtonTester } from '@/components/debug/ButtonTester';
 
 interface DashboardWidget {
   title: string;
@@ -366,6 +367,10 @@ export function DashboardContent() {
           <div className="p-6 text-center text-lg text-muted-foreground">Module Export & Rapports avancés à personnaliser</div>
         </TabsContent>
       </Tabs>
+      {/* Ajout du ButtonTester pour les tests E2E */}
+      <div className="my-8">
+        <ButtonTester />
+      </div>
     </div>
   );
 }
