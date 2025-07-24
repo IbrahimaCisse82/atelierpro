@@ -3,11 +3,13 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { componentTagger } from "lovable-tagger"
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
+    mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -57,7 +59,7 @@ export default defineConfig({
       gzipSize: true,
       brotliSize: true,
     }),
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -177,12 +179,12 @@ export default defineConfig({
     },
   },
   server: {
+    host: "::",
     port: 8080,
-    host: true,
   },
   define: {
     global: 'globalThis',
   },
-})
+}))
 
 
