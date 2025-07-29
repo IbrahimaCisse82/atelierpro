@@ -651,6 +651,9 @@ export function ClientsPage() {
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
                                 <DialogTitle>Modifier le client</DialogTitle>
+                                <DialogDescription>
+                                  Modifiez les informations du client sélectionné
+                                </DialogDescription>
                               </DialogHeader>
                               {selectedClient && (
                                 <ClientForm 
