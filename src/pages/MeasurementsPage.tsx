@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -193,6 +194,7 @@ const mockMeasurements: Measurement[] = [
 
 export function MeasurementsPage() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('measurements');
   const [searchTerm, setSearchTerm] = useState('');
   const [garmentTypeFilter, setGarmentTypeFilter] = useState<string>('all');
@@ -207,6 +209,30 @@ export function MeasurementsPage() {
     measurements: {},
     notes: ''
   });
+
+  // Effet pour gérer les paramètres URL (client pré-sélectionné)
+  useEffect(() => {
+    const clientId = searchParams.get('clientId');
+    const clientName = searchParams.get('clientName');
+    
+    if (clientId && clientName) {
+      // Pré-remplir le formulaire avec le client sélectionné
+      setNewMeasurement(prev => ({
+        ...prev,
+        clientId: clientId,
+        clientName: decodeURIComponent(clientName)
+      }));
+      
+      // Ouvrir automatiquement le dialog de création
+      setIsCreateDialogOpen(true);
+      
+      // Afficher un message informatif
+      toast({
+        title: "Nouveau client détecté",
+        description: `Prêt à créer les mesures pour ${decodeURIComponent(clientName)}`,
+      });
+    }
+  }, [searchParams]);
 
   // Permissions
   const canViewMeasurements = ['owner', 'manager', 'tailor', 'production'].includes(user?.role || '');
@@ -409,7 +435,7 @@ export function MeasurementsPage() {
         <div>
           <h1 className="text-3xl font-bold">Gestion des Mesures</h1>
           <p className="text-muted-foreground">
-            Saisie et suivi des mesures des clients
+            Visualisation et gestion des mesures prises pour les clients
           </p>
         </div>
         {canManageMeasurements && (
@@ -421,6 +447,23 @@ export function MeasurementsPage() {
           </div>
         )}
       </div>
+
+      {/* Message informatif */}
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <Ruler className="h-5 w-5 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Pour créer de nouvelles mesures
+              </p>
+              <p className="text-xs text-blue-700">
+                Créez d'abord un client depuis le module "Clients", puis les mesures seront automatiquement proposées.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

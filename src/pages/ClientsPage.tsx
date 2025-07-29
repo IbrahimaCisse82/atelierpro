@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Plus, 
@@ -26,7 +27,8 @@ import {
   Star,
   MoreHorizontal,
   Download,
-  ShoppingBag
+  ShoppingBag,
+  Ruler
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -105,6 +107,7 @@ const mockClients: Client[] = [
 
 export function ClientsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   // Permissions centralisées (désactivées pour activer tous les boutons)
   const canViewClients = true;
   const canManageClients = true;
@@ -117,6 +120,8 @@ export function ClientsPage() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMeasurementPrompt, setShowMeasurementPrompt] = useState(false);
+  const [createdClient, setCreatedClient] = useState<Client | null>(null);
 
   // Charger les clients depuis Supabase
   React.useEffect(() => {
@@ -198,11 +203,15 @@ export function ClientsPage() {
         };
         
         setClients(prev => [...prev, newClientData]);
+        setCreatedClient(newClientData);
         
         toast({
           title: "Succès",
           description: "Client ajouté avec succès.",
         });
+
+        // Proposer automatiquement la création des mesures
+        setShowMeasurementPrompt(true);
       }
     } catch (error: any) {
       toast({
@@ -668,6 +677,51 @@ export function ClientsPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Dialog de proposition de création de mesures */}
+      <Dialog open={showMeasurementPrompt} onOpenChange={setShowMeasurementPrompt}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Créer les mesures du client</DialogTitle>
+            <DialogDescription>
+              Client créé avec succès ! Souhaitez-vous maintenant créer les mesures pour{' '}
+              <strong>{createdClient?.firstName} {createdClient?.lastName}</strong> ?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
+            <Ruler className="h-8 w-8 text-blue-600" />
+            <div>
+              <p className="font-medium">Prise de mesures recommandée</p>
+              <p className="text-sm text-muted-foreground">
+                Prenez les mesures maintenant pour permettre la création de commandes personnalisées.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowMeasurementPrompt(false);
+                setCreatedClient(null);
+              }}
+            >
+              Plus tard
+            </Button>
+            <Button 
+              onClick={() => {
+                if (createdClient) {
+                  navigate(`/dashboard/measurements?clientId=${createdClient.id}&clientName=${encodeURIComponent(createdClient.firstName + ' ' + createdClient.lastName)}`);
+                }
+                setShowMeasurementPrompt(false);
+                setCreatedClient(null);
+              }}
+            >
+              <Ruler className="h-4 w-4 mr-2" />
+              Créer les mesures
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
