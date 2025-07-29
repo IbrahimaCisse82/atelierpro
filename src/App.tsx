@@ -106,27 +106,40 @@ function AppContent() {
   const { user, loading } = useAuth();
   const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
 
+  // Debug pour voir l'état de l'authentification
+  console.log("[AppContent] État auth:", { user: !!user, loading, userEmail: user?.email });
+
   if (loading) {
+    console.log("[AppContent] Chargement en cours...");
     return <LoadingPage />;
   }
 
   // Affiche la landing page si l'utilisateur n'est pas connecté
   if (!user) {
+    console.log("[AppContent] Aucun utilisateur connecté, redirection vers Index");
     return (
       <Suspense fallback={<LoadingPage />}>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/dashboard/*" element={<Index />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     );
   }
 
+  console.log("[AppContent] Utilisateur connecté, affichage du dashboard");
+
   return (
     <SidebarProvider>
       <QueryClientProvider client={queryClient}>
         <Suspense fallback={<LoadingPage />}>
           <Routes>
+            <Route path="/" element={
+              <DashboardLayout>
+                <RoleSpecificDashboard />
+              </DashboardLayout>
+            } />
             <Route path="/dashboard" element={
               <DashboardLayout>
                 <RoleSpecificDashboard />
