@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Settings, Users, Shield, Download, Upload, Save, RefreshCw, Building2, Globe, Palette, Bell, KeyRound, Mail, FileText } from 'lucide-react';
+import { User, Settings, Users, Shield, Download, Upload, Save, RefreshCw, Building2, Globe, Palette, Bell, KeyRound, Mail, FileText, Calculator } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
 
 export function SettingsPage() {
 	const { user } = useAuth();
@@ -61,9 +62,10 @@ export function SettingsPage() {
 				</div>
 			</div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company"><Building2 className="inline h-4 w-4 mr-1" />Entreprise</TabsTrigger>
           <TabsTrigger value="users"><Users className="inline h-4 w-4 mr-1" />Utilisateurs</TabsTrigger>
+          <TabsTrigger value="syscohada"><Calculator className="inline h-4 w-4 mr-1" />SYSCOHADA</TabsTrigger>
           <TabsTrigger value="preferences"><Settings className="inline h-4 w-4 mr-1" />Préférences</TabsTrigger>
           <TabsTrigger value="backup"><Save className="inline h-4 w-4 mr-1" />Sauvegarde</TabsTrigger>
         </TabsList>
@@ -138,6 +140,11 @@ export function SettingsPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Onglet SYSCOHADA */}
+        <TabsContent value="syscohada">
+          <SyscohadaSettingsPage />
         </TabsContent>
 
         {/* Onglet Préférences */}

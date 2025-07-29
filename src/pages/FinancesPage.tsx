@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 
 // Importation des composants des modules existants
-import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
 import { FinancialReportsPage } from '@/pages/FinancialReportsPage';
 import { BankReconciliationPage } from '@/pages/BankReconciliationPage';
 
@@ -83,9 +82,8 @@ export function FinancesPage() {
 
 			{/* Onglets principaux */}
 			<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-				<TabsList className="grid w-full grid-cols-4">
+				<TabsList className="grid w-full grid-cols-3">
 					<TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-					<TabsTrigger value="syscohada">SYSCOHADA</TabsTrigger>
 					<TabsTrigger value="reports">Rapports Financiers</TabsTrigger>
 					<TabsTrigger value="reconciliation">Rapprochement Bancaire</TabsTrigger>
 				</TabsList>
@@ -150,10 +148,12 @@ export function FinancesPage() {
 								<div className="text-muted-foreground">
 									Accédez aux différents modules financiers via les onglets ci-dessus :
 									<ul className="list-disc list-inside mt-2 space-y-1">
-										<li><strong>SYSCOHADA</strong> : Gestion du plan comptable et paramètres</li>
 										<li><strong>Rapports Financiers</strong> : Balance, grand livre, compte de résultat</li>
 										<li><strong>Rapprochement Bancaire</strong> : Rapprochement des comptes bancaires</li>
 									</ul>
+									<p className="mt-2 text-sm italic">
+										Note : Le paramétrage SYSCOHADA est maintenant disponible dans les Paramètres.
+									</p>
 								</div>
 							</CardContent>
 						</Card>
@@ -190,11 +190,6 @@ export function FinancesPage() {
 							</CardContent>
 						</Card>
 					)}
-				</TabsContent>
-
-				{/* Onglet SYSCOHADA */}
-				<TabsContent value="syscohada">
-					<SyscohadaSettingsPage />
 				</TabsContent>
 
 				{/* Onglet Rapports Financiers */}
