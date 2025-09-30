@@ -236,3 +236,5 @@ export function HRPage() {
     </div>
   );
 }
+
+export default HRPage;

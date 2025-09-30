@@ -857,3 +857,5 @@ export function MeasurementsPage() {
     </div>
   );
 }
+
+export default MeasurementsPage;

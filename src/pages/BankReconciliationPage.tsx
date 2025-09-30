@@ -676,4 +676,6 @@ export function BankReconciliationPage() {
       </Dialog>
     </div>
   );
-} 
+}
+
+export default BankReconciliationPage;

@@ -984,4 +984,6 @@ export function SyscohadaSettingsPage() {
       </Dialog>
     </div>
   );
-} 
+}
+
+export default SyscohadaSettingsPage;

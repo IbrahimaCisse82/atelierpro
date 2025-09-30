@@ -751,4 +751,6 @@ export function FinancialReportsPage() {
       </Tabs>
     </div>
   );
-} 
+}
+
+export default FinancialReportsPage;

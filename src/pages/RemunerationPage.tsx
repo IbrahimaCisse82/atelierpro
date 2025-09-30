@@ -734,4 +734,6 @@ export function RemunerationPage() {
       </Dialog>
     </div>
   );
-} 
+}
+
+export default RemunerationPage;

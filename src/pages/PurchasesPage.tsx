@@ -788,3 +788,5 @@ export function PurchasesPage() {
     </div>
   );
 }
+
+export default PurchasesPage;

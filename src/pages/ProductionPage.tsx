@@ -1007,3 +1007,5 @@ export function ProductionPage() {
     </div>
   );
 }
+
+export default ProductionPage;

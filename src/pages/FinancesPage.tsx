@@ -205,3 +205,5 @@ export function FinancesPage() {
 		</div>
 	);
 }
+
+export default FinancesPage;

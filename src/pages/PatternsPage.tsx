@@ -999,3 +999,5 @@ export function PatternsPage() {
     </div>
   );
 }
+
+export default PatternsPage;

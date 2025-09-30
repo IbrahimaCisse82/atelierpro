@@ -955,3 +955,5 @@ function ClientDetails({ client }: { client: Client }) {
     </Tabs>
   );
 }
+
+export default ClientsPage;

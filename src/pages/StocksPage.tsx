@@ -1058,3 +1058,5 @@ export function StocksPage() {
     </div>
   );
 }
+
+export default StocksPage;
