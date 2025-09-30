@@ -1,380 +1,381 @@
-import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Users, 
-  ShoppingCart, 
-  Package, 
-  Scissors, 
-  TrendingUp, 
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  DollarSign,
-  Calendar,
-  BarChart3,
-  FileText
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { formatFCFA } from '@/lib/utils';
 import { useDashboardStats } from '@/hooks/use-dashboard-stats';
 import { useDashboardAlerts } from '@/hooks/use-dashboard-alerts';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  Scissors,
+  FileText,
+  Briefcase,
+  Warehouse,
+  CreditCard
+} from 'lucide-react';
 
-interface DashboardWidget {
+// Configuration des sections du dashboard par domaine fonctionnel
+interface StatCard {
   title: string;
   value: string | number;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
   color: string;
-  roles: string[];
+  trend?: { value: number; isPositive: boolean };
 }
 
-interface AlertItem {
-  id: string;
+interface DashboardSection {
   title: string;
-  message: string;
-  level: 'info' | 'warning' | 'error' | 'critical';
-  time: string;
+  icon: React.ComponentType<{ className?: string }>;
+  cards: StatCard[];
+  requiredRoles?: string[];
 }
 
-const getDashboardWidgets = (stats: any): DashboardWidget[] => [
-  {
-    title: 'Commandes en cours',
-    value: stats?.activeOrders || 0,
-    description: `${stats?.activeOrders || 0} commande(s) active(s)`,
-    icon: ShoppingCart,
-    trend: { value: 15, isPositive: true },
-    color: 'text-blue-600',
-    roles: ['owner', 'manager', 'orders', 'customer_service']
-  },
-  {
-    title: 'Production active',
-    value: stats?.productionActive || 0,
-    description: 'En cours de fabrication',
-    icon: Scissors,
-    trend: { value: 8, isPositive: true },
-    color: 'text-green-600',
-    roles: ['owner', 'manager', 'tailor']
-  },
-  {
-    title: 'Stock faible',
-    value: stats?.lowStockCount || 0,
-    description: 'Produits à réapprovisionner',
-    icon: Package,
-    trend: { value: -2, isPositive: false },
-    color: 'text-orange-600',
-    roles: ['owner', 'stocks']
-  },
-  {
-    title: 'Clients actifs',
-    value: stats?.activeClients || 0,
-    description: `+${stats?.thisMonthClients || 0} ce mois`,
-    icon: Users,
-    trend: { value: 12, isPositive: true },
-    color: 'text-purple-600',
-    roles: ['owner', 'orders', 'customer_service']
-  },
-  {
-    title: "Chiffre d'affaires",
-    value: stats?.totalRevenue || 0,
-    description: '+8% ce mois',
-    icon: DollarSign,
-    trend: { value: 8, isPositive: true },
-    color: 'text-emerald-600',
-    roles: ['owner']
-  },
-  {
-    title: 'Factures en attente',
-    value: stats?.unpaidInvoicesCount || 0,
-    description: `${formatFCFA(stats?.unpaidInvoicesTotal || 0)} à encaisser`,
-    icon: FileText,
-    trend: { value: -1, isPositive: false },
-    color: 'text-red-600',
-    roles: ['owner', 'orders']
-  }
-];
+const formatFCFA = (amount: number) => {
+  return `${amount.toLocaleString('fr-FR')} FCFA`;
+};
 
+const getDashboardSections = (stats: any): DashboardSection[] => {
+  if (!stats) return [];
 
-const getProductionStatuses = (stats: any) => [
-  { status: 'En attente', count: stats?.productionStatuses?.cutting || 0, color: 'bg-blue-500' },
-  { status: 'En cours', count: stats?.productionStatuses?.sewing || 0, color: 'bg-yellow-500' },
-  { status: 'Terminé', count: stats?.productionStatuses?.finishing || 0, color: 'bg-green-500' },
-];
+  return [
+    {
+      title: 'Gestion Commerciale',
+      icon: Briefcase,
+      requiredRoles: ['owner', 'manager', 'orders'],
+      cards: [
+        {
+          title: 'Commandes Actives',
+          value: stats.activeOrders || 0,
+          description: 'En cours de traitement',
+          icon: ShoppingCart,
+          color: 'text-blue-600',
+        },
+        {
+          title: 'Clients Actifs',
+          value: stats.activeClients || 0,
+          description: `+${stats.thisMonthClients || 0} ce mois`,
+          icon: Users,
+          color: 'text-green-600',
+          trend: { value: stats.thisMonthClients || 0, isPositive: true },
+        },
+        {
+          title: 'Factures Impayées',
+          value: stats.unpaidInvoicesCount || 0,
+          description: formatFCFA(stats.unpaidInvoicesTotal || 0),
+          icon: FileText,
+          color: 'text-orange-600',
+        },
+      ],
+    },
+    {
+      title: 'Production & Stocks',
+      icon: Warehouse,
+      requiredRoles: ['owner', 'manager', 'tailor', 'stocks'],
+      cards: [
+        {
+          title: 'Tâches en Production',
+          value: stats.productionActive || 0,
+          description: 'En cours de fabrication',
+          icon: Scissors,
+          color: 'text-purple-600',
+        },
+        {
+          title: 'Stock Faible',
+          value: stats.lowStockCount || 0,
+          description: 'Articles à réapprovisionner',
+          icon: Package,
+          color: 'text-red-600',
+        },
+      ],
+    },
+    {
+      title: 'Finance',
+      icon: CreditCard,
+      requiredRoles: ['owner', 'manager'],
+      cards: [
+        {
+          title: 'Revenu Total',
+          value: formatFCFA(stats.totalRevenue || 0),
+          description: 'Paiements reçus',
+          icon: DollarSign,
+          color: 'text-emerald-600',
+        },
+        {
+          title: 'Montant Impayé',
+          value: formatFCFA(stats.unpaidInvoicesTotal || 0),
+          description: `${stats.unpaidInvoicesCount || 0} factures`,
+          icon: AlertCircle,
+          color: 'text-amber-600',
+        },
+      ],
+    },
+  ];
+};
 
 export function DashboardContent() {
   const { user } = useAuth();
-  const [tab, setTab] = React.useState('overview');
-  
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: alerts = [], isLoading: alertsLoading } = useDashboardAlerts();
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
+  const { data: alerts, isLoading: isLoadingAlerts } = useDashboardAlerts();
 
-  const dashboardWidgets = getDashboardWidgets(stats);
-  const productionStatuses = getProductionStatuses(stats);
-  
-  const filteredWidgets = dashboardWidgets.filter(widget => 
-    widget.roles.includes(user?.role || '')
-  );
-
-  if (statsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const sections = getDashboardSections(stats).filter((section) => {
+    if (!section.requiredRoles) return true;
+    return section.requiredRoles.some(role => role === user?.role);
+  });
 
   const getAlertIcon = (level: string) => {
     switch (level) {
       case 'critical':
       case 'error':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertCircle className="h-4 w-4" />;
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4" />;
       default:
-        return <CheckCircle className="h-4 w-4 text-blue-500" />;
+        return <CheckCircle className="h-4 w-4" />;
     }
   };
 
-  const getAlertBadgeVariant = (level: string) => {
+  const getAlertColor = (level: string) => {
     switch (level) {
       case 'critical':
       case 'error':
         return 'destructive';
       case 'warning':
-        return 'secondary';
-      default:
         return 'default';
+      default:
+        return 'secondary';
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Onglets Dashboard */}
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="mb-6 bg-white/10 backdrop-blur rounded-xl p-1 flex gap-2">
-          <TabsTrigger value="overview" className="font-semibold">Vue d’ensemble</TabsTrigger>
-          <TabsTrigger value="reports" className="font-semibold">Rapports</TabsTrigger>
-          <TabsTrigger value="alerts" className="font-semibold">Alertes</TabsTrigger>
-          <TabsTrigger value="audit" className="font-semibold">Journal d’activité</TabsTrigger>
-          <TabsTrigger value="export" className="font-semibold">Export & Rapports avancés</TabsTrigger>
-        </TabsList>
-        {/* Vue d’ensemble */}
-        <TabsContent value="overview">
-          {/* En-tête */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Tableau de bord</h1>
-              <p className="text-muted-foreground">
-                Bonjour {user?.firstName}, voici un aperçu de votre atelier
-              </p>
+    <div className="space-y-8 pb-8">
+      {/* En-tête avec bienvenue */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            Tableau de Bord
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Bienvenue, {user?.firstName || user?.email?.split('@')[0]}
+          </p>
+        </div>
+        <Badge variant="outline" className="text-sm w-fit">
+          {user?.role === 'owner' && '👑 Propriétaire'}
+          {user?.role === 'manager' && '👨‍💼 Manager'}
+          {user?.role === 'orders' && '📋 Commandes'}
+          {user?.role === 'tailor' && '✂️ Tailleur'}
+          {user?.role === 'stocks' && '📦 Stocks'}
+        </Badge>
+      </div>
+
+      {/* Sections par domaine fonctionnel */}
+      {sections.map((section, sectionIndex) => {
+        const SectionIcon = section.icon;
+        return (
+          <div key={sectionIndex} className="space-y-4">
+            <div className="flex items-center gap-2 border-b pb-2">
+              <SectionIcon className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold">{section.title}</h2>
             </div>
-                     <div className="flex items-center gap-2">
-               <Badge variant="outline" className="capitalize">
-                 {user?.role || 'Utilisateur'}
-               </Badge>
-              <Button variant="outline" size="sm">
-                <Calendar className="h-4 w-4 mr-2" />
-                {new Date().toLocaleDateString('fr-FR')}
-              </Button>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {isLoadingStats ? (
+                Array.from({ length: section.cards.length }).map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader className="pb-2">
+                      <Skeleton className="h-4 w-32" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-8 w-24 mb-2" />
+                      <Skeleton className="h-3 w-40" />
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                section.cards.map((card, cardIndex) => {
+                  const CardIcon = card.icon;
+                  return (
+                    <Card
+                      key={cardIndex}
+                      className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                    >
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          {card.title}
+                        </CardTitle>
+                        <CardIcon className={`h-5 w-5 ${card.color}`} />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{card.value}</div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {card.description}
+                        </p>
+                        {card.trend && (
+                          <div className="flex items-center mt-2 text-xs">
+                            {card.trend.isPositive ? (
+                              <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
+                            ) : (
+                              <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
+                            )}
+                            <span
+                              className={
+                                card.trend.isPositive
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              }
+                            >
+                              +{card.trend.value}
+                            </span>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </div>
+        );
+      })}
 
-          {/* Widgets statistiques */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWidgets.map((widget, index) => {
-              const Icon = widget.icon;
-              return (
-                <Card key={index}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {widget.title}
-                    </CardTitle>
-                    <Icon className={cn("h-4 w-4", widget.color)} />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {typeof widget.value === 'number' && widget.title === "Chiffre d'affaires"
-                        ? formatFCFA(widget.value as number)
-                        : widget.value}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {widget.description}
-                    </p>
-                    {widget.trend && (
-                      <div className="flex items-center mt-2">
-                        <TrendingUp 
-                          className={cn(
-                            "h-3 w-3 mr-1",
-                            widget.trend.isPositive ? "text-green-500" : "text-red-500"
-                          )} 
-                        />
-                        <span className={cn(
-                          "text-xs",
-                          widget.trend.isPositive ? "text-green-500" : "text-red-500"
-                        )}>
-                          {widget.trend.isPositive ? '+' : ''}{widget.trend.value}%
-                        </span>
+      {/* Détail Production pour les rôles concernés */}
+      {user?.role && ['owner', 'manager', 'tailor'].includes(user.role) && (
+        <Card className="border-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Scissors className="h-5 w-5 text-purple-600" />
+              Détail de la Production
+            </CardTitle>
+            <CardDescription>
+              Répartition des tâches par étape de fabrication
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingStats ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {[
+                  {
+                    label: 'En attente',
+                    value: stats?.productionStatuses?.cutting || 0,
+                    color: 'bg-blue-500',
+                    icon: Clock,
+                  },
+                  {
+                    label: 'En cours',
+                    value: stats?.productionStatuses?.sewing || 0,
+                    color: 'bg-purple-500',
+                    icon: Scissors,
+                  },
+                  {
+                    label: 'Terminées',
+                    value: stats?.productionStatuses?.finishing || 0,
+                    color: 'bg-green-500',
+                    icon: CheckCircle,
+                  },
+                ].map((status, index) => {
+                  const StatusIcon = status.icon;
+                  return (
+                    <div key={index} className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        <StatusIcon className="h-6 w-6 text-muted-foreground" />
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Statut de production */}
-            {(user?.role === 'owner' || user?.role === 'manager' || user?.role === 'tailor') && (
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Scissors className="h-5 w-5 mr-2" />
-                    Statut de production
-                  </CardTitle>
-                  <CardDescription>
-                    Répartition des commandes par étape de production
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {productionStatuses.map((item, index) => {
-                    const totalTasks = productionStatuses.reduce((sum, s) => sum + s.count, 0);
-                    const percentage = totalTasks > 0 ? (item.count / totalTasks) * 100 : 0;
-                    
-                    return (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className={cn("w-3 h-3 rounded-full", item.color)} />
-                          <span className="text-sm">{item.status}</span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-medium">
+                            {status.label}
+                          </span>
+                          <span className="text-sm font-bold">
+                            {status.value} tâches
+                          </span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium">{item.count}</span>
-                          <Progress 
-                            value={percentage} 
-                            className="w-20" 
+                        <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${status.color} transition-all duration-500`}
+                            style={{
+                              width: `${Math.min(
+                                (status.value / Math.max(stats?.productionActive || 1, 10)) * 100,
+                                100
+                              )}%`,
+                            }}
                           />
                         </div>
                       </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
+                    </div>
+                  );
+                })}
+              </div>
             )}
+          </CardContent>
+        </Card>
+      )}
 
-            {/* Alertes */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2" />
-                  Alertes récentes
-                </CardTitle>
-                <CardDescription>
-                  Notifications importantes
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {alertsLoading ? (
-                  <div className="flex items-center justify-center p-4">
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  </div>
-                ) : alerts.length === 0 ? (
-                  <div className="text-center text-muted-foreground p-4">
-                    Aucune alerte pour le moment
-                  </div>
-                ) : (
-                  alerts.map((alert) => (
-                  <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg border">
+      {/* Alertes récentes */}
+      <Card className="border-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            Alertes Récentes
+          </CardTitle>
+          <CardDescription>
+            Les 5 dernières notifications importantes
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoadingAlerts ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : alerts && alerts.length > 0 ? (
+            <div className="space-y-3">
+              {alerts.map((alert) => (
+                <Alert key={alert.id} variant={getAlertColor(alert.level) as any}>
+                  <div className="flex items-start gap-3">
                     {getAlertIcon(alert.level)}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{alert.title}</p>
-                                             <Badge variant={getAlertBadgeVariant(alert.level)}>
-                       {alert.level}
-                     </Badge>
+                        <p className="text-sm font-medium">
+                          {alert.title}
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {alert.level}
+                        </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <AlertDescription className="text-xs">
                         {alert.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      </AlertDescription>
+                      <p className="text-xs text-muted-foreground">
                         {alert.time}
                       </p>
                     </div>
                   </div>
-                  ))
-                )}
-                {alerts.length > 0 && (
-                  <Button variant="outline" size="sm" className="w-full">
-                    Voir toutes les alertes
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Graphiques et analyses */}
-          {(user?.role === 'owner' || user?.role === 'manager') && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BarChart3 className="h-5 w-5 mr-2" />
-                    Performance mensuelle
-                  </CardTitle>
-                  <CardDescription>
-                    Évolution des commandes et du chiffre d'affaires
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    Graphique en cours de développement
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2" />
-                    Délais de production
-                  </CardTitle>
-                  <CardDescription>
-                    Temps moyen par étape de production
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    Graphique en cours de développement
-                  </div>
-                </CardContent>
-              </Card>
+                </Alert>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">
+              <CheckCircle className="h-16 w-16 mx-auto mb-3 opacity-20" />
+              <p className="text-sm font-medium">Aucune alerte active</p>
+              <p className="text-xs mt-1">Tout fonctionne correctement</p>
             </div>
           )}
-        </TabsContent>
-        {/* Rapports */}
-        <TabsContent value="reports">
-          <div className="p-6 text-center text-lg text-muted-foreground">Module Rapports à personnaliser</div>
-        </TabsContent>
-        {/* Alertes */}
-        <TabsContent value="alerts">
-          <div className="p-6 text-center text-lg text-muted-foreground">Module Alertes à personnaliser</div>
-        </TabsContent>
-        {/* Journal d’activité */}
-        <TabsContent value="audit">
-          <div className="p-6 text-center text-lg text-muted-foreground">Module Journal d’activité à personnaliser</div>
-        </TabsContent>
-        {/* Export & Rapports avancés */}
-        <TabsContent value="export">
-          <div className="p-6 text-center text-lg text-muted-foreground">Module Export & Rapports avancés à personnaliser</div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }
