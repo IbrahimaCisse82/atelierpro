@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/sidebar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronDown, ChevronRight, Home } from 'lucide-react';
+import { ChevronDown, ChevronRight, Home, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -37,7 +38,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { open: sidebarOpen } = useSidebar();
+  const { open: sidebarOpen, toggleSidebar } = useSidebar();
   
   // État pour gérer l'ouverture/fermeture des groupes
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
@@ -131,26 +132,37 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen w-full bg-background">
-      <Sidebar className="border-r">
-        <SidebarHeader>
-          <div className="flex items-center justify-between w-full">
+      <Sidebar className="border-r bg-black text-white" collapsible="icon">
+        <SidebarHeader className="border-b border-gray-800 bg-black">
+          <div className="flex items-center justify-between w-full px-2">
             <div className="flex items-center space-x-2">
               <span className="text-2xl">👔</span>
-              {sidebarOpen && <h1 className="text-lg font-bold">AteliérPro</h1>}
+              {sidebarOpen && <h1 className="text-lg font-bold text-white">AteliérPro</h1>}
             </div>
+            {sidebarOpen && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="text-white hover:bg-gray-800"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </SidebarHeader>
         
-        <SidebarContent>
+        <SidebarContent className="bg-black">
           {/* Dashboard principal */}
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={location.pathname === '/dashboard' || location.pathname === '/'}
                 onClick={() => navigate('/dashboard')}
+                className="text-white hover:bg-gray-800 data-[active=true]:bg-gray-800 data-[active=true]:text-white"
               >
-                <Home className="mr-2 h-4 w-4" />
-                {sidebarOpen && 'Tableau de Bord'}
+                <Home className="h-4 w-4" />
+                {sidebarOpen && <span className="ml-2">Tableau de Bord</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -160,7 +172,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <SidebarGroup key={group.key}>
               <button
                 onClick={() => toggleGroup(group.key)}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity"
+                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-gray-800 transition-all rounded"
               >
                 <div className="flex items-center space-x-2">
                   <span>{group.icon}</span>
@@ -173,7 +185,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 )}
               </button>
               
-              {openGroups[group.key] && (
+              {sidebarOpen && openGroups[group.key] && (
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {group.items.map((item) => (
@@ -181,9 +193,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         <SidebarMenuButton
                           isActive={isActive(item.path)}
                           onClick={() => navigate(item.path)}
+                          className="text-gray-300 hover:bg-gray-800 hover:text-white data-[active=true]:bg-gray-800 data-[active=true]:text-white"
                         >
                           <span className="mr-2">{item.icon}</span>
-                          {sidebarOpen && item.label}
+                          <span>{item.label}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
@@ -195,7 +208,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Administration */}
           <SidebarGroup>
-            <SidebarGroupLabel>
+            <SidebarGroupLabel className="text-gray-300">
               <div className="flex items-center space-x-2">
                 <span>⚙️</span>
                 {sidebarOpen && <span>Administration</span>}
@@ -207,9 +220,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <SidebarMenuButton
                     isActive={isActive('/dashboard/settings')}
                     onClick={() => navigate('/dashboard/settings')}
+                    className="text-gray-300 hover:bg-gray-800 hover:text-white data-[active=true]:bg-gray-800 data-[active=true]:text-white"
                   >
                     <span className="mr-2">⚙️</span>
-                    {sidebarOpen && 'Paramètres'}
+                    {sidebarOpen && <span>Paramètres</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -218,10 +232,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SidebarContent>
       </Sidebar>
 
+      {/* Bouton toggle quand sidebar est fermé */}
+      {!sidebarOpen && (
+        <div className="fixed left-2 top-4 z-50">
+          <Button
+            variant="default"
+            size="icon"
+            onClick={toggleSidebar}
+            className="bg-black hover:bg-gray-800 text-white shadow-lg"
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
       <main className="flex-1 overflow-y-auto">
         {/* Header mobile avec trigger */}
         <div className="md:hidden sticky top-0 z-10 bg-background border-b p-4 flex items-center justify-between">
-          <SidebarTrigger />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleSidebar}
+          >
+            <PanelLeft className="h-4 w-4" />
+          </Button>
           <h2 className="text-lg font-semibold">AteliérPro</h2>
           <div className="w-8" /> {/* Spacer pour centrage */}
         </div>
