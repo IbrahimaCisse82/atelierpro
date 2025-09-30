@@ -64,6 +64,9 @@ const ProductionPage = lazy(() => import('./pages/ProductionPage').then(module =
 const StocksPage = lazy(() => import('./pages/StocksPage').then(module => ({ default: module.StocksPage })));
 const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
 const ReceptionsPage = lazy(() => import('./pages/ReceptionsPage'));
+const FixedAssetsPage = lazy(() => import('./pages/FixedAssetsPage'));
+const TreasuryPage = lazy(() => import('./pages/TreasuryPage'));
+const CustomerInvoicesDetailPage = lazy(() => import('./pages/CustomerInvoicesDetailPage'));
 const PatternsPage = lazy(() => import('./pages/PatternsPage').then(module => ({ default: module.PatternsPage })));
 const MeasurementsPage = lazy(() => import('./pages/MeasurementsPage').then(module => ({ default: module.MeasurementsPage })));
 const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then(module => ({ default: module.InvoicesPage })));
@@ -181,6 +184,21 @@ function AppContent() {
             <Route path="/dashboard/invoices" element={
               <DashboardLayout>
                 <InvoicesPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/customer-invoices" element={
+              <DashboardLayout>
+                <CustomerInvoicesDetailPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/fixed-assets" element={
+              <DashboardLayout>
+                <FixedAssetsPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/treasury" element={
+              <DashboardLayout>
+                <TreasuryPage />
               </DashboardLayout>
             } />
             <Route path="/dashboard/profile" element={

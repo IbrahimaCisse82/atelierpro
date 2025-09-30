@@ -659,6 +659,59 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_invoice_lines: {
+        Row: {
+          created_at: string
+          description: string
+          discount_percent: number | null
+          id: string
+          invoice_id: string
+          line_number: number
+          quantity: number
+          tax_amount: number
+          tax_rate: number | null
+          total_amount: number
+          total_before_tax: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          discount_percent?: number | null
+          id?: string
+          invoice_id: string
+          line_number: number
+          quantity?: number
+          tax_amount: number
+          tax_rate?: number | null
+          total_amount: number
+          total_before_tax: number
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          discount_percent?: number | null
+          id?: string
+          invoice_id?: string
+          line_number?: number
+          quantity?: number
+          tax_amount?: number
+          tax_rate?: number | null
+          total_amount?: number
+          total_before_tax?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "customer_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_invoices: {
         Row: {
           company_id: string
@@ -956,6 +1009,62 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fixed_asset_categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          default_rate: number | null
+          default_useful_life: number | null
+          depreciation_method: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          syscohada_account: string | null
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          default_rate?: number | null
+          default_useful_life?: number | null
+          depreciation_method?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          syscohada_account?: string | null
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          default_rate?: number | null
+          default_useful_life?: number | null
+          depreciation_method?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          syscohada_account?: string | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fixed_asset_categories_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -1383,6 +1492,63 @@ export type Database = {
             columns: ["model_id"]
             isOneToOne: false
             referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_reminders: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          id: string
+          invoice_id: string
+          notes: string | null
+          reminder_date: string
+          reminder_number: number
+          reminder_type: string
+          sent_at: string | null
+          sent_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          reminder_date?: string
+          reminder_number?: number
+          reminder_type: string
+          sent_at?: string | null
+          sent_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          reminder_date?: string
+          reminder_number?: number
+          reminder_type?: string
+          sent_at?: string | null
+          sent_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reminders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_reminders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "customer_invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -2595,6 +2761,107 @@ export type Database = {
           },
         ]
       }
+      treasury_movements: {
+        Row: {
+          accounting_entry_id: string | null
+          amount: number
+          beneficiary: string | null
+          category: string
+          company_id: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          is_reconciled: boolean
+          movement_date: string
+          movement_number: string
+          movement_type: string
+          notes: string | null
+          reference: string | null
+          source_id: string | null
+          source_type: string | null
+          transfer_to_account_id: string | null
+          treasury_account_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          accounting_entry_id?: string | null
+          amount: number
+          beneficiary?: string | null
+          category: string
+          company_id: string
+          created_at?: string
+          created_by: string
+          description: string
+          id?: string
+          is_reconciled?: boolean
+          movement_date?: string
+          movement_number: string
+          movement_type: string
+          notes?: string | null
+          reference?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          transfer_to_account_id?: string | null
+          treasury_account_id: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          accounting_entry_id?: string | null
+          amount?: number
+          beneficiary?: string | null
+          category?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          is_reconciled?: boolean
+          movement_date?: string
+          movement_number?: string
+          movement_type?: string
+          notes?: string | null
+          reference?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          transfer_to_account_id?: string | null
+          treasury_account_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasury_movements_accounting_entry_id_fkey"
+            columns: ["accounting_entry_id"]
+            isOneToOne: false
+            referencedRelation: "accounting_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_movements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_movements_transfer_to_account_id_fkey"
+            columns: ["transfer_to_account_id"]
+            isOneToOne: false
+            referencedRelation: "treasury_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_movements_treasury_account_id_fkey"
+            columns: ["treasury_account_id"]
+            isOneToOne: false
+            referencedRelation: "treasury_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_hours: {
         Row: {
           company_id: string
@@ -2736,6 +3003,10 @@ export type Database = {
       }
       generate_order_number: {
         Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_treasury_movement_number: {
+        Args: { p_company_id: string }
         Returns: string
       }
       get_employee_remunerations: {
