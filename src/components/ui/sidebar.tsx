@@ -264,6 +264,60 @@ export function SidebarMenuButton({
   );
 }
 
+// Sidebar Group
+interface SidebarGroupProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function SidebarGroup({ children, className, ...props }: SidebarGroupProps) {
+  return (
+    <div
+      className={cn("mb-4", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Sidebar Group Label
+interface SidebarGroupLabelProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function SidebarGroupLabel({ children, className, ...props }: SidebarGroupLabelProps) {
+  return (
+    <div
+      className={cn(
+        "px-3 py-2 text-xs font-semibold uppercase tracking-wider opacity-70",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Sidebar Group Content
+interface SidebarGroupContentProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function SidebarGroupContent({ children, className, ...props }: SidebarGroupContentProps) {
+  return (
+    <div
+      className={cn("space-y-1", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
 // Sidebar Trigger (for mobile toggle)
 interface SidebarTriggerProps {
   children?: ReactNode;
