@@ -23,6 +23,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatFCFA } from '@/lib/utils';
 import { ButtonTester } from '@/components/debug/ButtonTester';
 import { TestRunner } from '@/components/debug/TestRunner';
+import { useDashboardStats } from '@/hooks/use-dashboard-stats';
+import { useDashboardAlerts } from '@/hooks/use-dashboard-alerts';
+import { Loader2 } from 'lucide-react';
 
 interface DashboardWidget {
   title: string;
@@ -45,11 +48,11 @@ interface AlertItem {
   time: string;
 }
 
-const dashboardWidgets: DashboardWidget[] = [
+const getDashboardWidgets = (stats: any): DashboardWidget[] => [
   {
     title: 'Commandes en cours',
-    value: 12,
-    description: '+2 cette semaine',
+    value: stats?.activeOrders || 0,
+    description: `${stats?.activeOrders || 0} commande(s) active(s)`,
     icon: ShoppingCart,
     trend: { value: 15, isPositive: true },
     color: 'text-blue-600',
@@ -57,7 +60,7 @@ const dashboardWidgets: DashboardWidget[] = [
   },
   {
     title: 'Production active',
-    value: 8,
+    value: stats?.productionActive || 0,
     description: 'En cours de fabrication',
     icon: Scissors,
     trend: { value: 8, isPositive: true },
@@ -66,7 +69,7 @@ const dashboardWidgets: DashboardWidget[] = [
   },
   {
     title: 'Stock faible',
-    value: 3,
+    value: stats?.lowStockCount || 0,
     description: 'Produits à réapprovisionner',
     icon: Package,
     trend: { value: -2, isPositive: false },
@@ -75,8 +78,8 @@ const dashboardWidgets: DashboardWidget[] = [
   },
   {
     title: 'Clients actifs',
-    value: 45,
-    description: '+5 ce mois',
+    value: stats?.activeClients || 0,
+    description: `+${stats?.thisMonthClients || 0} ce mois`,
     icon: Users,
     trend: { value: 12, isPositive: true },
     color: 'text-purple-600',
@@ -84,7 +87,7 @@ const dashboardWidgets: DashboardWidget[] = [
   },
   {
     title: "Chiffre d'affaires",
-    value: 12450, // valeur numérique pour formatage FCFA
+    value: stats?.totalRevenue || 0,
     description: '+8% ce mois',
     icon: DollarSign,
     trend: { value: 8, isPositive: true },
@@ -93,8 +96,8 @@ const dashboardWidgets: DashboardWidget[] = [
   },
   {
     title: 'Factures en attente',
-    value: 5,
-    description: '3 200 FCFA à encaisser',
+    value: stats?.unpaidInvoicesCount || 0,
+    description: `${formatFCFA(stats?.unpaidInvoicesTotal || 0)} à encaisser`,
     icon: FileText,
     trend: { value: -1, isPositive: false },
     color: 'text-red-600',
@@ -102,45 +105,34 @@ const dashboardWidgets: DashboardWidget[] = [
   }
 ];
 
-const mockAlerts: AlertItem[] = [
-  {
-    id: '1',
-    title: 'Commande en retard',
-    message: 'Commande #1234 dépasse le délai de livraison',
-    level: 'warning',
-    time: 'Il y a 2h'
-  },
-  {
-    id: '2',
-    title: 'Stock faible',
-    message: 'Tissu coton rouge en rupture',
-    level: 'error',
-    time: 'Il y a 4h'
-  },
-  {
-    id: '3',
-    title: 'Réception en attente',
-    message: 'Commande fournisseur #5678 à réceptionner',
-    level: 'info',
-    time: 'Il y a 6h'
-  }
-];
 
-const productionStatuses = [
-  { status: 'En cours de coupe', count: 3, color: 'bg-blue-500' },
-  { status: 'En assemblage', count: 4, color: 'bg-yellow-500' },
-  { status: 'En finition', count: 2, color: 'bg-orange-500' },
-  { status: 'Contrôle qualité', count: 1, color: 'bg-purple-500' },
-  { status: 'Prêt à livrer', count: 2, color: 'bg-green-500' }
+const getProductionStatuses = (stats: any) => [
+  { status: 'En attente', count: stats?.productionStatuses?.cutting || 0, color: 'bg-blue-500' },
+  { status: 'En cours', count: stats?.productionStatuses?.sewing || 0, color: 'bg-yellow-500' },
+  { status: 'Terminé', count: stats?.productionStatuses?.finishing || 0, color: 'bg-green-500' },
 ];
 
 export function DashboardContent() {
   const { user } = useAuth();
   const [tab, setTab] = React.useState('overview');
+  
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
+  const { data: alerts = [], isLoading: alertsLoading } = useDashboardAlerts();
 
+  const dashboardWidgets = getDashboardWidgets(stats);
+  const productionStatuses = getProductionStatuses(stats);
+  
   const filteredWidgets = dashboardWidgets.filter(widget => 
     widget.roles.includes(user?.role || '')
   );
+
+  if (statsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const getAlertIcon = (level: string) => {
     switch (level) {
@@ -255,21 +247,26 @@ export function DashboardContent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {productionStatuses.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className={cn("w-3 h-3 rounded-full", item.color)} />
-                        <span className="text-sm">{item.status}</span>
+                  {productionStatuses.map((item, index) => {
+                    const totalTasks = productionStatuses.reduce((sum, s) => sum + s.count, 0);
+                    const percentage = totalTasks > 0 ? (item.count / totalTasks) * 100 : 0;
+                    
+                    return (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className={cn("w-3 h-3 rounded-full", item.color)} />
+                          <span className="text-sm">{item.status}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">{item.count}</span>
+                          <Progress 
+                            value={percentage} 
+                            className="w-20" 
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm font-medium">{item.count}</span>
-                        <Progress 
-                          value={(item.count / 12) * 100} 
-                          className="w-20" 
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             )}
@@ -286,7 +283,16 @@ export function DashboardContent() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {mockAlerts.map((alert) => (
+                {alertsLoading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : alerts.length === 0 ? (
+                  <div className="text-center text-muted-foreground p-4">
+                    Aucune alerte pour le moment
+                  </div>
+                ) : (
+                  alerts.map((alert) => (
                   <div key={alert.id} className="flex items-start space-x-3 p-3 rounded-lg border">
                     {getAlertIcon(alert.level)}
                     <div className="flex-1 min-w-0">
@@ -304,10 +310,13 @@ export function DashboardContent() {
                       </p>
                     </div>
                   </div>
-                ))}
-                <Button variant="outline" size="sm" className="w-full">
-                  Voir toutes les alertes
-                </Button>
+                  ))
+                )}
+                {alerts.length > 0 && (
+                  <Button variant="outline" size="sm" className="w-full">
+                    Voir toutes les alertes
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </div>
