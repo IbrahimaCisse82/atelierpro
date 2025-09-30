@@ -48,8 +48,8 @@ export function ReceptionsPage() {
     notes: '',
   });
 
-  // Permissions
-  const canManage = ['owner', 'stocks'].includes(user?.role || '');
+  // Permissions - Respecte la ségrégation des tâches
+  const canManage = ['owner', 'manager', 'stocks'].includes(user?.role || '');
 
   const statuses = [
     { value: 'all', label: 'Tous les statuts', icon: Package },

@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -2694,11 +2694,11 @@ export type Database = {
       check_user_consistency: {
         Args: Record<PropertyKey, never>
         Returns: {
-          status: string
           auth_users_count: number
-          public_profiles_count: number
           missing_profiles: number
           orphaned_profiles: number
+          public_profiles_count: number
+          status: string
         }[]
       }
       create_syscohada_chart_of_accounts: {
@@ -2707,12 +2707,12 @@ export type Database = {
       }
       create_user_with_profile: {
         Args: {
+          user_company_id?: string
           user_email: string
-          user_password: string
           user_first_name?: string
           user_last_name?: string
+          user_password: string
           user_role?: string
-          user_company_id?: string
         }
         Returns: Json
       }
@@ -2720,17 +2720,17 @@ export type Database = {
         Args:
           | {
               p_company_id: string
-              p_journal_id: string
               p_description: string
               p_entries: Json
+              p_journal_id: string
             }
           | {
               p_company_id: string
-              p_journal_type: Database["public"]["Enums"]["journal_type"]
               p_description: string
-              p_source_type: string
-              p_source_id: string
               p_entries: Json
+              p_journal_type: Database["public"]["Enums"]["journal_type"]
+              p_source_id: string
+              p_source_type: string
             }
         Returns: string
       }
@@ -2741,23 +2741,20 @@ export type Database = {
       get_employee_remunerations: {
         Args:
           | Record<PropertyKey, never>
-          | { p_employee_id: string; p_start_date: string; p_end_date: string }
+          | { p_employee_id: string; p_end_date: string; p_start_date: string }
         Returns: {
-          task_name: string
-          order_number: string
-          completion_date: string
-          hours_worked: number
-          remuneration_amount: number
-          remuneration_status: string
-          payment_date: string
+          employee_id: string
+          employee_name: string
+          month_year: string
+          total_remuneration: number
         }[]
       }
       get_production_stats: {
         Args: Record<PropertyKey, never> | { p_company_id: string }
         Returns: {
-          total_orders: number
           completed_orders: number
           pending_orders: number
+          total_orders: number
           total_revenue: number
         }[]
       }

@@ -56,8 +56,8 @@ export function SuppliersPage() {
     { value: 'autres', label: 'Autres' },
   ];
 
-  // Permissions
-  const canManage = ['owner', 'stocks'].includes(user?.role || '');
+  // Permissions - Respecte la ségrégation des tâches
+  const canManage = ['owner', 'manager', 'stocks'].includes(user?.role || '');
 
   const filteredSuppliers = suppliers.filter(supplier => {
     const matchesSearch = supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
