@@ -79,7 +79,6 @@ const SyscohadaSettingsPage = lazy(() => import('./pages/SyscohadaSettingsPage')
 const AlertsPage = lazy(() => import('./pages/AlertsPage').then(module => ({ default: module.AlertsPage })));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then(module => ({ default: module.AuditTrailPage })));
 const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(module => ({ default: module.AdvancedExportPage })));
-const NotFound = lazy(() => import('./pages/NotFound').then(module => ({ default: module.default })));
 
 // Pages légères importées normalement
 // import { Index } from './pages/Index';
@@ -114,8 +113,8 @@ function AppContent() {
       <Suspense fallback={<LoadingPage />}>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/dashboard/*" element={<Index />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/dashboard/*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     );
@@ -266,7 +265,7 @@ function AppContent() {
                 <AdvancedExportPage />
               </DashboardLayout>
             } />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Suspense>
         
