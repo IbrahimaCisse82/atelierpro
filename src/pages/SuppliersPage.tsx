@@ -1,413 +1,445 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useSuppliers } from '@/hooks/use-suppliers';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Building2, Plus, Edit, Trash2, Search, Download, Eye } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-
-interface Supplier {
-  id: string;
-  name: string;
-  contact: string;
-  email: string;
-  phone: string;
-}
-
-const mockSuppliers: Supplier[] = [
-  { id: '1', name: 'Textiles Paris', contact: 'Mme Martin', email: 'contact@textilesparis.fr', phone: '01 23 45 67 89' },
-  { id: '2', name: 'Mercerie Pro', contact: 'M. Dubois', email: 'info@merceriepro.com', phone: '02 98 76 54 32' },
-];
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  Truck,
+  Star,
+  Phone,
+  Building2
+} from 'lucide-react';
 
 export function SuppliersPage() {
   const { user } = useAuth();
-  // Permissions centralisées (désactivées pour activer tous les boutons)
-  const canViewSuppliers = true;
-  const canManageSuppliers = true;
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const { suppliers, isLoading, createSupplier, updateSupplier, deleteSupplier } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState('');
-  const [newSupplier, setNewSupplier] = useState<Partial<Supplier>>({});
-  const [editSupplier, setEditSupplier] = useState<Supplier | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
 
-  // Charger les fournisseurs depuis Supabase
-  React.useEffect(() => {
-    if (!user) return;
-    setLoading(true);
-    supabase
-      .from('suppliers')
-      .select('*')
-      .eq('company_id', user.companyId)
-      .then(({ data, error }) => {
-        if (error) setError(error.message);
-        else if (data) setSuppliers(data.map(s => ({
-          id: s.id,
-          name: s.name,
-          contact: s.contact_person || '',
-          email: s.email || '',
-          phone: s.phone || ''
-        })));
-        setLoading(false);
-      });
-  }, [user]);
+  // Formulaire
+  const [formData, setFormData] = useState({
+    name: '',
+    contact_person: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: 'Sénégal',
+    tax_id: '',
+    payment_terms: 30,
+    credit_limit: 0,
+    category: 'textile',
+    rating: 5,
+    notes: '',
+    is_active: true,
+  });
 
-  // CRUD Handlers
-  const handleAddSupplier = async () => {
-    // Validation stricte
-    if (!newSupplier.name || !newSupplier.contact || !newSupplier.email || !newSupplier.phone) {
-      toast({
-        title: "Erreur",
-        description: "Tous les champs sont obligatoires.",
-        variant: "destructive"
-      });
-      return;
+  const categories = [
+    { value: 'all', label: 'Toutes catégories' },
+    { value: 'textile', label: 'Tissus' },
+    { value: 'accessoires', label: 'Accessoires' },
+    { value: 'fournitures', label: 'Fournitures' },
+    { value: 'equipement', label: 'Équipement' },
+    { value: 'autres', label: 'Autres' },
+  ];
+
+  // Permissions
+  const canManage = ['owner', 'stocks'].includes(user?.role || '');
+
+  const filteredSuppliers = suppliers.filter(supplier => {
+    const matchesSearch = supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         supplier.supplier_number.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || supplier.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (editingSupplier) {
+      updateSupplier({ id: editingSupplier.id, ...formData });
+    } else {
+      createSupplier(formData as any);
     }
     
-    // Vérification unicité email et téléphone
-    const emailExists = suppliers.some(s => s.email === newSupplier.email);
-    if (emailExists) {
-      toast({
-        title: "Erreur",
-        description: "Cet email est déjà utilisé par un autre fournisseur.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const phoneExists = suppliers.some(s => s.phone === newSupplier.phone);
-    if (phoneExists) {
-      toast({
-        title: "Erreur",
-        description: "Ce numéro de téléphone est déjà utilisé par un autre fournisseur.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.from('suppliers').insert([
-        {
-          name: newSupplier.name,
-          contact_person: newSupplier.contact,
-          email: newSupplier.email,
-          phone: newSupplier.phone,
-          company_id: user?.companyId,
-          created_by: user?.id,
-          updated_by: user?.id,
-          is_active: true
-        }
-      ]).select();
-
-      if (error) throw error;
-
-      if (data) {
-        const newSupplierData = {
-          id: data[0].id,
-          name: data[0].name,
-          contact: data[0].contact_person || '',
-          email: data[0].email || '',
-          phone: data[0].phone || ''
-        };
-        
-        setSuppliers(prev => [...prev, newSupplierData]);
-        
-        toast({
-          title: "Succès",
-          description: "Fournisseur ajouté avec succès.",
-        });
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Erreur lors de l'ajout du fournisseur.",
-        variant: "destructive"
-      });
-    } finally {
-      setNewSupplier({});
-      setLoading(false);
-    }
+    setDialogOpen(false);
+    resetForm();
   };
 
-  const handleEditSupplier = async () => {
-    if (!editSupplier || !user) return;
-    
-    setLoading(true);
-    try {
-      const { error } = await supabase.from('suppliers').update({
-        name: editSupplier.name,
-        contact_person: editSupplier.contact,
-        email: editSupplier.email,
-        phone: editSupplier.phone,
-        updated_by: user.id,
-        updated_at: new Date().toISOString()
-      }).eq('id', editSupplier.id);
-
-      if (error) throw error;
-
-      setSuppliers(prev => prev.map(s => s.id === editSupplier.id ? editSupplier : s));
-      
-      toast({
-        title: "Succès",
-        description: "Fournisseur mis à jour avec succès.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Erreur lors de la mise à jour du fournisseur.",
-        variant: "destructive"
-      });
-    } finally {
-      setEditSupplier(null);
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteSupplier = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.from('suppliers').delete().eq('id', id);
-      
-      if (error) throw error;
-
-      setSuppliers(prev => prev.filter(s => s.id !== id));
-      
-      toast({
-        title: "Succès",
-        description: "Fournisseur supprimé avec succès.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Erreur",
-        description: error.message || "Erreur lors de la suppression du fournisseur.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleExportSuppliers = async () => {
-    try {
-      const csvContent = [
-        ['Nom', 'Contact', 'Email', 'Téléphone'],
-        ...suppliers.map(supplier => [
-          supplier.name,
-          supplier.contact,
-          supplier.email,
-          supplier.phone
-        ])
-      ].map(row => row.join(',')).join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `fournisseurs_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toast({
-        title: "Succès",
-        description: "Export des fournisseurs terminé.",
-      });
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de l'export.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleViewSupplierDetails = (supplier: Supplier) => {
-    toast({
-      title: "Détails du fournisseur",
-      description: `${supplier.name} - ${supplier.contact} - ${supplier.email}`,
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      contact_person: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      country: 'Sénégal',
+      tax_id: '',
+      payment_terms: 30,
+      credit_limit: 0,
+      category: 'textile',
+      rating: 5,
+      notes: '',
+      is_active: true,
     });
+    setEditingSupplier(null);
   };
 
-  // Filtrage
-  const filteredSuppliers = suppliers.filter(s =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.contact.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Actions réelles pour les fournisseurs
-  const handleSupplierAction = (action: string, supplierName?: string) => {
-    const context = supplierName ? ` (${supplierName})` : '';
-    toast({
-      title: `${action} activé`,
-      description: `La fonctionnalité « ${action} »${context} est maintenant active.`,
+  const handleEdit = (supplier: any) => {
+    setEditingSupplier(supplier);
+    setFormData({
+      name: supplier.name,
+      contact_person: supplier.contact_person || '',
+      email: supplier.email || '',
+      phone: supplier.phone || '',
+      address: supplier.address || '',
+      city: supplier.city || '',
+      country: supplier.country || 'Sénégal',
+      tax_id: supplier.tax_id || '',
+      payment_terms: supplier.payment_terms,
+      credit_limit: supplier.credit_limit,
+      category: supplier.category || 'textile',
+      rating: supplier.rating || 5,
+      notes: supplier.notes || '',
+      is_active: supplier.is_active,
     });
+    setDialogOpen(true);
   };
 
-  if (!canViewSuppliers) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Accès restreint</h3>
-            <p className="text-muted-foreground">
-              Vous n'avez pas les permissions nécessaires pour accéder à ce module.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+  const handleDelete = (id: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
+      deleteSupplier(id);
+    }
+  };
+
+  const getStatusBadge = (isActive: boolean) => {
+    return isActive ? (
+      <Badge variant="default">Actif</Badge>
+    ) : (
+      <Badge variant="secondary">Inactif</Badge>
     );
+  };
+
+  const getRatingStars = (rating: number) => {
+    return Array(5).fill(0).map((_, i) => (
+      <Star key={i} className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+    ));
+  };
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-64">Chargement...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-2">
+          <Truck className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-bold">Fournisseurs</h1>
-          <p className="text-muted-foreground">Gestion des fournisseurs de matières et services</p>
+          <Badge variant="outline">{filteredSuppliers.length}</Badge>
         </div>
-        {canManageSuppliers && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportSuppliers}>
-              <Download className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button onClick={() => setFormError(null)}>
-                  <Plus className="h-4 w-4 mr-2" /> Nouveau fournisseur
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Ajouter un fournisseur</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {formError && (
-                    <div className="text-red-600 text-sm font-medium">{formError}</div>
-                  )}
-                  <div>
-                    <Label>Nom *</Label>
-                    <Input value={newSupplier.name || ''} onChange={e => setNewSupplier(s => ({ ...s, name: e.target.value }))} required />
+
+        {canManage && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm}>
+                <Plus className="h-4 w-4 mr-2" /> Nouveau fournisseur
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingSupplier ? 'Modifier le fournisseur' : 'Nouveau fournisseur'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingSupplier ? 'Modifiez les informations du fournisseur' : 'Ajoutez un nouveau fournisseur à votre base'}
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Label htmlFor="name">Nom du fournisseur *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                    />
                   </div>
+
                   <div>
-                    <Label>Contact *</Label>
-                    <Input value={newSupplier.contact || ''} onChange={e => setNewSupplier(s => ({ ...s, contact: e.target.value }))} required />
+                    <Label htmlFor="contact_person">Personne de contact</Label>
+                    <Input
+                      id="contact_person"
+                      value={formData.contact_person}
+                      onChange={(e) => setFormData({ ...formData, contact_person: e.target.value })}
+                    />
                   </div>
+
                   <div>
-                    <Label>Email *</Label>
-                    <Input value={newSupplier.email || ''} onChange={e => setNewSupplier(s => ({ ...s, email: e.target.value }))} required />
+                    <Label htmlFor="category">Catégorie</Label>
+                    <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.filter(c => c.value !== 'all').map(cat => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+
                   <div>
-                    <Label>Téléphone *</Label>
-                    <Input value={newSupplier.phone || ''} onChange={e => setNewSupplier(s => ({ ...s, phone: e.target.value }))} required />
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
                   </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setNewSupplier({})}>Annuler</Button>
-                    <Button onClick={handleAddSupplier}>Ajouter</Button>
+
+                  <div>
+                    <Label htmlFor="phone">Téléphone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="address">Adresse</Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="city">Ville</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="country">Pays</Label>
+                    <Input
+                      id="country"
+                      value={formData.country}
+                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tax_id">NINEA / Identifiant fiscal</Label>
+                    <Input
+                      id="tax_id"
+                      value={formData.tax_id}
+                      onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="payment_terms">Délai de paiement (jours)</Label>
+                    <Input
+                      id="payment_terms"
+                      type="number"
+                      value={formData.payment_terms}
+                      onChange={(e) => setFormData({ ...formData, payment_terms: parseInt(e.target.value) })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="credit_limit">Plafond crédit (F CFA)</Label>
+                    <Input
+                      id="credit_limit"
+                      type="number"
+                      value={formData.credit_limit}
+                      onChange={(e) => setFormData({ ...formData, credit_limit: parseFloat(e.target.value) })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="rating">Note (1-5)</Label>
+                    <Select value={formData.rating.toString()} onValueChange={(value) => setFormData({ ...formData, rating: parseInt(value) })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5].map(r => (
+                          <SelectItem key={r} value={r.toString()}>{r} étoiles</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="col-span-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      rows={3}
+                    />
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button type="submit">
+                    {editingSupplier ? 'Modifier' : 'Créer'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         )}
       </div>
+
+      {/* Filtres */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recherche et filtres</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par nom ou numéro..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tableau des fournisseurs */}
       <Card>
         <CardHeader>
           <CardTitle>Liste des fournisseurs</CardTitle>
-          <CardDescription>CRUD, recherche, filtres</CardDescription>
+          <CardDescription>{filteredSuppliers.length} fournisseur(s) trouvé(s)</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center mb-4">
-            <Search className="h-4 w-4 mr-2 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher par nom ou contact..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="max-w-xs"
-            />
-          </div>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Numéro</TableHead>
                 <TableHead>Nom</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Téléphone</TableHead>
-                {canManageSuppliers && <TableHead>Actions</TableHead>}
+                <TableHead>Catégorie</TableHead>
+                <TableHead>Note</TableHead>
+                <TableHead>Paiement</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSuppliers.map(supplier => (
-                <TableRow key={supplier.id}>
-                  <TableCell>{supplier.name}</TableCell>
-                  <TableCell>{supplier.contact}</TableCell>
-                  <TableCell>{supplier.email}</TableCell>
-                  <TableCell>{supplier.phone}</TableCell>
-                  {canManageSuppliers && (
+              {filteredSuppliers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    Aucun fournisseur trouvé
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredSuppliers.map((supplier) => (
+                  <TableRow key={supplier.id}>
+                    <TableCell className="font-mono text-sm">{supplier.supplier_number}</TableCell>
+                    <TableCell className="font-medium">{supplier.name}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => handleViewSupplierDetails(supplier)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Modifier le fournisseur</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label>Nom</Label>
-                                <Input value={editSupplier?.name || ''} onChange={e => setEditSupplier(s => s ? { ...s, name: e.target.value } : null)} />
-                              </div>
-                              <div>
-                                <Label>Contact</Label>
-                                <Input value={editSupplier?.contact || ''} onChange={e => setEditSupplier(s => s ? { ...s, contact: e.target.value } : null)} />
-                              </div>
-                              <div>
-                                <Label>Email</Label>
-                                <Input value={editSupplier?.email || ''} onChange={e => setEditSupplier(s => s ? { ...s, email: e.target.value } : null)} />
-                              </div>
-                              <div>
-                                <Label>Téléphone</Label>
-                                <Input value={editSupplier?.phone || ''} onChange={e => setEditSupplier(s => s ? { ...s, phone: e.target.value } : null)} />
-                              </div>
-                              <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setEditSupplier(null)}>Annuler</Button>
-                                <Button onClick={handleEditSupplier}>Enregistrer</Button>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleSupplierAction('Modifier', supplier.name)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleSupplierAction('Supprimer', supplier.name)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                      <div className="space-y-1 text-sm">
+                        {supplier.contact_person && (
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3" />
+                            {supplier.contact_person}
+                          </div>
+                        )}
+                        {supplier.phone && (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Phone className="h-3 w-3" />
+                            {supplier.phone}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
-                  )}
-                </TableRow>
-              ))}
+                    <TableCell>
+                      <Badge variant="outline">{supplier.category || 'N/A'}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-0.5">
+                        {getRatingStars(supplier.rating || 0)}
+                      </div>
+                    </TableCell>
+                    <TableCell>{supplier.payment_terms} jours</TableCell>
+                    <TableCell>{getStatusBadge(supplier.is_active)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {canManage && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(supplier)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDelete(supplier.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
-          {filteredSuppliers.length === 0 && (
-            <p className="text-center text-muted-foreground mt-4">Aucun fournisseur trouvé.</p>
-          )}
         </CardContent>
       </Card>
     </div>

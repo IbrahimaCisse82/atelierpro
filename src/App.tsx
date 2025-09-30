@@ -62,7 +62,8 @@ const RemunerationPage = lazy(() => import('./pages/RemunerationPage').then(modu
 const OrdersPage = lazy(() => import('./pages/OrdersPage').then(module => ({ default: module.OrdersPage })));
 const ProductionPage = lazy(() => import('./pages/ProductionPage').then(module => ({ default: module.ProductionPage })));
 const StocksPage = lazy(() => import('./pages/StocksPage').then(module => ({ default: module.StocksPage })));
-const SuppliersPage = lazy(() => import('./pages/SuppliersPage').then(module => ({ default: module.SuppliersPage })));
+const SuppliersPage = lazy(() => import('./pages/SuppliersPage'));
+const ReceptionsPage = lazy(() => import('./pages/ReceptionsPage'));
 const PatternsPage = lazy(() => import('./pages/PatternsPage').then(module => ({ default: module.PatternsPage })));
 const MeasurementsPage = lazy(() => import('./pages/MeasurementsPage').then(module => ({ default: module.MeasurementsPage })));
 const InvoicesPage = lazy(() => import('./pages/InvoicesPage').then(module => ({ default: module.InvoicesPage })));
@@ -155,6 +156,16 @@ function AppContent() {
             <Route path="/dashboard/purchases" element={
               <DashboardLayout>
                 <PurchasesPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/suppliers" element={
+              <DashboardLayout>
+                <SuppliersPage />
+              </DashboardLayout>
+            } />
+            <Route path="/dashboard/receptions" element={
+              <DashboardLayout>
+                <ReceptionsPage />
               </DashboardLayout>
             } />
             <Route path="/dashboard/patterns" element={

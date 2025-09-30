@@ -1,109 +1,167 @@
-import { useCallback } from 'react';
-import { useSupabaseQuery, useSupabaseMutation } from './use-supabase-query';
-import { Database } from '@/integrations/supabase/types';
-import { toast } from './use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
-type Supplier = Database['public']['Tables']['suppliers']['Row'];
-type SupplierInsert = Database['public']['Tables']['suppliers']['Insert'];
-type SupplierUpdate = Database['public']['Tables']['suppliers']['Update'];
+export interface Supplier {
+  id: string;
+  company_id: string;
+  supplier_number: string;
+  name: string;
+  contact_person?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  tax_id?: string;
+  payment_terms: number;
+  credit_limit: number;
+  category?: string;
+  rating?: number;
+  notes?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
-export function useSuppliers() {
-  const {
-    data: suppliers,
-    loading,
-    error,
-    refetch
-  } = useSupabaseQuery<Supplier>('suppliers', {
-    select: '*',
-    orderBy: { column: 'created_at', ascending: false }
+export const useSuppliers = () => {
+  const queryClient = useQueryClient();
+
+  const { data: suppliers = [], isLoading } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      return (data || []) as any[];
+    },
   });
 
-  const { create, update, remove, loading: mutationLoading } = useSupabaseMutation<Supplier>('suppliers');
+  const createSupplier = useMutation({
+    mutationFn: async (supplier: Omit<Supplier, 'id' | 'created_at' | 'updated_at' | 'supplier_number' | 'company_id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
 
-  const addSupplier = useCallback(async (supplierData: Omit<SupplierInsert, 'company_id' | 'created_by' | 'updated_by'>) => {
-    try {
-      await create(supplierData);
-      toast({
-        title: "Fournisseur ajouté",
-        description: "Le fournisseur a été ajouté avec succès.",
-      });
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible d'ajouter le fournisseur.",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  }, [create, refetch]);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single();
 
-  const updateSupplier = useCallback(async (id: string, supplierData: Partial<SupplierUpdate>) => {
-    try {
-      await update(id, supplierData);
-      toast({
-        title: "Fournisseur modifié",
-        description: "Le fournisseur a été modifié avec succès.",
-      });
-      refetch();
-    } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de modifier le fournisseur.",
-        variant: "destructive"
-      });
-      throw error;
-    }
-  }, [update, refetch]);
+      if (!profile) throw new Error('Profil non trouvé');
 
-  const deleteSupplier = useCallback(async (id: string) => {
-    try {
-      await remove(id);
+      // Générer le numéro de fournisseur manuellement
+      const { data: existingSuppliers } = await supabase
+        .from('suppliers')
+        .select('supplier_number')
+        .eq('company_id', profile.company_id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const count = existingSuppliers?.length || 0;
+      const supplierNumber = `FOUR-${String(count + 1).padStart(6, '0')}`;
+
+      const { data, error } = await supabase
+        .from('suppliers')
+        .insert({
+          ...supplier,
+          supplier_number: supplierNumber,
+          company_id: profile.company_id,
+          created_by: user.id,
+          updated_by: user.id,
+        } as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast({
-        title: "Fournisseur supprimé",
-        description: "Le fournisseur a été supprimé avec succès.",
+        title: 'Fournisseur créé',
+        description: 'Le fournisseur a été créé avec succès.',
       });
-      refetch();
-    } catch (error) {
+    },
+    onError: (error: Error) => {
       toast({
-        title: "Erreur",
-        description: "Impossible de supprimer le fournisseur.",
-        variant: "destructive"
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
       });
-      throw error;
-    }
-  }, [remove, refetch]);
+    },
+  });
 
-  const getSupplierById = useCallback((id: string) => {
-    return suppliers?.find(supplier => supplier.id === id);
-  }, [suppliers]);
+  const updateSupplier = useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Supplier> & { id: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
 
-  const getActiveSuppliers = useCallback(() => {
-    return suppliers?.filter(supplier => supplier.is_active) || [];
-  }, [suppliers]);
+      const { data, error } = await supabase
+        .from('suppliers')
+        .update({
+          ...updates,
+          updated_by: user.id,
+        })
+        .eq('id', id)
+        .select()
+        .single();
 
-  const searchSuppliers = useCallback((searchTerm: string) => {
-    if (!suppliers) return [];
-    
-    const term = searchTerm.toLowerCase();
-    return suppliers.filter(supplier => 
-      supplier.name.toLowerCase().includes(term) ||
-      supplier.contact_person?.toLowerCase().includes(term) ||
-      supplier.email?.toLowerCase().includes(term) ||
-      supplier.phone?.includes(term)
-    );
-  }, [suppliers]);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      toast({
+        title: 'Fournisseur mis à jour',
+        description: 'Le fournisseur a été mis à jour avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteSupplier = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('suppliers')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      toast({
+        title: 'Fournisseur supprimé',
+        description: 'Le fournisseur a été supprimé avec succès.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erreur',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
 
   return {
-    suppliers: suppliers || [],
-    loading: loading || mutationLoading,
-    error,
-    addSupplier,
-    updateSupplier,
-    deleteSupplier,
-    getSupplierById,
-    getActiveSuppliers,
-    searchSuppliers,
-    refetch
+    suppliers,
+    isLoading,
+    createSupplier: createSupplier.mutate,
+    updateSupplier: updateSupplier.mutate,
+    deleteSupplier: deleteSupplier.mutate,
+    isCreating: createSupplier.isPending,
+    isUpdating: updateSupplier.isPending,
+    isDeleting: deleteSupplier.isPending,
   };
-}
+};
