@@ -163,7 +163,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenuButton
                 isActive={location.pathname === '/dashboard' || location.pathname === '/'}
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center"
+                className="flex items-center data-[active=true]:bg-white data-[active=true]:text-black"
               >
                 <div className="w-12 flex items-center justify-center text-white">
                   <Home className="h-5 w-5" />
@@ -201,6 +201,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         <SidebarMenuButton
                           isActive={isActive(item.path)}
                           onClick={() => navigate(item.path)}
+                          className="data-[active=true]:bg-white data-[active=true]:text-black"
                         >
                           <div className="w-12 flex items-center justify-center text-white">
                             <span>{item.icon}</span>
@@ -231,6 +232,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <SidebarMenuButton
                     isActive={isActive('/dashboard/settings')}
                     onClick={() => navigate('/dashboard/settings')}
+                    className="data-[active=true]:bg-white data-[active=true]:text-black"
                   >
                     <div className="w-12 flex items-center justify-center text-white">
                       <span>⚙️</span>
