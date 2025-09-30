@@ -10,15 +10,15 @@ Palette professionnelle: Bleus corporates + accents dorés artisanaux
   :root {
     /* Background system */
     --background: 220 20% 98%;
-    --foreground: 220 45% 15%;
+    --foreground: 0 0% 10%;
 
     /* Card system */
     --card: 0 0% 100%;
-    --card-foreground: 220 45% 15%;
+    --card-foreground: 0 0% 10%;
 
     /* Popover system */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 45% 15%;
+    --popover-foreground: 0 0% 10%;
 
     /* Primary - Bleu professionnel */
     --primary: 220 60% 35%;
@@ -28,7 +28,7 @@ Palette professionnelle: Bleus corporates + accents dorés artisanaux
 
     /* Secondary - Bleu clair */
     --secondary: 220 30% 92%;
-    --secondary-foreground: 220 45% 15%;
+    --secondary-foreground: 0 0% 10%;
 
     /* Muted tones */
     --muted: 220 15% 94%;
