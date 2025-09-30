@@ -132,19 +132,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen w-full bg-background">
-      <Sidebar className="border-r bg-black text-white" collapsible="icon">
-        <SidebarHeader className="border-b border-gray-800 bg-black">
-          <div className="flex items-center justify-between w-full px-2">
+      <Sidebar className="border-r" collapsible="icon">
+        {/* Bande noire pour les icônes */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-black z-0" />
+        
+        <SidebarHeader className="border-b relative z-10">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">👔</span>
-              {sidebarOpen && <h1 className="text-lg font-bold text-white">AteliérPro</h1>}
+              <div className="w-12 h-12 flex items-center justify-center">
+                <span className="text-2xl">👔</span>
+              </div>
+              {sidebarOpen && <h1 className="text-lg font-bold">AteliérPro</h1>}
             </div>
             {sidebarOpen && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="text-white hover:bg-gray-800"
               >
                 <PanelLeftClose className="h-4 w-4" />
               </Button>
@@ -152,16 +156,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </SidebarHeader>
         
-        <SidebarContent className="bg-black">
+        <SidebarContent className="relative z-10">
           {/* Dashboard principal */}
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={location.pathname === '/dashboard' || location.pathname === '/'}
                 onClick={() => navigate('/dashboard')}
-                className="text-white hover:bg-gray-800 data-[active=true]:bg-gray-800 data-[active=true]:text-white"
+                className="flex items-center"
               >
-                <Home className="h-4 w-4" />
+                <div className="w-12 flex items-center justify-center text-white">
+                  <Home className="h-5 w-5" />
+                </div>
                 {sidebarOpen && <span className="ml-2">Tableau de Bord</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -172,10 +178,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <SidebarGroup key={group.key}>
               <button
                 onClick={() => toggleGroup(group.key)}
-                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-300 hover:text-white hover:bg-gray-800 transition-all rounded"
+                className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity"
               >
                 <div className="flex items-center space-x-2">
-                  <span>{group.icon}</span>
+                  <div className="w-12 flex items-center justify-center text-white -ml-3">
+                    <span>{group.icon}</span>
+                  </div>
                   {sidebarOpen && <span>{group.label}</span>}
                 </div>
                 {sidebarOpen && (
@@ -193,9 +201,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         <SidebarMenuButton
                           isActive={isActive(item.path)}
                           onClick={() => navigate(item.path)}
-                          className="text-gray-300 hover:bg-gray-800 hover:text-white data-[active=true]:bg-gray-800 data-[active=true]:text-white"
                         >
-                          <span className="mr-2">{item.icon}</span>
+                          <div className="w-12 flex items-center justify-center text-white">
+                            <span>{item.icon}</span>
+                          </div>
                           <span>{item.label}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -208,9 +217,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Administration */}
           <SidebarGroup>
-            <SidebarGroupLabel className="text-gray-300">
+            <SidebarGroupLabel>
               <div className="flex items-center space-x-2">
-                <span>⚙️</span>
+                <div className="w-12 flex items-center justify-center text-white -ml-3">
+                  <span>⚙️</span>
+                </div>
                 {sidebarOpen && <span>Administration</span>}
               </div>
             </SidebarGroupLabel>
@@ -220,9 +231,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <SidebarMenuButton
                     isActive={isActive('/dashboard/settings')}
                     onClick={() => navigate('/dashboard/settings')}
-                    className="text-gray-300 hover:bg-gray-800 hover:text-white data-[active=true]:bg-gray-800 data-[active=true]:text-white"
                   >
-                    <span className="mr-2">⚙️</span>
+                    <div className="w-12 flex items-center justify-center text-white">
+                      <span>⚙️</span>
+                    </div>
                     {sidebarOpen && <span>Paramètres</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -239,7 +251,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             variant="default"
             size="icon"
             onClick={toggleSidebar}
-            className="bg-black hover:bg-gray-800 text-white shadow-lg"
+            className="shadow-lg"
           >
             <PanelLeft className="h-4 w-4" />
           </Button>
