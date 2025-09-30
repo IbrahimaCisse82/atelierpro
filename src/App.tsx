@@ -2,12 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AuthDebug } from "@/components/debug/AuthDebug";
-import { PerformanceMonitor } from "@/components/debug/PerformanceMonitor";
 import { PWAInstallPrompt } from "@/components/ui/pwa-install-prompt";
 import MobileNavigation from "@/components/common/MobileNavigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -15,9 +12,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashboard";
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
-import { lazy, Suspense, useState } from 'react';
-import { toast } from "@/hooks/use-toast";
-import { unstable_HistoryRouter as HistoryRouter } from "react-router-dom";
+import { lazy, Suspense } from 'react';
 import Index from './pages/Index';
 
 // Configuration optimisée de React Query
@@ -104,19 +99,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // Composant principal de l'application
 function AppContent() {
   const { user, loading } = useAuth();
-  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
-
-  // Debug pour voir l'état de l'authentification
-  console.log("[AppContent] État auth:", { user: !!user, loading, userEmail: user?.email });
 
   if (loading) {
-    console.log("[AppContent] Chargement en cours...");
     return <LoadingPage />;
   }
 
   // Affiche la landing page si l'utilisateur n'est pas connecté
   if (!user) {
-    console.log("[AppContent] Aucun utilisateur connecté, redirection vers Index");
     return (
       <Suspense fallback={<LoadingPage />}>
         <Routes>
@@ -127,8 +116,6 @@ function AppContent() {
       </Suspense>
     );
   }
-
-  console.log("[AppContent] Utilisateur connecté, affichage du dashboard");
 
   return (
     <SidebarProvider>
@@ -254,43 +241,11 @@ function AppContent() {
           </Routes>
         </Suspense>
         
-        {/* Devtools React Query en développement */}
-        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
-        
         {/* Composants PWA */}
         <PWAInstallPrompt />
         
         {/* Navigation mobile */}
         <MobileNavigation />
-        
-        {/* Debug et monitoring uniquement en dev */}
-        {import.meta.env.DEV && (
-          <>
-            {/* Bouton flottant pour afficher/masquer le panneau de performance */}
-            <button
-              className="fixed bottom-6 right-6 z-50 bg-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-gray-100 transition"
-              onClick={() => setShowPerformanceMonitor((v) => !v)}
-            >
-              {showPerformanceMonitor ? 'Masquer' : 'Performance'}
-            </button>
-            {showPerformanceMonitor && (
-              <PerformanceMonitor onClose={() => setShowPerformanceMonitor(false)} />
-            )}
-            
-            {/* Bouton flottant pour tester les boutons */}
-            <button
-              className="fixed bottom-6 left-6 z-50 bg-green-500 text-white border shadow-lg rounded-full px-4 py-2 text-sm font-semibold hover:bg-green-600 transition"
-              onClick={() => {
-                toast({
-                  title: "Tous les boutons activés !",
-                  description: "Vérifiez que tous les boutons sont maintenant fonctionnels.",
-                });
-              }}
-            >
-              Test Boutons
-            </button>
-          </>
-        )}
       </QueryClientProvider>
     </SidebarProvider>
   );
@@ -310,7 +265,6 @@ function App() {
           <AppContent />
           <Toaster />
           <Sonner />
-          {import.meta.env.DEV && <AuthDebug />}
         </TooltipProvider>
       </AuthProvider>
     </Router>

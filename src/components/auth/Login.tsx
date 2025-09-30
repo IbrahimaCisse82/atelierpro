@@ -36,8 +36,6 @@ export function Login({ onSwitchToRegister }: LoginProps) {
       await login(formData.email, formData.password);
       // La redirection sera gérée automatiquement par le contexte d'auth
     } catch (error: any) {
-      console.error('Erreur de connexion:', error);
-      
       // Gestion spécifique des erreurs avec messages personnalisés
       let errorMessage = 'Une erreur est survenue lors de la connexion.';
       

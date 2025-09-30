@@ -167,12 +167,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     } catch (error) {
-      console.error('[AuthContext] Erreur lors de la récupération de session:', error);
-      
       // Retry automatique si pas encore au maximum
       if (retryCount < maxRetries && !didTimeout) {
-        console.log(`[AuthContext] Tentative de reconnexion ${retryCount + 1}/${maxRetries}`);
-        setTimeout(() => loadSessionAndProfile(true), 1000 * (retryCount + 1)); // Backoff exponentiel
+        setTimeout(() => loadSessionAndProfile(true), 1000 * (retryCount + 1));
         return;
       }
       
@@ -186,13 +183,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fonction pour charger le profil utilisateur avec timeout et cache
   const loadUserDataWithTimeout = async (session: Session) => {
     let didTimeout = false;
-    console.time('supabase-profile-total');
     
     try {
       // Vérifier le cache d'abord
       const cachedData = getCachedData();
       if (cachedData && cachedData.user.id === session.user.id) {
-        console.log('[AuthContext] Utilisation des données en cache');
         dispatch({ 
           type: 'LOGIN_SUCCESS', 
           payload: { user: cachedData.user, company: cachedData.company } 
@@ -208,15 +203,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       await Promise.race([loadUserData(session), timeoutPromise]);
-      console.timeEnd('supabase-profile-total');
       
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     } catch (error) {
-      console.error('[AuthContext] Erreur lors du chargement du profil:', error);
-      
       // Retry automatique si pas encore au maximum
       if (retryCount < maxRetries && !didTimeout) {
-        console.log(`[AuthContext] Tentative de reconnexion profil ${retryCount + 1}/${maxRetries}`);
         setTimeout(() => loadUserDataWithTimeout(session), 1000 * (retryCount + 1));
         return;
       }
@@ -235,7 +226,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Écouter les changements d'état d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[Supabase Auth] Event:', event, 'Session:', session);
         if (session?.user) {
           await loadUserDataWithTimeout(session);
         } else {
@@ -254,10 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Charger les données utilisateur depuis Supabase (PARALLÉLISÉ)
   const loadUserData = async (session: Session) => {
-    const start = Date.now();
     try {
-      console.log('[AuthContext] Chargement du profil pour user_id:', session.user.id);
-      
       // REQUÊTES PARALLÉLISÉES au lieu de séquentielles
       const [profileResult, companyResult] = await Promise.all([
         supabase
@@ -276,22 +263,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .single()
       ]);
       
-      console.log('[AuthContext] Chargement parallèle terminé en', Date.now() - start, 'ms');
-      
       if (profileResult.error) {
-        console.error('[AuthContext] Erreur lors du chargement du profil:', profileResult.error);
         dispatch({ type: 'SET_ERROR', payload: `Erreur profil: ${profileResult.error.message}` });
         return;
       }
       
       if (companyResult.error) {
-        console.error('[AuthContext] Erreur lors du chargement de l\'entreprise:', companyResult.error);
         dispatch({ type: 'SET_ERROR', payload: `Erreur entreprise: ${companyResult.error.message}` });
         return;
       }
       
       if (!profileResult.data || !companyResult.data) {
-        console.error('[AuthContext] Données manquantes');
         dispatch({ type: 'SET_ERROR', payload: "Données utilisateur ou entreprise introuvables." });
         return;
       }
@@ -318,15 +300,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date(companyData.created_at),
         isActive: companyData.is_active
       };
-
-      console.log('[AuthContext] Chargement complet terminé en', Date.now() - start, 'ms');
       
       // Mettre en cache les données
       setCachedData(user, company);
       
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
     } catch (error) {
-      console.error('[AuthContext] Erreur lors du chargement des données utilisateur:', error);
       dispatch({ type: 'SET_ERROR', payload: "Erreur lors du chargement du profil utilisateur." });
     }
   };
@@ -334,26 +313,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Connexion avec Supabase
   const login = async (email: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
-    setRetryCount(0); // Reset retry count on new login
-    
-    console.log('[AuthContext] Tentative de connexion...');
-    console.log('[AuthContext] Email:', email);
-    console.log('[AuthContext] URL Supabase:', import.meta.env.VITE_SUPABASE_URL);
+    setRetryCount(0);
     
     try {
-      const startTime = Date.now();
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password
       });
 
-      const endTime = Date.now();
-      console.log('[AuthContext] Durée de connexion:', endTime - startTime, 'ms');
-
       if (error) {
-        console.error('[AuthContext] Erreur de connexion:', error);
-        
         // Gestion spécifique des erreurs 400
         if (error.status === 400) {
           if (error.message.includes('Email not confirmed')) {
@@ -369,15 +337,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         throw error;
       }
-
-      if (data.user) {
-        console.log('[AuthContext] Connexion réussie pour:', data.user.email);
-        console.log('[AuthContext] Email confirmé:', data.user.email_confirmed_at ? 'Oui' : 'Non');
-      }
       
       // Le loadUserData sera appelé automatiquement par onAuthStateChange
     } catch (error) {
-      console.error('[AuthContext] Erreur finale de connexion:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }

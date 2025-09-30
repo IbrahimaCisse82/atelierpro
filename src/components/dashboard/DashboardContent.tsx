@@ -21,8 +21,6 @@ import {
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { formatFCFA } from '@/lib/utils';
-import { ButtonTester } from '@/components/debug/ButtonTester';
-import { TestRunner } from '@/components/debug/TestRunner';
 import { useDashboardStats } from '@/hooks/use-dashboard-stats';
 import { useDashboardAlerts } from '@/hooks/use-dashboard-alerts';
 import { Loader2 } from 'lucide-react';
@@ -377,11 +375,6 @@ export function DashboardContent() {
           <div className="p-6 text-center text-lg text-muted-foreground">Module Export & Rapports avancés à personnaliser</div>
         </TabsContent>
       </Tabs>
-      {/* Tests E2E et outils de développement */}
-      <div className="my-8 flex gap-4">
-        <ButtonTester />
-        <TestRunner />
-      </div>
     </div>
   );
 }
