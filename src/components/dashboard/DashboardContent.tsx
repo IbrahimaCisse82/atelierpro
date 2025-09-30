@@ -70,7 +70,7 @@ const getDashboardSections = (stats: any): DashboardSection[] => {
         {
           title: 'Factures Impayées',
           value: stats.unpaidInvoicesCount || 0,
-          description: formatFCFA(stats.unpaidInvoicesTotal || 0),
+          description: `${formatFCFA(stats.unpaidInvoicesTotal || 0)} en attente`,
           icon: FileText,
           color: 'text-orange-600',
         },
@@ -105,14 +105,14 @@ const getDashboardSections = (stats: any): DashboardSection[] => {
         {
           title: 'Revenu Total',
           value: formatFCFA(stats.totalRevenue || 0),
-          description: 'Paiements reçus',
+          description: 'Encaissements reçus',
           icon: DollarSign,
           color: 'text-emerald-600',
         },
         {
-          title: 'Montant Impayé',
+          title: 'Factures à Encaisser',
           value: formatFCFA(stats.unpaidInvoicesTotal || 0),
-          description: `${stats.unpaidInvoicesCount || 0} factures`,
+          description: `${stats.unpaidInvoicesCount || 0} facture(s) impayée(s)`,
           icon: AlertCircle,
           color: 'text-amber-600',
         },
