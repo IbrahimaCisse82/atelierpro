@@ -11,47 +11,97 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
+      manifest: {
+        name: 'AtelierPro - Gestion d\'Atelier de Couture',
+        short_name: 'AtelierPro',
+        description: 'Application de gestion complète pour atelier de couture et artisanat',
+        theme_color: '#3b82f6',
+        background_color: '#ffffff',
+        display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
+        orientation: 'any',
+        scope: '/',
+        start_url: '/',
+        lang: 'fr',
+        dir: 'ltr',
+        categories: ['business', 'productivity', 'finance'],
+        icons: [
+          {
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Interface mobile d\'AtelierPro'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Interface desktop d\'AtelierPro'
+          }
+        ]
+      },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*$/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'supabase-cache',
+              cacheName: 'supabase-api-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 jours
+                maxAgeSeconds: 60 * 60 * 24, // 24 heures
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 jours
               },
             },
           },
-        ],
-      },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
-        name: 'AtelierPro - Gestion d\'atelier de couture',
-        short_name: 'AtelierPro',
-        description: 'Application de gestion complète pour atelier de couture',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
-        display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
-        icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources',
+            },
           },
         ],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
       },
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      }
     }),
     visualizer({
       filename: 'dist/stats.html',

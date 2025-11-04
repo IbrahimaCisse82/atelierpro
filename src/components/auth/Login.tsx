@@ -140,16 +140,26 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                 )}
               </Button>
 
-              <div className="text-center text-sm text-muted-foreground">
-                Pas encore d'atelier ?{' '}
-                <button
-                  type="button"
-                  onClick={onSwitchToRegister}
-                  className="text-primary hover:text-primary-dark underline"
-                  disabled={loading}
-                >
-                  Créer votre entreprise
-                </button>
+              <div className="text-center text-sm space-y-2">
+                <div className="text-muted-foreground">
+                  Pas encore d'atelier ?{' '}
+                  <button
+                    type="button"
+                    onClick={onSwitchToRegister}
+                    className="text-primary hover:text-primary-dark underline"
+                    disabled={loading}
+                  >
+                    Créer votre entreprise
+                  </button>
+                </div>
+                <div className="text-muted-foreground">
+                  <a
+                    href="/install"
+                    className="text-primary hover:text-primary-dark underline"
+                  >
+                    📱 Installer l'application sur votre téléphone
+                  </a>
+                </div>
               </div>
             </form>
           </CardContent>

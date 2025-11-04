@@ -87,6 +87,7 @@
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.8.0",
+    "workbox-window": "^7.3.0",
     "xlsx": "^0.18.5",
     "zod": "^3.22.4"
   },
@@ -133,7 +134,7 @@
     "tsx": "^4.20.3",
     "typescript": "^5.3.3",
     "vite": "^5.0.10",
-    "vite-plugin-pwa": "^1.0.1",
+    "vite-plugin-pwa": "^1.1.0",
     "vitest": "^1.1.3"
   }
 }
