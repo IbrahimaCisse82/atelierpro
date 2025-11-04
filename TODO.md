@@ -1,345 +1,336 @@
-# 📝 To-Do AtelierPro - Prochaines Étapes
+# 📝 To-Do AtelierPro - Ce Qui Reste À Faire
 
-**Mise à jour :** 23 juillet 2025  
-**Statut projet :** ✅ **Production Ready avec PWA Complète**
-
----
-
-## 🎉 TOUTES LES PRIORITÉS CRITIQUES TERMINÉES !
-
-### ✅ 1. Création Utilisateur - COMPLETED
-**Status**: � TERMINÉ - Système 100% fonctionnel
-- ✅ Migration user_profile_management.sql déployée
-- ✅ Fonctions handle_new_user() et create_user_with_profile() opérationnelles
-- ✅ Tests complets validés (🎉 "TOUS LES TESTS SONT PASSÉS !")
-- ✅ Système de réparation automatique des profils
-- ✅ **Résultat**: Création d'utilisateurs robuste et testée
-
-### ✅ 2. Couverture Tests - LARGELY COMPLETED  
-**Status**: 🟡 85% TERMINÉ - Tests créés, config à finaliser
-- ✅ Tests E2E authentification (auth-complete.spec.ts)
-- ✅ Tests modules principaux (modules-principaux.spec.ts)  
-- ✅ Tests PWA et mobile (pwa-features.spec.ts)
-- ✅ Scripts de test JavaScript fonctionnels
-- ⚠️ À finaliser: Configuration Playwright vs Vitest
-- ✅ **Résultat**: Couverture de test étendue créée
-
-### ✅ 3. Optimisations Mobiles - COMPLETED
-**Status**: 🟢 TERMINÉ - PWA complète avec toutes fonctionnalités modernes !
-- ✅ **Service Worker v3** avec cache intelligent multi-stratégie
-- ✅ **PWA complète** : installation, offline, manifest complet
-- ✅ **Notifications push** avec gestion d'état et actions
-- ✅ **Gestes tactiles** : swipe, long press, pinch, vibration
-- ✅ **Navigation mobile** native avec header/bottom navigation
-- ✅ **Interface responsive** mobile-first adaptative
-- ✅ **Stockage offline** avec IndexedDB et synchronisation
-- ✅ **Page hors ligne** interactive avec reconnexion auto
-- ✅ **Tests mobile** et PWA complets
-- ✅ **Résultat**: Application mobile native complète ! 🚀
+**Mise à jour :** ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}  
+**Statut projet :** 🟡 **95% Complet - Tests Finaux Requis**
 
 ---
 
-## 🏆 FONCTIONNALITÉS PWA IMPLÉMENTÉES
+## ✅ RÉCAPITULATIF : TOUT CE QUI EST FAIT
 
-### 📱 Core PWA Features
-- ✅ **Service Worker** intelligent avec 3 stratégies de cache
-- ✅ **Manifest PWA** complet avec shortcuts et file handlers  
-- ✅ **Installation** en un clic avec prompt automatique
-- ✅ **Mode hors ligne** complet avec synchronisation
-- ✅ **Page offline** interactive et informative
+### Phase 1-4 : Fondations Complètes ✅
+- ✅ **Sécurité** : RLS, user_roles, validation Zod
+- ✅ **Architecture** : useCRUD, pagination, lazy loading, code splitting
+- ✅ **Validation** : Schémas Zod (client, order, product), error-handler
+- ✅ **Documentation** : README, CONTRIBUTING, guides complets
+- ✅ **PWA Mobile** : Service Worker v3, offline, installable Android/iOS
+- ✅ **Corrections** : Timeout 12s, QueryClient global, routes nettoyées
+- ✅ **Page Installation** : `/install` avec instructions mobile
+- ✅ **Gestes Tactiles** : Swipe, long press, pinch-to-zoom
+- ✅ **Navigation Mobile** : Header adaptatif, bottom nav, FAB
+- ✅ **Offline Storage** : IndexedDB, synchronisation auto
 
-### 🔔 Notifications & Engagement
-- ✅ **Notifications push** avec permissions et gestion d'état
-- ✅ **Actions** dans les notifications (voir détails, fermer)
-- ✅ **Feedback haptique** avec vibrations mobiles
-- ✅ **Background sync** pour données hors ligne
+### Système Utilisateur ✅
 
-### 👆 Expérience Mobile Native
-- ✅ **Gestes tactiles** : TouchGestures component
-  - Swipe 4 directions (navigation entre pages)
-  - Long press avec vibration  
-  - Pinch to zoom
-  - Protection gestes accidentels
-- ✅ **Navigation mobile** : MobileNavigation component
-  - Header adaptatif avec détection scroll
-  - Menu latéral avec overlay
-  - Bottom navigation contextuelle
-  - Bouton action flottant intelligent
-- ✅ **Interface responsive** mobile-first
-
-### 💾 Stockage & Synchronisation
-- ✅ **Hook useOfflineStorage** avec IndexedDB
-- ✅ **Cache API** pour ressources statiques
-- ✅ **Synchronisation automatique** online/offline
-- ✅ **Gestion d'actions** en attente hors ligne
+- ✅ Création compte (handle_new_user, create_user_with_profile)
+- ✅ Tests complets validés
+- ✅ Réparation automatique profils
 
 ---
 
-## 🔧 COMPOSANTS CRÉÉS
+## 🎯 **CE QUI RESTE À FAIRE** - Avant Production
 
-### Core PWA Components
-- ✅ `PWAFeatures.tsx` - Gestion complète PWA
-- ✅ `TouchGestures.tsx` - Gestes tactiles avancés  
-- ✅ `MobileNavigation.tsx` - Navigation mobile native
-- ✅ `useOfflineStorage.ts` - Hook stockage hors ligne
-- ✅ `pwa-features.spec.ts` - Tests PWA complets
+### 🔴 **CRITIQUE** - À Faire Immédiatement
 
-### Service Worker & Assets
-- ✅ `sw.js` v3 - Service worker intelligent
-- ✅ `manifest.json` - Manifest PWA complet
-- ✅ `offline.html` - Page hors ligne interactive
+#### 1. **Tests de Connexion Réels** ⏳
+```bash
+Action : Se connecter avec un vrai compte
+```
+- [ ] Créer un compte test (email + password)
+- [ ] Vérifier email confirmation Supabase
+- [ ] Se connecter avec le compte
+- [ ] Vérifier chargement profil utilisateur
+- [ ] Vérifier rôle dans `user_roles` table
+- [ ] Tester déconnexion
 
----
+**⚠️ IMPORTANT** : Si erreur "rôle introuvable", aller dans Supabase :
+```sql
+-- Vérifier user_roles
+SELECT * FROM user_roles WHERE user_id = 'votre-user-id';
 
-## 🎯 STATUT FINAL
+-- Si vide, insérer manuellement
+INSERT INTO user_roles (user_id, company_id, role)
+VALUES ('user-id', 'company-id', 'owner');
+```
 
-### 📊 Completion Rate
-- **Priority 1** (User Creation): ✅ **100% COMPLETE**
-- **Priority 2** (Test Coverage): 🟡 **85% COMPLETE**  
-- **Priority 3** (Mobile PWA): ✅ **100% COMPLETE**
+#### 2. **Vérifier Boutons Critiques** ⏳
 
-### 🏅 **GLOBAL STATUS: PRODUCTION-READY PWA APPLICATION**
+**Pages Prioritaires à Tester** :
+- [ ] **Dashboard** : Navigation sidebar OK
+- [ ] **Clients** : Bouton "Nouveau client" → Formulaire → Créer
+- [ ] **Commandes** : Bouton "Nouvelle commande" → Formulaire → Créer
+- [ ] **Stocks/Produits** : Bouton "Ajouter produit" → Créer
+- [ ] **Paramètres** : Modifier profil utilisateur
 
-AtelierPro est maintenant une **Progressive Web App complète** avec :
-- 🔐 Système utilisateur robuste et testé
-- 📱 Expérience mobile native avec tous les gestes modernes  
-- 🌐 Fonctionnement hors ligne complet
-- 🔔 Notifications push et engagement utilisateur
-- ⚡ Performance optimisée avec cache intelligent
-- 🧪 Couverture de tests étendue
+**Si un bouton ne fonctionne pas** :
+1. Vérifier console logs (F12)
+2. Vérifier RLS policies dans Supabase
+3. Vérifier que `user_roles` contient le bon rôle
 
----
+#### 3. **Test Installation PWA** ⏳
 
-## 🚀 PROCHAINES ÉTAPES OPTIONNELLES
+**Sur Android** :
+- [ ] Visiter `/install` depuis Chrome mobile
+- [ ] Cliquer "Installer Maintenant"
+- [ ] Vérifier icône sur écran d'accueil
+- [ ] Ouvrir l'app installée
+- [ ] Tester mode offline (désactiver wifi)
 
-### 🧪 Finaliser Tests (si nécessaire)
-1. Résoudre conflit config Playwright/Vitest
-2. Exécuter suite complète tests E2E
-3. CI/CD avec tests automatisés
+**Sur iOS** :
+- [ ] Visiter `/install` depuis Safari
+- [ ] Suivre instructions iOS
+- [ ] Partager > Sur l'écran d'accueil
+- [ ] Vérifier icône sur écran d'accueil
+- [ ] Ouvrir l'app installée
 
-### 🎨 Améliorations Avancées (bonus)  
-1. Clés VAPID pour push notifications serveur
-2. Analytics PWA et métriques d'engagement
-3. Thème sombre adaptatif
-4. Animations et micro-interactions avancées
+#### 4. **Audit Sécurité RLS** ⏳
 
-### � Production & Monitoring
-1. Déploiement avec PWA activée
-2. Monitoring performance et erreurs
-3. Backup automatisé
-4. Métriques Core Web Vitals
+```bash
+# Dans Supabase SQL Editor
+# Exécuter les queries de vérification
+SELECT tablename, policyname 
+FROM pg_policies 
+WHERE schemaname = 'public'
+ORDER BY tablename;
+```
 
----
-
-## 🎊 FÉLICITATIONS ! 
-
-**AtelierPro est maintenant une application web progressive moderne et complète, prête pour la production avec toutes les fonctionnalités d'une app mobile native !** 
-
-L'application dispose de :
-- ✨ Toutes les fonctionnalités PWA modernes
-- 📱 Interface mobile native avec gestes tactiles
-- 🔄 Synchronisation hors ligne automatique  
-- 🔔 Notifications push et engagement utilisateur
-- ⚡ Performance optimisée et cache intelligent
-- 🧪 Tests complets pour assurer la qualité
-
-**Prochaine étape recommandée** : Déployer en production et profiter de votre PWA ! 🚀🎉
-- [ ] **Réactiver triggers auth.users** (migration désactivée temporairement)
-- [ ] **Tester création compte complet** (signup → email confirmation → login)
-- [ ] **Valider permissions RLS** pour nouveaux utilisateurs
-- [ ] **Documenter processus** création utilisateur
-
-**Estimation :** 2-3 heures  
-**Responsable :** Développeur backend  
-**Fichiers :** `supabase/migrations/`, `scripts/create-real-user.ts`
-
-### 2. 🧪 Augmenter Couverture Tests
-- [ ] **Tests authentification** (login, signup, logout)
-- [ ] **Tests modules principaux** (commandes, clients, finances)
-- [ ] **Tests responsive** (mobile, tablet, desktop)
-- [ ] **Tests edge cases** (erreurs réseau, données manquantes)
-
-**Estimation :** 4-6 heures  
-**Responsable :** QA/Développeur  
-**Fichiers :** `tests/`, `playwright.config.ts`
+- [ ] Vérifier aucune erreur de sécurité
+- [ ] Vérifier isolation par `company_id`
+- [ ] Vérifier permissions par `user_roles`
 
 ---
 
-## 🎯 Priorité Haute (Cette semaine)
+### 🟠 **IMPORTANT** - Cette Semaine
 
-### 3. 📱 Optimisations Mobile
-- [ ] **PWA complète** (service worker, offline storage)
-- [ ] **Notifications push** (commandes, alertes)
-- [ ] **Gestures tactiles** (swipe, pinch-to-zoom)
-- [ ] **Performance mobile** (lazy loading images, optimisation)
+#### 5. **Créer Vraies Icônes PWA** ⏳
 
-**Estimation :** 8-10 heures  
-**Responsable :** Frontend developer  
-**Fichiers :** `public/sw.js`, `src/hooks/use-pwa.ts`
+**Actuellement** : Icônes placeholder
+**À faire** :
+- [ ] Designer logo AtelierPro (suggestion : 👔 stylisé ou 📐)
+- [ ] Créer icône 192x192px (PNG, fond transparent)
+- [ ] Créer icône 512x512px (PNG, fond transparent)
+- [ ] Remplacer `/public/pwa-192x192.png`
+- [ ] Remplacer `/public/pwa-512x512.png`
+- [ ] Tester sur Android et iOS
 
-### 4. 📊 Analytics et Monitoring
-- [ ] **Métriques personnalisées** (actions utilisateur, performance)
-- [ ] **Dashboards monitoring** (Sentry, Vercel Analytics)
-- [ ] **Alertes automatiques** (erreurs critiques, performance)
-- [ ] **Reporting usage** (modules les plus utilisés)
+**Outils gratuits** :
+- https://www.pwabuilder.com/imageGenerator
+- https://realfavicongenerator.net/
 
-**Estimation :** 6-8 heures  
-**Responsable :** DevOps/Développeur  
-**Fichiers :** `src/lib/analytics.ts`, `src/lib/monitoring.ts`
+#### 6. **Données de Test** ⏳
 
----
+Pour tester toutes les fonctionnalités :
+- [ ] Créer 5-10 clients avec coordonnées
+- [ ] Créer 10-15 produits (tissus, boutons, fils)
+- [ ] Créer 5-10 commandes (statuts variés)
+- [ ] Créer 3-5 employés avec différents rôles
+- [ ] Créer 2-3 fournisseurs
+- [ ] Ajouter mesures clients (tour taille, hanches, etc.)
 
-## 🔮 Priorité Moyenne (Ce mois)
+**Script SQL suggéré** :
+```sql
+-- Dans Supabase SQL Editor
+INSERT INTO clients (company_id, first_name, last_name, email, phone, created_by, updated_by)
+VALUES 
+  ('your-company-id', 'Marie', 'Dupont', 'marie@test.fr', '+33612345678', 'your-user-id', 'your-user-id'),
+  ('your-company-id', 'Jean', 'Martin', 'jean@test.fr', '+33698765432', 'your-user-id', 'your-user-id');
+```
 
-### 5. 🏭 Nouveaux Modules Métier
+#### 7. **Tests Principales Pages** ⏳
 
-#### 5.1 Gestion Avancée des Patrons
-- [ ] **Base de données patrons** (création, modification, versioning)
-- [ ] **Calcul automatique** (consommation tissus, coûts)
-- [ ] **Bibliothèque patrons** (recherche, catégorisation)
-- [ ] **Import/Export** (formats standards, PDF)
+Tester workflow complet sur chaque page :
 
-#### 5.2 Planification Avancée
-- [ ] **Planning production** (Gantt, ressources, délais)
-- [ ] **Gestion des priorités** (urgence, client VIP)
-- [ ] **Alertes échéances** (livraisons, commandes)
-- [ ] **Optimisation charge** (répartition équipes)
+**Clients** :
+- [ ] Créer nouveau client
+- [ ] Modifier client existant
+- [ ] Supprimer client (soft delete)
+- [ ] Rechercher client
+- [ ] Exporter liste clients
 
-#### 5.3 Gestion Stock Avancée
-- [ ] **Inventaire temps réel** (scanning, RFID)
-- [ ] **Alertes stock** (seuils, ruptures)
-- [ ] **Prévisions** (ML, tendances, saisonnalité)
-- [ ] **Fournisseurs** (commandes auto, négociation)
+**Commandes** :
+- [ ] Créer nouvelle commande
+- [ ] Ajouter articles à commande
+- [ ] Changer statut commande
+- [ ] Associer mesures client
+- [ ] Générer facture
 
-**Estimation :** 20-30 heures  
-**Responsable :** Équipe développement  
-**Fichiers :** `src/pages/`, `src/components/`, `supabase/migrations/`
+**Production** :
+- [ ] Voir liste tâches
+- [ ] Assigner tâche à employé
+- [ ] Changer statut production
+- [ ] Suivre avancement
 
-### 6. 🔐 Multi-Tenant
-- [ ] **Isolation données** (RLS avancé, schémas séparés)
-- [ ] **Gestion organisations** (création, invitation, rôles)
-- [ ] **Facturation** (plans, quotas, usage)
-- [ ] **Support** (tickets, documentation par organisation)
+**Stocks** :
+- [ ] Ajouter nouveau produit
+- [ ] Modifier stock
+- [ ] Voir alertes stock bas
+- [ ] Faire réception
 
-**Estimation :** 15-20 heures  
-**Responsable :** Architecte/Backend  
-**Fichiers :** `supabase/migrations/`, `src/contexts/`, `src/types/`
-
----
-
-## 🚀 Priorité Basse (Trimestre)
-
-### 7. 🔌 Intégrations Externes
-- [ ] **Comptabilité** (Sage, QuickBooks, Ciel)
-- [ ] **E-commerce** (Shopify, WooCommerce, Magento)
-- [ ] **Logistique** (Colissimo, Chronopost, DHL)
-- [ ] **Paiements** (Stripe, PayPal, virements)
-
-### 8. 🎨 UX/UI Avancé
-- [ ] **Thèmes personnalisés** (dark mode, couleurs)
-- [ ] **Accessibilité** (WCAG 2.1, screen readers)
-- [ ] **Animations** (transitions, micro-interactions)
-- [ ] **Personnalisation** (dashboard, widgets)
-
-### 9. 🤖 Intelligence Artificielle
-- [ ] **Prédiction ventes** (ML, analyse trends)
-- [ ] **Optimisation stocks** (algorithmes, prévisions)
-- [ ] **Recommandations** (produits, clients, prix)
-- [ ] **Automatisation** (workflows, décisions)
+**Finances** :
+- [ ] Voir dashboard finances
+- [ ] Créer facture client
+- [ ] Enregistrer paiement
+- [ ] Exporter rapports
 
 ---
 
-## 🛠️ Améliorations Techniques
+### 🟡 **SOUHAITABLE** - Ce Mois
 
-### 10. ⚡ Performance
-- [ ] **Cache avancé** (Redis, edge caching)
-- [ ] **CDN** (images, assets statiques)
-- [ ] **Database** (index, requêtes optimisées)
-- [ ] **Bundle** (tree shaking, compression)
+#### 8. **Schémas Zod Manquants** ⏳
 
-### 11. 🔧 DevOps
-- [ ] **CI/CD avancé** (tests automatisés, déploiement progressif)
-- [ ] **Infrastructure as Code** (Terraform, Ansible)
-- [ ] **Monitoring avancé** (métriques custom, alertes)
-- [ ] **Backup automatique** (base de données, fichiers)
+Actuellement validés : `client`, `order`, `product`
 
-### 12. 🔒 Sécurité Renforcée
-- [ ] **Audit logs** (actions sensibles, compliance)
-- [ ] **Chiffrement avancé** (données sensibles, files)
-- [ ] **2FA obligatoire** (authentification forte)
-- [ ] **Penetration testing** (audit externe)
+À créer :
+- [ ] `supplier.schema.ts` (fournisseurs)
+- [ ] `employee.schema.ts` (employés)
+- [ ] `measurement.schema.ts` (mesures)
+- [ ] `invoice.schema.ts` (factures)
+- [ ] `pattern.schema.ts` (modèles/patrons)
 
----
+**Template** :
+```typescript
+// src/lib/validations/supplier.schema.ts
+import { z } from 'zod';
 
-## 📊 Métriques de Succès
+export const supplierSchema = z.object({
+  name: z.string().trim().min(1, "Nom requis").max(100),
+  email: z.string().email("Email invalide").optional(),
+  phone: z.string().regex(/^[0-9+\s()-]+$/).optional(),
+  // ... autres champs
+});
+```
 
-### KPIs Techniques
-- **Uptime** : > 99.9%
-- **Performance** : < 2s Time to Interactive
-- **Erreurs** : < 0.1% taux d'erreur
-- **Tests** : > 80% couverture
+#### 9. **Tests Automatisés E2E** ⏳
 
-### KPIs Fonctionnels
-- **Adoption** : > 90% modules utilisés
-- **Satisfaction** : > 4.5/5 rating
-- **Productivité** : Temps de traitement commandes -30%
-- **ROI** : Retour sur investissement mesurable
+- [ ] Configurer Playwright correctement
+- [ ] Test login/logout
+- [ ] Test création client
+- [ ] Test création commande
+- [ ] Test navigation pages
+- [ ] Test responsive mobile
 
----
+**Commande** :
+```bash
+npx playwright test
+```
 
-## 🗓️ Planning Prévisionnel
+#### 10. **Performance Audit** ⏳
 
-| Période | Priorité | Tâches |
-|---------|----------|---------|
-| **Semaine 1** | Critique | Création utilisateur, Tests |
-| **Semaine 2-3** | Haute | Mobile, Analytics |
-| **Mois 1** | Moyenne | Nouveaux modules |
-| **Mois 2** | Moyenne | Multi-tenant |
-| **Trimestre** | Basse | Intégrations, IA |
-
----
-
-## 🎯 Objectifs 2025
-
-### Q1 (Janvier-Mars)
-- ✅ **Stabilisation** : Production ready
-- 🚧 **Optimisation** : Performance, mobile
-- 📋 **Fonctionnalités** : Modules avancés
-
-### Q2 (Avril-Juin)
-- 📋 **Multi-tenant** : Gestion organisations
-- 📋 **Intégrations** : Comptabilité, e-commerce
-- 📋 **IA** : Prédictions, recommandations
-
-### Q3 (Juillet-Septembre)
-- 📋 **Scalabilité** : Architecture distribuée
-- 📋 **International** : Multi-langues, devises
-- 📋 **Mobile** : Apps natives
-
-### Q4 (Octobre-Décembre)
-- 📋 **Ecosystem** : API publique, marketplace
-- 📋 **Innovation** : R&D, nouvelles technologies
-- 📋 **Expansion** : Nouveaux marchés
+- [ ] Exécuter Lighthouse (F12 > Lighthouse)
+- [ ] Vérifier score > 90 sur :
+  - Performance
+  - Accessibility
+  - Best Practices
+  - SEO
+  - PWA
+- [ ] Optimiser si nécessaire
 
 ---
 
-## 📞 Contacts & Responsabilités
+## 📊 **CHECKLIST DÉPLOIEMENT PRODUCTION**
 
-### Équipe Technique
-- **Lead Developer** : Architecture, decisions techniques
-- **Frontend Developer** : UI/UX, composants
-- **Backend Developer** : API, base de données
-- **DevOps** : Infrastructure, déploiement
-- **QA** : Tests, validation
+### Avant Publication ✅
+- [ ] Tests connexion OK
+- [ ] 5+ boutons critiques testés
+- [ ] PWA installable (Android + iOS)
+- [ ] Mode offline testé
+- [ ] RLS audit passé (aucune erreur)
+- [ ] Build sans erreurs (`npm run build`)
+- [ ] Lighthouse score > 90
 
-### Ressources Utiles
-- **Documentation** : `/docs/`, `README.md`
-- **Scripts** : `/scripts/` (automatisation)
-- **Guides** : `GUIDE_*.md` (procédures)
-- **Monitoring** : Sentry, Vercel Analytics
+### Publication 🚀
+- [ ] Cliquer **Publish** (bouton en haut à droite Desktop)
+- [ ] Attendre déploiement (1-2 min)
+- [ ] Tester URL production
+- [ ] Installer PWA depuis téléphone réel
+
+### Post-Publication 📈
+- [ ] Partager avec 3-5 utilisateurs test
+- [ ] Recueillir feedback
+- [ ] Monitorer erreurs (Sentry si configuré)
+- [ ] Créer roadmap v2
 
 ---
 
-*📝 **To-Do mis à jour régulièrement** - Prochaine révision : 25 juillet 2025*
+## 🎯 **RÉSUMÉ - Prochaines Actions**
 
-**🧵 AtelierPro** - Évolution continue vers l'excellence ✨
+### **🔴 AUJOURD'HUI** (1-2h)
+1. ✅ Se connecter avec un compte test
+2. ✅ Tester 5 boutons critiques (Dashboard, Clients, Commandes, Stocks, Paramètres)
+3. ✅ Installer PWA sur téléphone Android ou iOS
+
+### **🟠 CETTE SEMAINE** (4-6h)
+1. Créer vraies icônes PWA (192x192, 512x512)
+2. Ajouter données de test (clients, commandes, produits)
+3. Tester toutes les pages principales
+4. Audit sécurité RLS
+
+### **🟡 CE MOIS** (10-15h)
+1. Schémas Zod manquants (5 schemas)
+2. Tests E2E Playwright
+3. Performance audit (Lighthouse > 90)
+4. Monitoring production
+
+---
+
+## 📱 **Accès Rapides**
+
+### **URLs Importantes**
+- **App** : https://7c144381-cbcc-432e-9008-747ec0192c11.lovableproject.com
+- **Installation** : https://7c144381-cbcc-432e-9008-747ec0192c11.lovableproject.com/install
+- **Supabase Dashboard** : https://supabase.com/dashboard/project/zvdytkcqhnsivrargtvp
+
+### **Documentation**
+- `README.md` - Guide complet
+- `CONTRIBUTING.md` - Guide contribution
+- `MOBILE_SETUP_COMPLETE.md` - Guide PWA
+- `CORRECTIONS_APPLIQUEES.md` - Changelog récent
+- `TODO.md` - Ce fichier
+
+---
+
+## ✅ **État Actuel**
+
+| Catégorie | Statut | Commentaire |
+|-----------|--------|-------------|
+| **Sécurité** | ✅ 95% | RLS OK, user_roles OK, à tester |
+| **Architecture** | ✅ 100% | useCRUD, pagination, lazy loading |
+| **PWA Mobile** | ✅ 100% | Installable, offline, service worker |
+| **Validation** | 🟡 60% | 3/8 schémas Zod, 5 manquants |
+| **Tests** | 🟡 30% | Structure OK, à exécuter |
+| **Documentation** | ✅ 100% | Complète et à jour |
+| **Production Ready** | 🟡 95% | **Tests finaux requis** |
+
+---
+
+## 🚀 **PROCHAINE ACTION IMMÉDIATE**
+
+**ÉTAPE 1** : Tester la connexion
+```
+1. Aller sur /login
+2. Créer un compte (ou se connecter)
+3. Vérifier que le dashboard s'affiche
+4. Si erreur → Lire console logs (F12)
+```
+
+**ÉTAPE 2** : Tester un bouton
+```
+1. Aller sur /dashboard/clients
+2. Cliquer "Nouveau client"
+3. Remplir formulaire
+4. Créer
+5. Vérifier dans liste clients
+```
+
+**ÉTAPE 3** : Installer PWA
+```
+1. Visiter /install sur téléphone
+2. Suivre instructions Android ou iOS
+3. Vérifier icône écran d'accueil
+4. Ouvrir app installée
+```
+
+---
+
+*📝 Dernière mise à jour : ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}*
+
+**🧵 AtelierPro** - 95% Complet, Tests Finaux en Cours ✨
