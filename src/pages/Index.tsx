@@ -1,15 +1,17 @@
-import { DashboardContent } from '@/components/dashboard/DashboardContent';
+import { AuthLayout } from '@/components/auth/AuthLayout';
 import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
 
 const Index = () => {
   const { user } = useAuth();
 
+  // Si pas connecté, afficher la page d'authentification
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <AuthLayout />;
   }
 
-  return <DashboardContent />;
+  // Si connecté, rediriger vers le dashboard
+  // (cette page ne devrait jamais s'afficher pour un utilisateur connecté)
+  return null;
 };
 
 export default Index;

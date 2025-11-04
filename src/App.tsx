@@ -107,13 +107,14 @@ function AppContent() {
     return <LoadingPage />;
   }
 
-  // Affiche la landing page si l'utilisateur n'est pas connecté
+  // Affiche les pages d'authentification si l'utilisateur n'est pas connecté
   if (!user) {
     return (
       <Suspense fallback={<LoadingPage />}>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard/*" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<AuthLayout />} />
+          <Route path="/login" element={<AuthLayout />} />
+          <Route path="/register" element={<AuthLayout />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
