@@ -8,6 +8,7 @@ interface UseSupabaseQueryOptions<T> {
   filters?: Record<string, any>;
   orderBy?: { column: string; ascending?: boolean };
   limit?: number;
+  offset?: number; // ✅ Ajouté pour pagination
   enabled?: boolean;
   onSuccess?: (data: T[]) => void;
   onError?: (error: Error) => void;
@@ -29,7 +30,8 @@ export function useSupabaseQuery<T = any>(
     select = '*',
     filters = {},
     orderBy,
-    limit,
+    limit = 50, // ✅ Pagination par défaut : 50 éléments
+    offset = 0, // ✅ Offset pour pagination
     enabled = true,
     onSuccess,
     onError
@@ -53,7 +55,8 @@ export function useSupabaseQuery<T = any>(
       let query = supabase
         .from(table as any)
         .select(select)
-        .eq('company_id', userProfile.companyId);
+        .eq('company_id', userProfile.companyId)
+        .is('deleted_at', null); // ✅ Exclure les soft-deleted par défaut
 
       // Appliquer les filtres
       Object.entries(filters).forEach(([key, value]) => {
@@ -71,9 +74,12 @@ export function useSupabaseQuery<T = any>(
         query = query.order(orderBy.column, { ascending: orderBy.ascending ?? true });
       }
 
-      // Appliquer la limite
+      // ✅ Appliquer pagination
       if (limit) {
         query = query.limit(limit);
+      }
+      if (offset > 0) {
+        query = query.range(offset, offset + limit - 1);
       }
 
       const { data: result, error: queryError } = await query;
@@ -97,7 +103,7 @@ export function useSupabaseQuery<T = any>(
     } finally {
       setLoading(false);
     }
-  }, [table, select, filters, orderBy, limit, enabled, user, userProfile, onSuccess, onError]);
+  }, [table, select, filters, orderBy, limit, offset, enabled, user, userProfile, onSuccess, onError]);
 
   useEffect(() => {
     fetchData();

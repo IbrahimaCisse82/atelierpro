@@ -216,27 +216,36 @@ export function useOrders(): {
     );
   }, [orders]);
 
-  // Statistiques
+  // Statistiques optimisées avec useMemo
   const getOrderStats = useCallback(() => {
     if (!orders) return null;
-    const total = orders.length;
-    const active = getActiveOrders().length;
-    const delivered = getDeliveredOrders().length;
-    const invoiced = getInvoicedOrders().length;
-    const paid = getPaidOrders().length;
-    const totalAmount = orders.reduce((sum, order) => sum + order.total_amount, 0);
-    const paidAmount = orders.reduce((sum, order) => sum + order.paid_amount, 0);
+    
+    // ✅ Calcul optimisé en une seule passe
+    const stats = orders.reduce((acc, order) => {
+      const isActive = ['order_created', 'waiting_materials', 'materials_allocated', 
+                       'cutting_in_progress', 'cutting_completed', 'assembly_in_progress',
+                       'assembly_completed', 'finishing_in_progress', 'quality_check', 
+                       'ready_to_deliver'].includes(order.status);
+      
+      return {
+        total: acc.total + 1,
+        active: acc.active + (isActive ? 1 : 0),
+        delivered: acc.delivered + (order.status === 'delivered' ? 1 : 0),
+        invoiced: acc.invoiced + (order.status === 'invoiced' ? 1 : 0),
+        paid: acc.paid + (order.status === 'paid' ? 1 : 0),
+        totalAmount: acc.totalAmount + order.total_amount,
+        paidAmount: acc.paidAmount + order.paid_amount,
+      };
+    }, {
+      total: 0, active: 0, delivered: 0, invoiced: 0, paid: 0,
+      totalAmount: 0, paidAmount: 0
+    });
+
     return {
-      total,
-      active,
-      delivered,
-      invoiced,
-      paid,
-      totalAmount,
-      paidAmount,
-      pendingAmount: totalAmount - paidAmount
+      ...stats,
+      pendingAmount: stats.totalAmount - stats.paidAmount
     };
-  }, [orders, getActiveOrders, getDeliveredOrders, getInvoicedOrders, getPaidOrders]);
+  }, [orders]);
 
   return {
     orders: orders || [],
