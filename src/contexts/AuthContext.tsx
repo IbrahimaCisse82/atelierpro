@@ -244,20 +244,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Charger les données utilisateur depuis Supabase (OPTIMISÉ avec user_roles)
   const loadUserData = async (session: Session) => {
+    console.log('[AuthContext] 🔄 Chargement des données utilisateur...', session.user.id);
+    
     try {
       // 1. Récupérer le profil utilisateur
+      console.log('[AuthContext] 📊 Récupération du profil...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, email, first_name, last_name, company_id, is_active, created_at, last_login')
         .eq('user_id', session.user.id)
         .single();
       
+      console.log('[AuthContext] Résultat profil:', profileData, 'Erreur:', profileError);
+      
       if (profileError || !profileData) {
-        dispatch({ type: 'SET_ERROR', payload: `Erreur profil: ${profileError?.message || 'Profil introuvable'}` });
+        // Si le profil n'existe pas, c'est probablement un utilisateur qui vient de s'inscrire
+        // et qui n'a pas encore confirmé son email
+        if (profileError?.code === 'PGRST116') {
+          console.warn('[AuthContext] ⚠️ Profil non trouvé - Email probablement non confirmé');
+          dispatch({ 
+            type: 'SET_ERROR', 
+            payload: 'Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte mail.' 
+          });
+        } else {
+          dispatch({ 
+            type: 'SET_ERROR', 
+            payload: `Erreur de chargement du profil: ${profileError?.message || 'Profil introuvable'}` 
+          });
+        }
         return;
       }
 
       // 2. Récupérer le rôle depuis user_roles (table sécurisée)
+      console.log('[AuthContext] 👤 Récupération du rôle...');
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles' as any)
         .select('role')
@@ -265,20 +284,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('company_id', profileData.company_id)
         .single();
 
+      console.log('[AuthContext] Résultat rôle:', roleData, 'Erreur:', roleError);
+
       if (roleError || !roleData) {
-        dispatch({ type: 'SET_ERROR', payload: `Erreur rôle: ${roleError?.message || 'Rôle introuvable'}` });
+        if (roleError?.code === 'PGRST116') {
+          console.warn('[AuthContext] ⚠️ Rôle non trouvé - Compte en cours de création');
+          dispatch({ 
+            type: 'SET_ERROR', 
+            payload: 'Votre compte est en cours de création. Veuillez patienter quelques instants et réessayer.' 
+          });
+        } else {
+          dispatch({ 
+            type: 'SET_ERROR', 
+            payload: `Erreur de chargement du rôle: ${roleError?.message || 'Rôle introuvable'}` 
+          });
+        }
         return;
       }
 
       // 3. Récupérer l'entreprise
+      console.log('[AuthContext] 🏢 Récupération de l\'entreprise...');
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('id, name, email, created_at, is_active')
         .eq('id', profileData.company_id)
         .single();
       
+      console.log('[AuthContext] Résultat entreprise:', companyData, 'Erreur:', companyError);
+      
       if (companyError || !companyData) {
-        dispatch({ type: 'SET_ERROR', payload: `Erreur entreprise: ${companyError?.message || 'Entreprise introuvable'}` });
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: `Erreur de chargement de l'entreprise: ${companyError?.message || 'Entreprise introuvable'}` 
+        });
         return;
       }
 
@@ -302,11 +340,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isActive: companyData.is_active
       };
       
+      console.log('[AuthContext] ✅ Données chargées avec succès:', { user, company });
+      
       // Mettre en cache les données
       setCachedData(user, company);
       
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
     } catch (error) {
+      console.error('[AuthContext] ❌ Erreur critique:', error);
       dispatch({ type: 'SET_ERROR', payload: "Erreur lors du chargement du profil utilisateur." });
     }
   };
