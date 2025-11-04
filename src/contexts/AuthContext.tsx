@@ -242,51 +242,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line
   }, [forceReload]);
 
-  // Charger les données utilisateur depuis Supabase (PARALLÉLISÉ)
+  // Charger les données utilisateur depuis Supabase (OPTIMISÉ avec user_roles)
   const loadUserData = async (session: Session) => {
     try {
-      // REQUÊTES PARALLÉLISÉES au lieu de séquentielles
-      const [profileResult, companyResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('user_id, email, first_name, last_name, role, company_id, is_active, created_at, last_login')
-          .eq('user_id', session.user.id)
-          .single(),
-        supabase
-          .from('companies')
-          .select('id, name, email, created_at, is_active')
-          .eq('id', (await supabase
-            .from('profiles')
-            .select('company_id')
-            .eq('user_id', session.user.id)
-            .single()).data?.company_id)
-          .single()
-      ]);
+      // 1. Récupérer le profil utilisateur
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id, email, first_name, last_name, company_id, is_active, created_at, last_login')
+        .eq('user_id', session.user.id)
+        .single();
       
-      if (profileResult.error) {
-        dispatch({ type: 'SET_ERROR', payload: `Erreur profil: ${profileResult.error.message}` });
-        return;
-      }
-      
-      if (companyResult.error) {
-        dispatch({ type: 'SET_ERROR', payload: `Erreur entreprise: ${companyResult.error.message}` });
-        return;
-      }
-      
-      if (!profileResult.data || !companyResult.data) {
-        dispatch({ type: 'SET_ERROR', payload: "Données utilisateur ou entreprise introuvables." });
+      if (profileError || !profileData) {
+        dispatch({ type: 'SET_ERROR', payload: `Erreur profil: ${profileError?.message || 'Profil introuvable'}` });
         return;
       }
 
-      const profileData = profileResult.data;
-      const companyData = companyResult.data;
+      // 2. Récupérer le rôle depuis user_roles (table sécurisée)
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles' as any)
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('company_id', profileData.company_id)
+        .single();
+
+      if (roleError || !roleData) {
+        dispatch({ type: 'SET_ERROR', payload: `Erreur rôle: ${roleError?.message || 'Rôle introuvable'}` });
+        return;
+      }
+
+      // 3. Récupérer l'entreprise
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('id, name, email, created_at, is_active')
+        .eq('id', profileData.company_id)
+        .single();
+      
+      if (companyError || !companyData) {
+        dispatch({ type: 'SET_ERROR', payload: `Erreur entreprise: ${companyError?.message || 'Entreprise introuvable'}` });
+        return;
+      }
 
       const user: User = {
         id: profileData.user_id,
         email: profileData.email,
         firstName: profileData.first_name,
         lastName: profileData.last_name,
-        role: profileData.role as UserRole || 'owner',
+        role: (roleData as any).role as UserRole,  // ✅ Rôle depuis table sécurisée
         companyId: profileData.company_id,
         isActive: profileData.is_active,
         createdAt: new Date(profileData.created_at),
@@ -396,19 +397,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Fonction pour changer de rôle (pour le développement uniquement)
+  // Fonction pour changer de rôle - Maintenant utilise user_roles (sécurisé)
   const switchRole = async (role: UserRole) => {
     if (state.user && state.company) {
       try {
+        // ✅ Mettre à jour dans user_roles au lieu de profiles
         const { error } = await supabase
-          .from('profiles')
+          .from('user_roles' as any)
           .update({ role })
-          .eq('user_id', state.user.id);
+          .eq('user_id', state.user.id)
+          .eq('company_id', state.company.id);
 
         if (error) throw error;
 
         // Mettre à jour le state local
         const updatedUser = { ...state.user, role };
+        setCachedData(updatedUser, state.company);
         dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
       } catch (error) {
         console.error('Erreur lors du changement de rôle:', error);

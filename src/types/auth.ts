@@ -15,7 +15,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  role: UserRole;  // ⚠️ Maintenant récupéré depuis user_roles (table séparée)
   companyId: string;
   isActive: boolean;
   createdAt: Date;
