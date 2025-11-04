@@ -122,8 +122,8 @@ function AppContent() {
   }
 
   return (
-    <SidebarProvider>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <SidebarProvider>
         <Suspense fallback={<LoadingPage />}>
           <Routes>
             <Route path="/" element={
@@ -221,11 +221,6 @@ function AppContent() {
                 <FinancesPage />
               </DashboardLayout>
             } />
-            <Route path="/dashboard/suppliers" element={
-              <DashboardLayout>
-                <SuppliersPage />
-              </DashboardLayout>
-            } />
             <Route path="/dashboard/settings" element={
               <DashboardLayout>
                 <SettingsPage />
@@ -275,8 +270,8 @@ function AppContent() {
         
         {/* Navigation mobile */}
         <MobileNavigation />
-      </QueryClientProvider>
-    </SidebarProvider>
+      </SidebarProvider>
+    </QueryClientProvider>
   );
 }
 

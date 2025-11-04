@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [retryCount, setRetryCount] = useState(0);
   const [forceReload, setForceReload] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const retryTimeout = 5000; // 5 secondes (réduit de 8s à 5s)
+  const retryTimeout = 12000; // 12 secondes (optimisé pour connexions lentes)
   const maxRetries = 3;
 
   // Fonction pour charger la session et le profil avec timeout et retry
