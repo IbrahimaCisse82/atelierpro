@@ -2954,12 +2954,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_entry_balance: {
-        Args: { p_entry_id: string }
-        Returns: boolean
-      }
+      check_entry_balance: { Args: { p_entry_id: string }; Returns: boolean }
       check_user_consistency: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           auth_users_count: number
           missing_profiles: number
@@ -2983,15 +2980,9 @@ export type Database = {
         }
         Returns: Json
       }
-      generate_accounting_entry: {
-        Args:
-          | {
-              p_company_id: string
-              p_description: string
-              p_entries: Json
-              p_journal_id: string
-            }
-          | {
+      generate_accounting_entry:
+        | {
+            Args: {
               p_company_id: string
               p_description: string
               p_entries: Json
@@ -2999,52 +2990,80 @@ export type Database = {
               p_source_id: string
               p_source_type: string
             }
-        Returns: string
-      }
-      generate_order_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_company_id: string
+              p_description: string
+              p_entries: Json
+              p_journal_id: string
+            }
+            Returns: string
+          }
+      generate_order_number: { Args: never; Returns: string }
       generate_treasury_movement_number: {
         Args: { p_company_id: string }
         Returns: string
       }
-      get_employee_remunerations: {
-        Args:
-          | Record<PropertyKey, never>
-          | { p_employee_id: string; p_end_date: string; p_start_date: string }
-        Returns: {
-          employee_id: string
-          employee_name: string
-          month_year: string
-          total_remuneration: number
-        }[]
-      }
-      get_production_stats: {
-        Args: Record<PropertyKey, never> | { p_company_id: string }
-        Returns: {
-          completed_orders: number
-          pending_orders: number
-          total_orders: number
-          total_revenue: number
-        }[]
-      }
-      get_user_company_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_employee_remunerations:
+        | {
+            Args: never
+            Returns: {
+              employee_id: string
+              employee_name: string
+              month_year: string
+              total_remuneration: number
+            }[]
+          }
+        | {
+            Args: {
+              p_employee_id: string
+              p_end_date: string
+              p_start_date: string
+            }
+            Returns: {
+              completion_date: string
+              hours_worked: number
+              order_number: string
+              payment_date: string
+              remuneration_amount: number
+              remuneration_status: string
+              task_name: string
+            }[]
+          }
+      get_production_stats:
+        | {
+            Args: never
+            Returns: {
+              completed_orders: number
+              pending_orders: number
+              total_orders: number
+              total_revenue: number
+            }[]
+          }
+        | {
+            Args: { p_company_id: string }
+            Returns: {
+              completed_orders: number
+              completed_tasks: number
+              in_production_orders: number
+              in_progress_tasks: number
+              pending_orders: number
+              pending_remuneration: number
+              pending_tasks: number
+              total_orders: number
+              total_remuneration: number
+              total_tasks: number
+            }[]
+          }
+      get_user_company_id: { Args: never; Returns: string }
       has_role: {
         Args: { required_role: Database["public"]["Enums"]["user_role"] }
         Returns: boolean
       }
-      post_accounting_entry: {
-        Args: { p_entry_id: string }
-        Returns: boolean
-      }
-      repair_missing_profiles: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      post_accounting_entry: { Args: { p_entry_id: string }; Returns: boolean }
+      repair_missing_profiles: { Args: never; Returns: Json }
       reverse_accounting_entry: {
         Args: { p_entry_id: string }
         Returns: string
