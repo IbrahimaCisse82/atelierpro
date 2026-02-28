@@ -2,13 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-// ✅ Validation des variables d'environnement
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('❌ ERREUR CRITIQUE: Variables Supabase manquantes. Vérifiez votre fichier .env');
-}
+const SUPABASE_URL = "https://tgjnabqqqwugezgawbki.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnam5hYnFxcXd1Z2V6Z2F3YmtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzk2MjIsImV4cCI6MjA4NzgxNTYyMn0.zvVOu6OIaTPQMtxkMtv-bJ1uyDupJId7AFrTWnEdUck";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -18,16 +13,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
-  },
-  db: {
-    schema: 'public'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'atelierpro-web'
-    }
   }
 });
-
-// Note: Pour les opérations admin côté serveur, créer un client séparé
-// avec la clé de service uniquement quand nécessaire
