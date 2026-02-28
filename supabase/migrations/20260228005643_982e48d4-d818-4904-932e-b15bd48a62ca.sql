@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN gender TEXT DEFAULT 'homme';

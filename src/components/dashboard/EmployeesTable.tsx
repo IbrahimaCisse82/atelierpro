@@ -152,9 +152,8 @@ export function EmployeesTable() {
           first_name: emp.firstName,
           last_name: emp.lastName,
           email: emp.email,
-          role: emp.role,
-        })
-        .eq('id', editEmployee.id);
+        } as any)
+        .eq('user_id', editEmployee.id);
       // Update employee
       const { error: empError } = await supabase
         .from('employees')
@@ -178,11 +177,10 @@ export function EmployeesTable() {
           first_name: emp.firstName,
           last_name: emp.lastName,
           email: emp.email,
-          role: emp.role,
           company_id: user.companyId,
           is_active: true,
-          user_id: '', // à lier si besoin
-        })
+          user_id: crypto.randomUUID(),
+        } as any)
         .select()
         .single();
       if (profileError || !profile) {
@@ -195,7 +193,7 @@ export function EmployeesTable() {
         .from('employees')
         .insert({
           company_id: user.companyId,
-          profile_id: profile.id,
+          profile_id: (profile as any).user_id,
           employee_number: Date.now().toString(),
           hire_date: emp.hireDate,
           hourly_rate: emp.salary,

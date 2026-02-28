@@ -166,7 +166,7 @@ export const PWAFeatures: React.FC<PWAFeaturesProps> = ({ className }) => {
       // Clé publique VAPID (à remplacer par votre vraie clé)
       const applicationServerKey = 'BOxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
       
-      const subscription = await registration.pushManager.subscribe({
+      const subscription = await (registration as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
       });
