@@ -48,20 +48,14 @@
       "name": "Nouveau Client",
       "short_name": "Client",
       "description": "Ajouter un nouveau client",
-      "url": "/clients/new",
-      "icons": [
-        {
-          "src": "/pwa-192x192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "url": "/dashboard/clients",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Nouvelle Commande",
       "short_name": "Commande",
       "description": "Créer une nouvelle commande",
-      "url": "/orders/new",
+      "url": "/dashboard/orders",
       "icons": [
         {
           "src": "/pwa-192x192.png",
@@ -87,7 +81,7 @@
       "name": "Finances",
       "short_name": "Finances",
       "description": "Gérer les finances",
-      "url": "/finances",
+      "url": "/dashboard/finances",
       "icons": [
         {
           "src": "/pwa-192x192.png",
