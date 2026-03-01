@@ -129,8 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [retryCount, setRetryCount] = useState(0);
   const [forceReload, setForceReload] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const retryTimeout = 12000; // 12 secondes (optimisé pour connexions lentes)
-  const maxRetries = 3;
+  const retryTimeout = 5000; // 5 secondes
+  const maxRetries = 2;
 
   // Fonction pour charger la session et le profil avec timeout et retry
   const loadSessionAndProfile = async (isRetry = false) => {
@@ -140,43 +140,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     dispatch({ type: 'SET_LOADING', payload: true });
-    let didTimeout = false;
     
     console.time('supabase-auth-total');
     try {
-      // Timeout global
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutRef.current = setTimeout(() => {
-          didTimeout = true;
-          reject(new Error('Timeout de connexion à Supabase'));
-        }, retryTimeout);
-      });
-      
-      // Récupération de la session
-      const sessionPromise = supabase.auth.getSession();
-      const result = await Promise.race([sessionPromise, timeoutPromise]);
-      
-      const session = (result as any)?.data?.session;
+      const { data, error } = await supabase.auth.getSession();
       console.timeEnd('supabase-auth-total');
       
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (error) {
+        console.error('[AuthContext] Erreur getSession:', error);
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return;
+      }
+
+      const session = data?.session;
       
       if (session?.user) {
         await loadUserDataWithTimeout(session);
       } else {
+        // Pas de session = pas connecté, arrêter le chargement immédiatement
         dispatch({ type: 'SET_LOADING', payload: false });
       }
     } catch (error) {
-      // Retry automatique si pas encore au maximum
-      if (retryCount < maxRetries && !didTimeout) {
-        setTimeout(() => loadSessionAndProfile(true), 1000 * (retryCount + 1));
-        return;
-      }
-      
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: `Connexion trop longue ou erreur réseau. (${retryCount}/${maxRetries})` 
-      });
+      console.error('[AuthContext] Erreur critique:', error);
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
