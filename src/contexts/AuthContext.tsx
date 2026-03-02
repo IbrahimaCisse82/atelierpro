@@ -264,7 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 2. Récupérer le rôle depuis user_roles (table sécurisée)
       console.log('[AuthContext] 👤 Récupération du rôle...');
       const { data: roleData, error: roleError } = await supabase
-        .from('user_roles' as any)
+        .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
         .eq('company_id', profileData.company_id)
@@ -311,7 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: profileData.email,
         firstName: profileData.first_name,
         lastName: profileData.last_name,
-        role: (roleData as any).role as UserRole,  // ✅ Rôle depuis table sécurisée
+        role: (roleData as any).role as UserRole,
         companyId: profileData.company_id,
         isActive: profileData.is_active,
         createdAt: new Date(profileData.created_at),
@@ -430,8 +430,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         // ✅ Mettre à jour dans user_roles au lieu de profiles
         const { error } = await supabase
-          .from('user_roles' as any)
-          .update({ role })
+          .from('user_roles')
+          .update({ role } as any)
           .eq('user_id', state.user.id)
           .eq('company_id', state.company.id);
 
