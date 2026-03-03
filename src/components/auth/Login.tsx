@@ -6,14 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Logo } from '@/components/ui/logo';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, Play } from 'lucide-react';
 
 interface LoginProps {
   onSwitchToRegister: () => void;
 }
 
 export function Login({ onSwitchToRegister }: LoginProps) {
-  const { login, loading } = useAuth();
+  const { login, loginAsDemo, loading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -140,6 +140,23 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                 )}
               </Button>
 
+              <div className="relative flex items-center my-2">
+                <div className="flex-grow border-t border-muted-foreground/30" />
+                <span className="mx-3 text-xs text-muted-foreground">ou</span>
+                <div className="flex-grow border-t border-muted-foreground/30" />
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                onClick={loginAsDemo}
+                disabled={loading}
+              >
+                <Play className="mr-2 h-4 w-4" />
+                Accès Démo (toutes fonctions)
+              </Button>
+
               <div className="text-center text-sm space-y-2">
                 <div className="text-muted-foreground">
                   Pas encore d'atelier ?{' '}
@@ -151,14 +168,6 @@ export function Login({ onSwitchToRegister }: LoginProps) {
                   >
                     Créer votre entreprise
                   </button>
-                </div>
-                <div className="text-muted-foreground">
-                  <a
-                    href="/install"
-                    className="text-primary hover:text-primary-dark underline"
-                  >
-                    📱 Installer l'application sur votre téléphone
-                  </a>
                 </div>
               </div>
             </form>
