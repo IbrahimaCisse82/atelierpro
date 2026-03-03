@@ -112,6 +112,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 // Context
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
+  loginAsDemo: () => void;
   logout: () => Promise<void>;
   registerCompany: (data: CompanyRegistrationData) => Promise<void>;
   switchRole: (role: UserRole) => void;
@@ -447,6 +448,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Mode démo - accès complet sans authentification
+  const loginAsDemo = () => {
+    const demoUser: User = {
+      id: 'demo-user-id',
+      email: 'demo@atelierpro.app',
+      firstName: 'Utilisateur',
+      lastName: 'Démo',
+      role: 'owner' as UserRole,
+      companyId: 'demo-company-id',
+      isActive: true,
+      createdAt: new Date(),
+      lastLogin: new Date()
+    };
+    const demoCompany: Company = {
+      id: 'demo-company-id',
+      name: 'Atelier Démo',
+      email: 'demo@atelierpro.app',
+      createdAt: new Date(),
+      isActive: true
+    };
+    setCachedData(demoUser, demoCompany);
+    dispatch({ type: 'LOGIN_SUCCESS', payload: { user: demoUser, company: demoCompany } });
+  };
+
   // Handler pour le bouton "Réessayer"
   const handleRetry = () => {
     setRetryCount(0);
@@ -460,6 +485,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value: AuthContextValue = {
     ...state,
     login,
+    loginAsDemo,
     logout,
     registerCompany,
     switchRole,
@@ -474,6 +500,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       ...state,
       login,
+      loginAsDemo,
       logout,
       registerCompany,
       switchRole,
