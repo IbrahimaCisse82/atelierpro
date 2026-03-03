@@ -2,8 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { PWAInstallPrompt } from "@/components/ui/pwa-install-prompt";
-import MobileNavigation from "@/components/common/MobileNavigation";
+// PWA features disabled
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -268,11 +267,6 @@ function AppContent() {
           </Routes>
         </Suspense>
         
-        {/* Composants PWA */}
-        <PWAInstallPrompt />
-        
-        {/* Navigation mobile */}
-        <MobileNavigation />
       </SidebarProvider>
     </QueryClientProvider>
   );
