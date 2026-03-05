@@ -429,10 +429,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchRole = async (role: UserRole) => {
     if (state.user && state.company) {
       try {
-        // ✅ Mettre à jour dans user_roles au lieu de profiles
+        // En mode démo, juste mettre à jour localement
+        if (state.user.id === 'demo-user-id') {
+          const updatedUser = { ...state.user, role };
+          setCachedData(updatedUser, state.company);
+          dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
+          return;
+        }
+        
         const { error } = await supabase
           .from('user_roles')
-          .update({ role } as any)
+          .update({ role })
           .eq('user_id', state.user.id)
           .eq('company_id', state.company.id);
 

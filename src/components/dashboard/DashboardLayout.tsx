@@ -6,7 +6,6 @@ import {
   SidebarMenu, 
   SidebarMenuItem, 
   SidebarMenuButton,
-  SidebarTrigger,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
@@ -14,6 +13,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { DashboardHeader } from './DashboardHeader';
 import { ChevronDown, ChevronRight, Home, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -40,7 +40,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
   
-  // État pour gérer l'ouverture/fermeture des groupes
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
     production: false,
@@ -50,7 +49,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     rapports: false,
   });
 
-  // Structure de navigation organisée par domaine fonctionnel
   const menuGroups: MenuGroup[] = [
     {
       key: 'commercial',
@@ -124,16 +122,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const isActive = (path: string) => location.pathname === path;
-  
-  // Vérifie si un groupe contient la route active
-  const isGroupActive = (items: MenuItem[]) => {
-    return items.some(item => isActive(item.path));
-  };
 
   return (
     <div className="flex h-screen w-full bg-background">
       <Sidebar className="border-r" collapsible="icon">
-        {/* Bande noire pour les icônes */}
         <div className="absolute left-0 top-0 bottom-0 w-16 bg-black z-0" />
         
         <SidebarHeader className="border-b relative z-10">
@@ -145,11 +137,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               {sidebarOpen && <h1 className="text-lg font-bold">AteliérPro</h1>}
             </div>
             {sidebarOpen && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-              >
+              <Button variant="ghost" size="icon" onClick={toggleSidebar}>
                 <PanelLeftClose className="h-4 w-4" />
               </Button>
             )}
@@ -157,7 +145,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SidebarHeader>
         
         <SidebarContent className="relative z-10">
-          {/* Dashboard principal */}
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -173,7 +160,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </SidebarMenuItem>
           </SidebarMenu>
 
-          {/* Groupes de navigation */}
           {menuGroups.map((group) => (
             <SidebarGroup key={group.key}>
               <button
@@ -216,7 +202,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </SidebarGroup>
           ))}
 
-          {/* Administration */}
           <SidebarGroup>
             <SidebarGroupLabel>
               <div className="flex items-center space-x-2">
@@ -246,38 +231,33 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </SidebarContent>
       </Sidebar>
 
-      {/* Bouton toggle quand sidebar est fermé */}
       {!sidebarOpen && (
         <div className="fixed left-2 top-4 z-50">
-          <Button
-            variant="default"
-            size="icon"
-            onClick={toggleSidebar}
-            className="shadow-lg"
-          >
+          <Button variant="default" size="icon" onClick={toggleSidebar} className="shadow-lg">
             <PanelLeft className="h-4 w-4" />
           </Button>
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto">
-        {/* Header mobile avec trigger */}
-        <div className="md:hidden sticky top-0 z-10 bg-background border-b p-4 flex items-center justify-between">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-          >
-            <PanelLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="text-lg font-semibold">AteliérPro</h2>
-          <div className="w-8" /> {/* Spacer pour centrage */}
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header avec profil utilisateur et déconnexion */}
+        <DashboardHeader />
         
-        <div className="p-6">
-          {children}
-        </div>
-      </main>
+        <main className="flex-1 overflow-y-auto">
+          {/* Header mobile avec trigger */}
+          <div className="md:hidden sticky top-0 z-10 bg-background border-b p-4 flex items-center justify-between">
+            <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+              <PanelLeft className="h-4 w-4" />
+            </Button>
+            <h2 className="text-lg font-semibold">AteliérPro</h2>
+            <div className="w-8" />
+          </div>
+          
+          <div className="p-6">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

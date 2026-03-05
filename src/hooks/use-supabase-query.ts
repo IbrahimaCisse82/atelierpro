@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { isDemoMode, useDemoData } from '@/contexts/DemoContext';
 import { toast } from '@/hooks/use-toast';
 
 interface UseSupabaseQueryOptions<T> {
@@ -8,7 +9,7 @@ interface UseSupabaseQueryOptions<T> {
   filters?: Record<string, any>;
   orderBy?: { column: string; ascending?: boolean };
   limit?: number;
-  offset?: number; // ✅ Ajouté pour pagination
+  offset?: number;
   enabled?: boolean;
   onSuccess?: (data: T[]) => void;
   onError?: (error: Error) => void;
@@ -30,8 +31,8 @@ export function useSupabaseQuery<T = any>(
     select = '*',
     filters = {},
     orderBy,
-    limit = 50, // ✅ Pagination par défaut : 50 éléments
-    offset = 0, // ✅ Offset pour pagination
+    limit = 50,
+    offset = 0,
     enabled = true,
     onSuccess,
     onError
@@ -42,9 +43,20 @@ export function useSupabaseQuery<T = any>(
   const [error, setError] = useState<Error | null>(null);
   const { user, userProfile } = useAuth();
 
+  // Mode démo : retourner des données en mémoire
+  const demoData = useDemoData<T>(table);
+  const isDemo = user ? isDemoMode(user.id) : false;
+
   const fetchData = useCallback(async () => {
     if (!enabled || !user || !userProfile) {
       setData(null);
+      return;
+    }
+
+    // Mode démo : pas de requête Supabase
+    if (isDemo) {
+      setData(demoData);
+      onSuccess?.(demoData || []);
       return;
     }
 
@@ -56,9 +68,8 @@ export function useSupabaseQuery<T = any>(
         .from(table as any)
         .select(select)
         .eq('company_id', userProfile.companyId)
-        .is('deleted_at', null); // ✅ Exclure les soft-deleted par défaut
+        .is('deleted_at', null);
 
-      // Appliquer les filtres
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
           if (Array.isArray(value)) {
@@ -69,12 +80,10 @@ export function useSupabaseQuery<T = any>(
         }
       });
 
-      // Appliquer l'ordre
       if (orderBy) {
         query = query.order(orderBy.column, { ascending: orderBy.ascending ?? true });
       }
 
-      // ✅ Appliquer pagination
       if (limit) {
         query = query.limit(limit);
       }
@@ -103,7 +112,7 @@ export function useSupabaseQuery<T = any>(
     } finally {
       setLoading(false);
     }
-  }, [table, select, filters, orderBy, limit, offset, enabled, user, userProfile, onSuccess, onError]);
+  }, [table, select, JSON.stringify(filters), orderBy?.column, orderBy?.ascending, limit, offset, enabled, user, userProfile, isDemo]);
 
   useEffect(() => {
     fetchData();
@@ -126,10 +135,16 @@ export function useSupabaseQuery<T = any>(
 export function useSupabaseMutation<T = any>(table: string) {
   const { user, userProfile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const isDemo = user ? isDemoMode(user.id) : false;
 
   const create = useCallback(async (data: Partial<T>) => {
     if (!user || !userProfile) {
       throw new Error('Utilisateur non authentifié');
+    }
+
+    if (isDemo) {
+      toast({ title: "Mode démo", description: "Les modifications ne sont pas sauvegardées en mode démo.", variant: "default" });
+      return { ...data, id: `demo-${Date.now()}` };
     }
 
     setLoading(true);
@@ -150,11 +165,16 @@ export function useSupabaseMutation<T = any>(table: string) {
     } finally {
       setLoading(false);
     }
-  }, [table, user, userProfile]);
+  }, [table, user, userProfile, isDemo]);
 
   const update = useCallback(async (id: string, data: Partial<T>) => {
     if (!user || !userProfile) {
       throw new Error('Utilisateur non authentifié');
+    }
+
+    if (isDemo) {
+      toast({ title: "Mode démo", description: "Les modifications ne sont pas sauvegardées en mode démo.", variant: "default" });
+      return { ...data, id };
     }
 
     setLoading(true);
@@ -176,11 +196,16 @@ export function useSupabaseMutation<T = any>(table: string) {
     } finally {
       setLoading(false);
     }
-  }, [table, user, userProfile]);
+  }, [table, user, userProfile, isDemo]);
 
   const remove = useCallback(async (id: string) => {
     if (!user || !userProfile) {
       throw new Error('Utilisateur non authentifié');
+    }
+
+    if (isDemo) {
+      toast({ title: "Mode démo", description: "Les modifications ne sont pas sauvegardées en mode démo.", variant: "default" });
+      return;
     }
 
     setLoading(true);
@@ -195,14 +220,13 @@ export function useSupabaseMutation<T = any>(table: string) {
     } finally {
       setLoading(false);
     }
-  }, [table, user, userProfile]);
+  }, [table, user, userProfile, isDemo]);
 
   return {
     create,
     update,
     remove,
     loading,
-    // Alias pour compatibilité
     mutate: create,
     isLoading: loading
   };
