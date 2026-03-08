@@ -128,6 +128,7 @@ function AppContent() {
           <Route path="/dashboard/alerts" element={<DashboardLayout><AlertsPage /></DashboardLayout>} />
           <Route path="/dashboard/audit" element={<DashboardLayout><AuditTrailPage /></DashboardLayout>} />
           <Route path="/dashboard/export" element={<DashboardLayout><AdvancedExportPage /></DashboardLayout>} />
+          <Route path="/dashboard/apps" element={<DashboardLayout><AppsStorePage /></DashboardLayout>} />
           <Route path="/install" element={<InstallPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
