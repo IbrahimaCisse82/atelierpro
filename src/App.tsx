@@ -70,6 +70,7 @@ const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(
 const InstallPage = lazy(() => import('./pages/InstallPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 
 // Composant principal de l'application
 function AppContent() {
@@ -80,7 +81,7 @@ function AppContent() {
     return (
       <Suspense fallback={<LoadingPage />}>
         <Routes>
-          <Route path="/" element={loading ? <LoadingPage /> : <AuthLayout />} />
+          <Route path="/" element={loading ? <LoadingPage /> : <LandingPage />} />
           <Route path="/login" element={loading ? <LoadingPage /> : <AuthLayout />} />
           <Route path="/register" element={loading ? <LoadingPage /> : <AuthLayout />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

@@ -1,66 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { isDemoMode } from '@/contexts/DemoContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { User, Settings, Users, Shield, Download, Upload, Save, RefreshCw, Building2, Globe, Palette, Bell, KeyRound, Mail, FileText, Calculator } from 'lucide-react';
+import { Building2, Users, Settings, Save, Download, Upload, Calculator, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
 
 export function SettingsPage() {
-	const { user } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('company');
+  const [saving, setSaving] = useState(false);
+  const [loadingCompany, setLoadingCompany] = useState(true);
+  const isDemo = user ? isDemoMode(user.id) : false;
 
-  // États pour le formulaire Entreprise
   const [company, setCompany] = useState({
-    name: 'AtelierPro',
-    logo: '',
-    address: '',
-    city: '',
-    country: '',
-    phone: '',
-    email: '',
-    ninea: '',
-    rccm: '',
-    legal: ''
+    name: '', address: '', city: '', country: '', phone: '', email: '',
+    ninea: '', rccm: '', legal: ''
   });
 
-  // États pour Préférences
   const [preferences, setPreferences] = useState({
-    language: 'fr',
-    currency: 'XOF',
-    theme: 'light',
-    notifications: true
+    language: 'fr', currency: 'XOF', theme: 'light', notifications: true
   });
 
-  // Permissions (exemple)
   const canManageSettings = ['owner', 'manager'].includes(user?.role || '');
 
-  // Handlers de sauvegarde (mock)
-  const handleSaveCompany = () => {
-    toast({ title: 'Succès', description: 'Informations de l’entreprise enregistrées.' });
+  // Load company data
+  useEffect(() => {
+    if (!user || isDemo) {
+      setLoadingCompany(false);
+      if (isDemo) setCompany(c => ({ ...c, name: 'Atelier Démo' }));
+      return;
+    }
+
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', user.companyId)
+          .single();
+
+        if (error) throw error;
+        if (data) {
+          setCompany(c => ({
+            ...c,
+            name: data.name || '',
+            email: data.email || '',
+          }));
+        }
+      } catch (err: any) {
+        console.error('Error loading company:', err);
+      } finally {
+        setLoadingCompany(false);
+      }
+    })();
+  }, [user, isDemo]);
+
+  const handleSaveCompany = async () => {
+    if (!user || isDemo) {
+      toast({ title: 'Mode démo', description: 'Les modifications ne sont pas sauvegardées.' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .update({
+          name: company.name,
+          email: company.email,
+        })
+        .eq('id', user.companyId);
+
+      if (error) throw error;
+      toast({ title: 'Succès', description: 'Informations de l\'entreprise enregistrées.' });
+    } catch (err: any) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
+
   const handleSavePreferences = () => {
     toast({ title: 'Succès', description: 'Préférences enregistrées.' });
   };
-  const handleBackup = () => {
-    toast({ title: 'Export', description: 'Sauvegarde exportée.' });
-  };
-  const handleRestore = () => {
-    toast({ title: 'Import', description: 'Restauration effectuée.' });
-	};
 
-	return (
-		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-3xl font-bold">Paramètres</h1>
-          <p className="text-muted-foreground">Configuration de l’entreprise, des utilisateurs et du système</p>
-				</div>
-			</div>
+  const handleBackup = () => {
+    toast({ title: 'Export', description: 'Fonctionnalité en cours de développement.' });
+  };
+
+  const handleRestore = () => {
+    toast({ title: 'Import', description: 'Fonctionnalité en cours de développement.' });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Paramètres</h1>
+        <p className="text-muted-foreground">Configuration de l'entreprise, des utilisateurs et du système</p>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company"><Building2 className="inline h-4 w-4 mr-1" />Entreprise</TabsTrigger>
@@ -70,89 +115,94 @@ export function SettingsPage() {
           <TabsTrigger value="backup"><Save className="inline h-4 w-4 mr-1" />Sauvegarde</TabsTrigger>
         </TabsList>
 
-        {/* Onglet Entreprise */}
+        {/* Company Tab */}
         <TabsContent value="company" className="space-y-4">
-			<Card>
-				<CardHeader>
-              <CardTitle>Informations de l’entreprise</CardTitle>
-              <CardDescription>Modifiez les informations légales et de contact de votre atelier</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="company-name">Nom de l’entreprise *</Label>
-                  <Input id="company-name" value={company.name} onChange={e => setCompany(c => ({ ...c, name: e.target.value }))} />
-                </div>
-                <div>
-                  <Label htmlFor="company-logo">Logo</Label>
-                  <Input id="company-logo" type="file" />
-                </div>
-                <div>
-                  <Label htmlFor="company-address">Adresse *</Label>
-                  <Input id="company-address" value={company.address} onChange={e => setCompany(c => ({ ...c, address: e.target.value }))} />
-                </div>
-                <div>
-                  <Label htmlFor="company-city">Ville *</Label>
-                  <Input id="company-city" value={company.city} onChange={e => setCompany(c => ({ ...c, city: e.target.value }))} />
-                </div>
-                <div>
-                  <Label htmlFor="company-country">Pays *</Label>
-                  <Input id="company-country" value={company.country} onChange={e => setCompany(c => ({ ...c, country: e.target.value }))} />
-                </div>
-                <div>
-                  <Label htmlFor="company-phone">Téléphone *</Label>
-                  <Input id="company-phone" value={company.phone} onChange={e => setCompany(c => ({ ...c, phone: e.target.value }))} />
-                </div>
-                <div>
-                  <Label htmlFor="company-email">Email *</Label>
-                  <Input id="company-email" value={company.email} onChange={e => setCompany(c => ({ ...c, email: e.target.value }))} />
-                </div>
-						<div>
-                  <Label htmlFor="company-ninea">NINEA</Label>
-                  <Input id="company-ninea" value={company.ninea} onChange={e => setCompany(c => ({ ...c, ninea: e.target.value }))} />
-						</div>
-						<div>
-                  <Label htmlFor="company-rccm">RCCM</Label>
-                  <Input id="company-rccm" value={company.rccm} onChange={e => setCompany(c => ({ ...c, rccm: e.target.value }))} />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="company-legal">Mentions légales</Label>
-                  <Textarea id="company-legal" value={company.legal} onChange={e => setCompany(c => ({ ...c, legal: e.target.value }))} />
-						</div>
-              </div>
-              <div className="flex justify-end">
-                <Button onClick={handleSaveCompany} disabled={!canManageSettings}>Enregistrer</Button>
-              </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Informations de l'entreprise</CardTitle>
+              <CardDescription>Modifiez les informations légales et de contact</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingCompany ? (
+                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="company-name">Nom de l'entreprise *</Label>
+                      <Input id="company-name" value={company.name} onChange={e => setCompany(c => ({ ...c, name: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-email">Email</Label>
+                      <Input id="company-email" type="email" value={company.email} onChange={e => setCompany(c => ({ ...c, email: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-phone">Téléphone</Label>
+                      <Input id="company-phone" value={company.phone} onChange={e => setCompany(c => ({ ...c, phone: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-address">Adresse</Label>
+                      <Input id="company-address" value={company.address} onChange={e => setCompany(c => ({ ...c, address: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-city">Ville</Label>
+                      <Input id="company-city" value={company.city} onChange={e => setCompany(c => ({ ...c, city: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-country">Pays</Label>
+                      <Input id="company-country" value={company.country} onChange={e => setCompany(c => ({ ...c, country: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-ninea">NINEA</Label>
+                      <Input id="company-ninea" value={company.ninea} onChange={e => setCompany(c => ({ ...c, ninea: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="company-rccm">RCCM</Label>
+                      <Input id="company-rccm" value={company.rccm} onChange={e => setCompany(c => ({ ...c, rccm: e.target.value }))} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="company-legal">Mentions légales</Label>
+                      <Textarea id="company-legal" value={company.legal} onChange={e => setCompany(c => ({ ...c, legal: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveCompany} disabled={!canManageSettings || saving}>
+                      {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Enregistrer
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Onglet Utilisateurs */}
+        {/* Users Tab */}
         <TabsContent value="users" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Gestion des utilisateurs</CardTitle>
-              <CardDescription>Invitez, modifiez ou désactivez les utilisateurs de l’atelier</CardDescription>
+              <CardDescription>Invitez, modifiez ou désactivez les utilisateurs</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-muted-foreground text-center py-8">
-                (Gestion des utilisateurs à connecter à la base Supabase)
+                Fonctionnalité en cours de développement
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Onglet SYSCOHADA */}
+        {/* SYSCOHADA Tab */}
         <TabsContent value="syscohada">
           <SyscohadaSettingsPage />
         </TabsContent>
 
-        {/* Onglet Préférences */}
+        {/* Preferences Tab */}
         <TabsContent value="preferences" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Préférences système</CardTitle>
-              <CardDescription>Personnalisez l’expérience de l’application</CardDescription>
+              <CardDescription>Personnalisez l'expérience de l'application</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,47 +214,36 @@ export function SettingsPage() {
                   <Label htmlFor="pref-currency">Devise</Label>
                   <Input id="pref-currency" value={preferences.currency} onChange={e => setPreferences(p => ({ ...p, currency: e.target.value }))} />
                 </div>
-                <div>
-                  <Label htmlFor="pref-theme">Thème</Label>
-                  <Input id="pref-theme" value={preferences.theme} onChange={e => setPreferences(p => ({ ...p, theme: e.target.value }))} />
-					</div>
-					<div>
-                  <Label htmlFor="pref-notif">Notifications</Label>
-                  <Input id="pref-notif" type="checkbox" checked={preferences.notifications} onChange={e => setPreferences(p => ({ ...p, notifications: e.target.checked }))} />
-                </div>
-					</div>
-					<div className="flex justify-end">
+              </div>
+              <div className="flex justify-end">
                 <Button onClick={handleSavePreferences} disabled={!canManageSettings}>Enregistrer</Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Onglet Sauvegarde/Restauration */}
+        {/* Backup Tab */}
         <TabsContent value="backup" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Sauvegarde & Restauration</CardTitle>
-              <CardDescription>Exportez ou importez les données de l’atelier</CardDescription>
+              <CardDescription>Exportez ou importez les données</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-4">
                 <Button variant="outline" onClick={handleBackup}>
                   <Download className="h-4 w-4 mr-2" />Exporter les données
-						</Button>
+                </Button>
                 <Button variant="outline" onClick={handleRestore}>
                   <Upload className="h-4 w-4 mr-2" />Importer une sauvegarde
-						</Button>
-					</div>
-              <div className="text-muted-foreground text-xs mt-2">
-                (Fonctionnalités avancées à connecter à la logique métier et à la base de données)
+                </Button>
               </div>
-				</CardContent>
-			</Card>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
-		</div>
-	);
+    </div>
+  );
 }
 
 export default SettingsPage;
