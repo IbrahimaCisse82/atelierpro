@@ -21,10 +21,14 @@ type Supplier = Database['public']['Tables']['suppliers']['Row'];
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   draft: { label: 'Brouillon', color: 'bg-gray-500' },
-  confirmed: { label: 'Confirmé', color: 'bg-blue-500' },
-  shipped: { label: 'Expédié', color: 'bg-yellow-500' },
+  ordered: { label: 'Commandé', color: 'bg-blue-500' },
+  in_transit: { label: 'En transit', color: 'bg-yellow-500' },
   received: { label: 'Reçu', color: 'bg-green-500' },
+  invoice_received: { label: 'Facturé', color: 'bg-teal-500' },
+  ready_to_pay: { label: 'Prêt à payer', color: 'bg-cyan-500' },
+  paid: { label: 'Payé', color: 'bg-emerald-500' },
   cancelled: { label: 'Annulé', color: 'bg-red-500' },
+  delivered_not_received: { label: 'Livré non reçu', color: 'bg-orange-500' },
 };
 
 export function PurchasesPage() {
