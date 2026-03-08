@@ -48,11 +48,17 @@ export function SettingsPage() {
 
         if (error) throw error;
         if (data) {
-          setCompany(c => ({
-            ...c,
+          setCompany({
             name: data.name || '',
             email: data.email || '',
-          }));
+            phone: (data as any).phone || '',
+            address: (data as any).address || '',
+            city: (data as any).city || '',
+            country: (data as any).country || '',
+            ninea: (data as any).ninea || '',
+            rccm: (data as any).rccm || '',
+            legal: (data as any).legal_notice || '',
+          });
         }
       } catch (err: any) {
         console.error('Error loading company:', err);
