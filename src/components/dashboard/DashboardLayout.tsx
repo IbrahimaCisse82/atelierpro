@@ -314,7 +314,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenuButton
                 isActive={isActive('/dashboard/settings')}
                 onClick={() => navigate('/dashboard/settings')}
-                tooltip="Paramètres"
                 className={cn(
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isActive('/dashboard/settings')
