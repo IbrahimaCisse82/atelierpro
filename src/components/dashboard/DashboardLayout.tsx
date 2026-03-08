@@ -227,6 +227,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    isActive={isActive('/dashboard/apps')}
+                    onClick={() => navigate('/dashboard/apps')}
+                    className="data-[active=true]:bg-white data-[active=true]:text-black"
+                  >
+                    <div className="w-12 flex items-center justify-center text-white">
+                      <span>🧩</span>
+                    </div>
+                    {sidebarOpen && <span>Applications</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
                     isActive={isActive('/dashboard/settings')}
                     onClick={() => navigate('/dashboard/settings')}
                     className="data-[active=true]:bg-white data-[active=true]:text-black"
