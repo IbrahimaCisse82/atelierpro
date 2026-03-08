@@ -113,26 +113,30 @@ export function DashboardHeader() {
             
             <DropdownMenuSeparator />
             
-            {/* Section démo - Changement de rôle */}
-            <DropdownMenuLabel className="text-xs text-accent">Mode Démonstration</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => switchRole('owner')}>
-              🏢 Propriétaire
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => switchRole('manager')}>
-              👨‍💼 Gérant
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => switchRole('tailor')}>
-              ✂️ Couturier
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => switchRole('orders')}>
-              📋 Resp. Commandes
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => switchRole('stocks')}>
-              📦 Resp. Stocks
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => switchRole('customer_service')}>
-              📞 Service Client
-            </DropdownMenuItem>
+            {/* Section démo - Changement de rôle (uniquement en mode démo) */}
+            {user.id === 'demo-user-id' && (
+              <>
+                <DropdownMenuLabel className="text-xs text-accent">Mode Démonstration</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => switchRole('owner')}>
+                  🏢 Propriétaire
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('manager')}>
+                  👨‍💼 Gérant
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('tailor')}>
+                  ✂️ Couturier
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('orders')}>
+                  📋 Resp. Commandes
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('stocks')}>
+                  📦 Resp. Stocks
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('customer_service')}>
+                  📞 Service Client
+                </DropdownMenuItem>
+              </>
+            )}
             
             <DropdownMenuSeparator />
             

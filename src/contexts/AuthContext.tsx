@@ -425,33 +425,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Fonction pour changer de rôle - Maintenant utilise user_roles (sécurisé)
-  const switchRole = async (role: UserRole) => {
-    if (state.user && state.company) {
-      try {
-        // En mode démo, juste mettre à jour localement
-        if (state.user.id === 'demo-user-id') {
-          const updatedUser = { ...state.user, role };
-          setCachedData(updatedUser, state.company);
-          dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
-          return;
-        }
-        
-        const { error } = await supabase
-          .from('user_roles')
-          .update({ role })
-          .eq('user_id', state.user.id)
-          .eq('company_id', state.company.id);
-
-        if (error) throw error;
-
-        // Mettre à jour le state local
-        const updatedUser = { ...state.user, role };
-        setCachedData(updatedUser, state.company);
-        dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
-      } catch (error) {
-        console.error('Erreur lors du changement de rôle:', error);
-      }
+  // Fonction pour changer de rôle - UNIQUEMENT en mode démo
+  const switchRole = (role: UserRole) => {
+    if (state.user && state.company && state.user.id === 'demo-user-id') {
+      const updatedUser = { ...state.user, role };
+      setCachedData(updatedUser, state.company);
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
     }
   };
 
