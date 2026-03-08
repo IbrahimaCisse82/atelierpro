@@ -205,7 +205,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </SidebarHeader>
 
-        <SidebarSeparator className="bg-sidebar-border" />
+        <Separator className="bg-sidebar-border" />
 
         <SidebarContent className="px-2 py-2">
           {/* Dashboard link */}
