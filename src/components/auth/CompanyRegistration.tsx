@@ -203,8 +203,8 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Minimum 6 caractères"
-                  disabled={loading}
+                    placeholder="Minimum 8 caractères"
+                    disabled={loading}
                   required
                   autoComplete="new-password"
                 />
