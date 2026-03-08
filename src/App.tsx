@@ -70,6 +70,7 @@ const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(
 const InstallPage = lazy(() => import('./pages/InstallPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 
 // Composant principal de l'application
 function AppContent() {
