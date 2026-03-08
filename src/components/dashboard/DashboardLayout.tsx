@@ -291,7 +291,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             );
           })}
 
-          <SidebarSeparator className="bg-sidebar-border my-2" />
+          <Separator className="bg-sidebar-border my-2" />
 
           {/* Admin links */}
           <SidebarMenu>
