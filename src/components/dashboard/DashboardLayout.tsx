@@ -399,4 +399,4 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
       </div>
     </div>
   );
-}
+});
