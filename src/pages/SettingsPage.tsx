@@ -8,14 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Users, Settings, Save, Calculator, Loader2, Moon, Sun, Monitor, Package } from 'lucide-react';
+import { Building2, Users, Settings, Save, Calculator, Loader2, Moon, Sun, Monitor } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
 import { UserManagement } from '@/components/settings/UserManagement';
 import { DataExport } from '@/components/settings/DataExport';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ModuleSetup } from '@/components/modules/ModuleSetup';
+import { useNavigate } from 'react-router-dom';
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -117,19 +117,13 @@ export function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company"><Building2 className="inline h-4 w-4 mr-1" />Entreprise</TabsTrigger>
-          <TabsTrigger value="modules"><Package className="inline h-4 w-4 mr-1" />Modules</TabsTrigger>
           <TabsTrigger value="users"><Users className="inline h-4 w-4 mr-1" />Utilisateurs</TabsTrigger>
           <TabsTrigger value="syscohada"><Calculator className="inline h-4 w-4 mr-1" />SYSCOHADA</TabsTrigger>
           <TabsTrigger value="preferences"><Settings className="inline h-4 w-4 mr-1" />Préférences</TabsTrigger>
           <TabsTrigger value="backup"><Save className="inline h-4 w-4 mr-1" />Sauvegarde</TabsTrigger>
         </TabsList>
-
-        {/* Modules Tab */}
-        <TabsContent value="modules">
-          <ModuleSetup mode="settings" />
-        </TabsContent>
 
         {/* Company Tab */}
         <TabsContent value="company" className="space-y-4">

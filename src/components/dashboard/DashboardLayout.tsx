@@ -41,7 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const { user } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
-  const { isModuleEnabled } = useCompanyModules();
+  const { isModuleInstalled } = useCompanyModules();
   
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
@@ -120,12 +120,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     },
   ];
 
-  // Filter menu groups based on enabled modules
   const menuGroups = allMenuGroups
     .map(group => ({
       ...group,
       items: group.items.filter(item => 
-        !item.moduleKey || isModuleEnabled(item.moduleKey)
+        !item.moduleKey || isModuleInstalled(item.moduleKey)
       ),
     }))
     .filter(group => group.items.length > 0);
@@ -226,6 +225,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={isActive('/dashboard/apps')}
+                    onClick={() => navigate('/dashboard/apps')}
+                    className="data-[active=true]:bg-white data-[active=true]:text-black"
+                  >
+                    <div className="w-12 flex items-center justify-center text-white">
+                      <span>🧩</span>
+                    </div>
+                    {sidebarOpen && <span>Applications</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={isActive('/dashboard/settings')}
