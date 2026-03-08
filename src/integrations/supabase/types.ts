@@ -206,27 +206,48 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
+          city: string | null
+          country: string | null
           created_at: string
           email: string | null
           id: string
           is_active: boolean
+          legal_notice: string | null
           name: string
+          ninea: string | null
+          phone: string | null
+          rccm: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           id?: string
           is_active?: boolean
+          legal_notice?: string | null
           name: string
+          ninea?: string | null
+          phone?: string | null
+          rccm?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string | null
           id?: string
           is_active?: boolean
+          legal_notice?: string | null
           name?: string
+          ninea?: string | null
+          phone?: string | null
+          rccm?: string | null
           updated_at?: string
         }
         Relationships: []
