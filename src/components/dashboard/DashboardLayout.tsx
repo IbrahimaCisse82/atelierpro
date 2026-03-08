@@ -41,7 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const { user } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
-  const { isModuleEnabled } = useCompanyModules();
+  const { isModuleInstalled } = useCompanyModules();
   
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
