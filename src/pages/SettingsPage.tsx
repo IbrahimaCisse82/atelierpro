@@ -15,6 +15,7 @@ import { UserManagement } from '@/components/settings/UserManagement';
 import { DataExport } from '@/components/settings/DataExport';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ModuleSetup } from '@/components/modules/ModuleSetup';
 
 export function SettingsPage() {
   const { user } = useAuth();
