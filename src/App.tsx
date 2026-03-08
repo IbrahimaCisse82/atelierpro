@@ -69,6 +69,7 @@ const SyscohadaSettingsPage = lazy(() => import('./pages/SyscohadaSettingsPage')
 const AlertsPage = lazy(() => import('./pages/AlertsPage').then(module => ({ default: module.AlertsPage })));
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then(module => ({ default: module.AuditTrailPage })));
 const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(module => ({ default: module.AdvancedExportPage })));
+const AppsStorePage = lazy(() => import('./pages/AppsStorePage').then(module => ({ default: module.AppsStorePage })));
 const InstallPage = lazy(() => import('./pages/InstallPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
