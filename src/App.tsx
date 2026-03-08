@@ -143,15 +143,17 @@ function App() {
   };
   return (
     <QueryClientProvider client={queryClient}>
-      <Router future={future}>
-        <AuthProvider>
-          <TooltipProvider>
-            <AppContent />
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </AuthProvider>
-      </Router>
+      <ThemeProvider>
+        <Router future={future}>
+          <AuthProvider>
+            <TooltipProvider>
+              <AppContent />
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
