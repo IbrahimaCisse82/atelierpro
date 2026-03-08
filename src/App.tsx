@@ -77,6 +77,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 // Composant principal de l'application
 function AppContent() {
   const { user, loading } = useAuth();
+  useRealtimeAlerts();
 
   // While loading auth, show public routes (login, register, etc.) instead of blocking
   if (!user) {
