@@ -10,7 +10,6 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
-  SidebarSeparator,
   useSidebar
 } from '@/components/ui/sidebar';
 import { useNavigate, useLocation } from 'react-router-dom';
