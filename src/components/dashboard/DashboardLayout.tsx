@@ -73,12 +73,12 @@ interface MenuGroup {
   key: string;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export const DashboardLayout = React.memo(function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, company } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
-  const { isModuleInstalled } = useCompanyModules();
+  const { isModuleInstalled, installedModules } = useCompanyModules();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
@@ -89,7 +89,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     rapports: false,
   });
 
-  const allMenuGroups: MenuGroup[] = [
+  const allMenuGroups: MenuGroup[] = React.useMemo(() => [
     {
       key: 'commercial',
       label: 'Commercial',
@@ -155,20 +155,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         { path: '/dashboard/export', label: 'Export', icon: Download, moduleKey: 'export' },
       ],
     },
-  ];
+  ], []);
 
-  const menuGroups = allMenuGroups
+  const menuGroups = React.useMemo(() => allMenuGroups
     .map(group => ({
       ...group,
       items: group.items.filter(item =>
         !item.moduleKey || isModuleInstalled(item.moduleKey)
       ),
     }))
-    .filter(group => group.items.length > 0);
+    .filter(group => group.items.length > 0), [allMenuGroups, installedModules]);
 
-  const toggleGroup = (groupKey: string) => {
+  const toggleGroup = React.useCallback((groupKey: string) => {
     setOpenGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
-  };
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
@@ -399,4 +399,4 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
     </div>
   );
-}
+});

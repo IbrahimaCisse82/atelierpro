@@ -9,7 +9,8 @@ export function useRealtimeAlerts() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    // Skip realtime subscription in demo mode
+    if (!user || user.id === 'demo-user-id') return;
 
     const channel = supabase
       .channel('alerts-realtime')

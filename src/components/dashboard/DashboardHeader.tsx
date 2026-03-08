@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 
-export function DashboardHeader() {
+export const DashboardHeader = React.memo(function DashboardHeader() {
   const { user, company, logout, switchRole } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -157,4 +157,4 @@ export function DashboardHeader() {
       </div>
     </header>
   );
-}
+});
