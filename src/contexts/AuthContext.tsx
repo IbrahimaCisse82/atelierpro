@@ -8,11 +8,8 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'LOGIN_SUCCESS'; payload: { user: User; company: Company } }
   | { type: 'LOGOUT' }
-  | { type: 'REGISTER_COMPANY_SUCCESS'; payload: { user: User; company: Company } }
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'SET_RETRY_COUNT'; payload: number };
+  | { type: 'SET_ERROR'; payload: string };
 
-// State initial
 const initialState: AuthState = {
   isAuthenticated: false,
   user: null,
@@ -21,54 +18,6 @@ const initialState: AuthState = {
   error: ''
 };
 
-// Cache local pour les données utilisateur
-const CACHE_KEY = 'atelierpro_auth_cache';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-interface CachedData {
-  user: User;
-  company: Company;
-  timestamp: number;
-}
-
-// Fonction pour gérer le cache local
-const getCachedData = (): CachedData | null => {
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (!cached) return null;
-    
-    const data: CachedData = JSON.parse(cached);
-    const isExpired = Date.now() - data.timestamp > CACHE_DURATION;
-    
-    if (isExpired) {
-      localStorage.removeItem(CACHE_KEY);
-      return null;
-    }
-    
-    return data;
-  } catch {
-    return null;
-  }
-};
-
-const setCachedData = (user: User, company: Company) => {
-  try {
-    const data: CachedData = { user, company, timestamp: Date.now() };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-  } catch (error) {
-    console.warn('[AuthContext] Impossible de mettre en cache:', error);
-  }
-};
-
-const clearCachedData = () => {
-  try {
-    localStorage.removeItem(CACHE_KEY);
-  } catch (error) {
-    console.warn('[AuthContext] Impossible de supprimer le cache:', error);
-  }
-};
-
-// Reducer
 function authReducer(state: AuthState, action: AuthAction): AuthState {
   switch (action.type) {
     case 'SET_LOADING':
@@ -82,28 +31,10 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
         loading: false,
         error: ''
       };
-    case 'REGISTER_COMPANY_SUCCESS':
-      return {
-        ...state,
-        isAuthenticated: true,
-        user: action.payload.user,
-        company: action.payload.company,
-        loading: false,
-        error: ''
-      };
     case 'LOGOUT':
-      return {
-        ...state,
-        isAuthenticated: false,
-        user: null,
-        company: null,
-        loading: false,
-        error: ''
-      };
+      return { ...initialState, loading: false };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
-    case 'SET_RETRY_COUNT':
-      return { ...state, retryCount: action.payload };
     default:
       return state;
   }
@@ -124,146 +55,30 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-// Provider
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const [retryCount, setRetryCount] = useState(0);
   const [forceReload, setForceReload] = useState(0);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const retryTimeout = 5000; // 5 secondes
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxRetries = 2;
 
-  // Fonction pour charger la session et le profil avec timeout et retry
-  const loadSessionAndProfile = async (isRetry = false) => {
-    if (isRetry) {
-      setRetryCount(prev => prev + 1);
-      dispatch({ type: 'SET_RETRY_COUNT', payload: retryCount + 1 });
-    }
-    
-    dispatch({ type: 'SET_LOADING', payload: true });
-    
-    console.time('supabase-auth-total');
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      console.timeEnd('supabase-auth-total');
-      
-      if (error) {
-        console.error('[AuthContext] Erreur getSession:', error);
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return;
-      }
-
-      const session = data?.session;
-      
-      if (session?.user) {
-        await loadUserDataWithTimeout(session);
-      } else {
-        // Pas de session = pas connecté, arrêter le chargement immédiatement
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
-    } catch (error) {
-      console.error('[AuthContext] Erreur critique:', error);
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  };
-
-  // Fonction pour charger le profil utilisateur avec timeout et cache
-  const loadUserDataWithTimeout = async (session: Session) => {
-    let didTimeout = false;
-    
-    try {
-      // Vérifier le cache d'abord
-      const cachedData = getCachedData();
-      if (cachedData && cachedData.user.id === session.user.id) {
-        dispatch({ 
-          type: 'LOGIN_SUCCESS', 
-          payload: { user: cachedData.user, company: cachedData.company } 
-        });
-        return;
-      }
-
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutRef.current = setTimeout(() => {
-          didTimeout = true;
-          reject(new Error('Timeout de chargement du profil'));
-        }, retryTimeout);
-      });
-      
-      await Promise.race([loadUserData(session), timeoutPromise]);
-      
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    } catch (error) {
-      // Retry automatique si pas encore au maximum
-      if (retryCount < maxRetries && !didTimeout) {
-        setTimeout(() => loadUserDataWithTimeout(session), 1000 * (retryCount + 1));
-        return;
-      }
-      
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: `Chargement du profil trop long ou erreur réseau. (${retryCount}/${maxRetries})` 
-      });
-    }
-  };
-
-  // Initialisation avec Supabase Auth (avec retry)
-  useEffect(() => {
-    loadSessionAndProfile();
-    
-    // Écouter les changements d'état d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          await loadUserDataWithTimeout(session);
-        } else {
-          clearCachedData();
-          dispatch({ type: 'LOGOUT' });
-        }
-      }
-    );
-    
-    return () => {
-      subscription.unsubscribe();
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-    // eslint-disable-next-line
-  }, [forceReload]);
-
-  // Charger les données utilisateur depuis Supabase (OPTIMISÉ avec user_roles)
   const loadUserData = async (session: Session) => {
-    console.log('[AuthContext] 🔄 Chargement des données utilisateur...', session.user.id);
-    
     try {
-      // 1. Récupérer le profil utilisateur
-      console.log('[AuthContext] 📊 Récupération du profil...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, email, first_name, last_name, company_id, is_active, created_at, last_login')
         .eq('user_id', session.user.id)
         .single();
       
-      console.log('[AuthContext] Résultat profil:', profileData, 'Erreur:', profileError);
-      
       if (profileError || !profileData) {
-        // Si le profil n'existe pas, c'est probablement un utilisateur qui vient de s'inscrire
-        // et qui n'a pas encore confirmé son email
         if (profileError?.code === 'PGRST116') {
-          console.warn('[AuthContext] ⚠️ Profil non trouvé - Email probablement non confirmé');
-          dispatch({ 
-            type: 'SET_ERROR', 
-            payload: 'Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte mail.' 
-          });
+          dispatch({ type: 'SET_ERROR', payload: 'Profil non trouvé. Vérifiez votre email de confirmation.' });
         } else {
-          dispatch({ 
-            type: 'SET_ERROR', 
-            payload: `Erreur de chargement du profil: ${profileError?.message || 'Profil introuvable'}` 
-          });
+          dispatch({ type: 'SET_ERROR', payload: `Erreur profil: ${profileError?.message || 'Introuvable'}` });
         }
         return;
       }
 
-      // 2. Récupérer le rôle depuis user_roles (table sécurisée)
-      console.log('[AuthContext] 👤 Récupération du rôle...');
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -271,39 +86,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('company_id', profileData.company_id)
         .single();
 
-      console.log('[AuthContext] Résultat rôle:', roleData, 'Erreur:', roleError);
-
       if (roleError || !roleData) {
         if (roleError?.code === 'PGRST116') {
-          console.warn('[AuthContext] ⚠️ Rôle non trouvé - Compte en cours de création');
-          dispatch({ 
-            type: 'SET_ERROR', 
-            payload: 'Votre compte est en cours de création. Veuillez patienter quelques instants et réessayer.' 
-          });
+          dispatch({ type: 'SET_ERROR', payload: 'Compte en cours de création. Veuillez réessayer.' });
         } else {
-          dispatch({ 
-            type: 'SET_ERROR', 
-            payload: `Erreur de chargement du rôle: ${roleError?.message || 'Rôle introuvable'}` 
-          });
+          dispatch({ type: 'SET_ERROR', payload: `Erreur rôle: ${roleError?.message || 'Introuvable'}` });
         }
         return;
       }
 
-      // 3. Récupérer l'entreprise
-      console.log('[AuthContext] 🏢 Récupération de l\'entreprise...');
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('id, name, email, created_at, is_active')
         .eq('id', profileData.company_id)
         .single();
       
-      console.log('[AuthContext] Résultat entreprise:', companyData, 'Erreur:', companyError);
-      
       if (companyError || !companyData) {
-        dispatch({ 
-          type: 'SET_ERROR', 
-          payload: `Erreur de chargement de l'entreprise: ${companyError?.message || 'Entreprise introuvable'}` 
-        });
+        dispatch({ type: 'SET_ERROR', payload: `Erreur entreprise: ${companyError?.message || 'Introuvable'}` });
         return;
       }
 
@@ -312,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: profileData.email,
         firstName: profileData.first_name,
         lastName: profileData.last_name,
-        role: (roleData as any).role as UserRole,
+        role: roleData.role as UserRole,
         companyId: profileData.company_id,
         isActive: profileData.is_active,
         createdAt: new Date(profileData.created_at),
@@ -326,60 +125,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date(companyData.created_at),
         isActive: companyData.is_active
       };
-      
-      console.log('[AuthContext] ✅ Données chargées avec succès:', { user, company });
-      
-      // Mettre en cache les données
-      setCachedData(user, company);
-      
+
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
-    } catch (error) {
-      console.error('[AuthContext] ❌ Erreur critique:', error);
-      dispatch({ type: 'SET_ERROR', payload: "Erreur lors du chargement du profil utilisateur." });
+    } catch {
+      dispatch({ type: 'SET_ERROR', payload: 'Erreur lors du chargement du profil.' });
     }
   };
 
-  // Connexion avec Supabase
+  const loadUserDataWithTimeout = async (session: Session) => {
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject(new Error('Timeout'));
+        }, 5000);
+      });
+      
+      await Promise.race([loadUserData(session), timeoutPromise]);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    } catch {
+      if (retryCount < maxRetries) {
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => loadUserDataWithTimeout(session), 1000 * (retryCount + 1));
+        return;
+      }
+      dispatch({ type: 'SET_ERROR', payload: `Chargement trop long. (${retryCount}/${maxRetries})` });
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data?.session?.user) {
+          dispatch({ type: 'SET_LOADING', payload: false });
+          return;
+        }
+        await loadUserDataWithTimeout(data.session);
+      } catch {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    };
+
+    init();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (session?.user) {
+          await loadUserDataWithTimeout(session);
+        } else {
+          dispatch({ type: 'LOGOUT' });
+        }
+      }
+    );
+    
+    return () => {
+      subscription.unsubscribe();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+    // eslint-disable-next-line
+  }, [forceReload]);
+
   const login = async (email: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     setRetryCount(0);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: email.trim(),
-        password: password
+        password
       });
 
       if (error) {
-        // Gestion spécifique des erreurs 400
-        if (error.status === 400) {
-          if (error.message.includes('Email not confirmed')) {
-            throw new Error('Votre email n\'est pas encore confirmé. Veuillez vérifier votre boîte mail et cliquer sur le lien de confirmation.');
-          } else if (error.message.includes('Invalid login credentials')) {
-            throw new Error('Email ou mot de passe incorrect.');
-          } else if (error.message.includes('Too many requests')) {
-            throw new Error('Trop de tentatives de connexion. Veuillez patienter quelques minutes.');
-          } else {
-            throw new Error(`Erreur d'authentification: ${error.message}`);
-          }
+        if (error.message.includes('Email not confirmed')) {
+          throw new Error('Email non confirmé. Vérifiez votre boîte mail.');
+        } else if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Email ou mot de passe incorrect.');
+        } else if (error.message.includes('Too many requests')) {
+          throw new Error('Trop de tentatives. Patientez quelques minutes.');
         }
-        
-        throw error;
+        throw new Error(error.message);
       }
-      
-      // Le loadUserData sera appelé automatiquement par onAuthStateChange
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
   };
 
-  // Inscription d'entreprise avec Supabase
   const registerCompany = async (data: CompanyRegistrationData) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      // Vérifier l'unicité du nom d'entreprise
       const { data: existingCompany } = await supabase
         .from('companies')
         .select('id')
@@ -390,7 +226,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Ce nom d\'entreprise existe déjà');
       }
 
-      // Créer l'utilisateur avec les métadonnées d'entreprise
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.ownerEmail,
         password: data.password,
@@ -405,10 +240,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (signUpError) throw signUpError;
-      
-      // Le trigger handle_new_user créera automatiquement l'entreprise et le profil
-      // L'utilisateur sera connecté automatiquement après confirmation email
-      
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
@@ -418,23 +249,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
-      clearCachedData();
       dispatch({ type: 'LOGOUT' });
-    } catch (error) {
-      console.error('[AuthContext] Erreur lors de la déconnexion:', error);
+    } catch {
+      // Silent fail on logout
     }
   };
 
-  // Fonction pour changer de rôle - UNIQUEMENT en mode démo
   const switchRole = (role: UserRole) => {
     if (state.user && state.company && state.user.id === 'demo-user-id') {
       const updatedUser = { ...state.user, role };
-      setCachedData(updatedUser, state.company);
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user: updatedUser, company: state.company } });
     }
   };
 
-  // Mode démo - accès complet sans authentification
   const loginAsDemo = () => {
     const demoUser: User = {
       id: 'demo-user-id',
@@ -454,11 +281,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
       isActive: true
     };
-    setCachedData(demoUser, demoCompany);
     dispatch({ type: 'LOGIN_SUCCESS', payload: { user: demoUser, company: demoCompany } });
   };
 
-  // Handler pour le bouton "Réessayer"
   const handleRetry = () => {
     setRetryCount(0);
     setForceReload(prev => prev + 1);
@@ -468,20 +293,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_ERROR', payload: '' });
   };
 
-  const value: AuthContextValue = {
-    ...state,
-    login,
-    loginAsDemo,
-    logout,
-    registerCompany,
-    switchRole,
-    retryCount,
-    handleRetry,
-    clearError,
-    userProfile: state.user
-  };
-
-  // Ajout du message d'attente intelligent dans le provider
   return (
     <AuthContext.Provider value={{
       ...state,
@@ -495,35 +306,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearError,
       userProfile: state.user
     }}>
-      {state.loading ? (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-orange-50">
-          <div className="text-center space-y-6">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary border-t-transparent mx-auto"></div>
-            <div className="space-y-2">
-              <div className="text-xl font-semibold text-gray-700">Chargement de votre espace...</div>
-              <div className="text-sm text-gray-500">Connexion à la base de données</div>
-            </div>
-            <div className="flex space-x-1 justify-center">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-            {state.error && (
-              <div className="mt-4 text-red-600 text-sm">
-                {state.error} <br />
-                <button onClick={handleRetry} className="mt-2 px-4 py-2 bg-primary text-white rounded shadow hover:bg-primary-dark transition">Réessayer (tentative #{retryCount})</button>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 }
 
-// Hook personnalisé
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

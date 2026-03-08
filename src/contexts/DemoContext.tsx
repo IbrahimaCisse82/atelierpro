@@ -1,19 +1,16 @@
-import React, { createContext, useContext } from 'react';
 import { useAuth } from './AuthContext';
 
-// Détecte si on est en mode démo
 export function isDemoMode(userId: string): boolean {
   return userId === 'demo-user-id';
 }
 
-// Données de démonstration
-export const DEMO_DATA = {
+export const DEMO_DATA: Record<string, any[]> = {
   clients: [
-    { id: 'demo-c1', first_name: 'Marie', last_name: 'Dupont', email: 'marie.dupont@mail.com', phone: '+225 07 01 02 03', address: 'Cocody, Abidjan', gender: 'femme', is_active: true, company_id: 'demo-company-id', created_at: '2025-11-15T10:00:00Z', notes: 'Cliente fidèle', client_number: 'CLI-001', city: 'Abidjan', country: 'Côte d\'Ivoire', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-11-15T10:00:00Z' },
-    { id: 'demo-c2', first_name: 'Jean', last_name: 'Koné', email: 'jean.kone@mail.com', phone: '+225 05 04 05 06', address: 'Plateau, Abidjan', gender: 'homme', is_active: true, company_id: 'demo-company-id', created_at: '2025-12-01T10:00:00Z', notes: '', client_number: 'CLI-002', city: 'Abidjan', country: 'Côte d\'Ivoire', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-12-01T10:00:00Z' },
-    { id: 'demo-c3', first_name: 'Aminata', last_name: 'Traoré', email: 'aminata@mail.com', phone: '+225 01 07 08 09', address: 'Marcory, Abidjan', gender: 'femme', is_active: true, company_id: 'demo-company-id', created_at: '2026-01-10T10:00:00Z', notes: 'Commandes régulières', client_number: 'CLI-003', city: 'Abidjan', country: 'Côte d\'Ivoire', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-01-10T10:00:00Z' },
-    { id: 'demo-c4', first_name: 'Fatou', last_name: 'Diallo', email: 'fatou.d@mail.com', phone: '+225 07 10 11 12', address: 'Treichville, Abidjan', gender: 'femme', is_active: true, company_id: 'demo-company-id', created_at: '2026-01-20T10:00:00Z', notes: '', client_number: 'CLI-004', city: 'Abidjan', country: 'Côte d\'Ivoire', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-01-20T10:00:00Z' },
-    { id: 'demo-c5', first_name: 'Moussa', last_name: 'Ouattara', email: 'moussa@mail.com', phone: '+225 05 13 14 15', address: 'Yopougon, Abidjan', gender: 'homme', is_active: true, company_id: 'demo-company-id', created_at: '2026-02-05T10:00:00Z', notes: 'VIP', client_number: 'CLI-005', city: 'Abidjan', country: 'Côte d\'Ivoire', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-02-05T10:00:00Z' },
+    { id: 'demo-c1', first_name: 'Marie', last_name: 'Dupont', email: 'marie.dupont@mail.com', phone: '+225 07 01 02 03', address: 'Cocody, Abidjan', gender: 'femme', is_active: true, company_id: 'demo-company-id', created_at: '2025-11-15T10:00:00Z', notes: 'Cliente fidèle', client_number: 'CLI-001', city: 'Abidjan', country: "Côte d'Ivoire", deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-11-15T10:00:00Z' },
+    { id: 'demo-c2', first_name: 'Jean', last_name: 'Koné', email: 'jean.kone@mail.com', phone: '+225 05 04 05 06', address: 'Plateau, Abidjan', gender: 'homme', is_active: true, company_id: 'demo-company-id', created_at: '2025-12-01T10:00:00Z', notes: '', client_number: 'CLI-002', city: 'Abidjan', country: "Côte d'Ivoire", deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-12-01T10:00:00Z' },
+    { id: 'demo-c3', first_name: 'Aminata', last_name: 'Traoré', email: 'aminata@mail.com', phone: '+225 01 07 08 09', address: 'Marcory, Abidjan', gender: 'femme', is_active: true, company_id: 'demo-company-id', created_at: '2026-01-10T10:00:00Z', notes: 'Commandes régulières', client_number: 'CLI-003', city: 'Abidjan', country: "Côte d'Ivoire", deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-01-10T10:00:00Z' },
+    { id: 'demo-c4', first_name: 'Fatou', last_name: 'Diallo', email: 'fatou.d@mail.com', phone: '+225 07 10 11 12', address: 'Treichville, Abidjan', gender: 'femme', is_active: true, company_id: 'demo-company-id', created_at: '2026-01-20T10:00:00Z', notes: '', client_number: 'CLI-004', city: 'Abidjan', country: "Côte d'Ivoire", deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-01-20T10:00:00Z' },
+    { id: 'demo-c5', first_name: 'Moussa', last_name: 'Ouattara', email: 'moussa@mail.com', phone: '+225 05 13 14 15', address: 'Yopougon, Abidjan', gender: 'homme', is_active: true, company_id: 'demo-company-id', created_at: '2026-02-05T10:00:00Z', notes: 'VIP', client_number: 'CLI-005', city: 'Abidjan', country: "Côte d'Ivoire", deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-02-05T10:00:00Z' },
   ],
   products: [
     { id: 'demo-p1', name: 'Tissu Bazin Riche', description: 'Bazin de qualité supérieure', sku: 'BAZ-001', unit_price: 15000, current_stock: 45, min_stock_level: 10, unit: 'mètre', is_active: true, company_id: 'demo-company-id', created_at: '2025-10-01T10:00:00Z', category_id: null, deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-10-01T10:00:00Z' },
@@ -31,9 +28,8 @@ export const DEMO_DATA = {
     { id: 'demo-o5', order_number: 'CMD-2026-005', client_id: 'demo-c5', status: 'delivered', total_amount: 55000, paid_amount: 55000, due_date: '2026-02-28', notes: 'Boubou grand modèle', company_id: 'demo-company-id', created_at: '2026-01-15T10:00:00Z', assigned_tailor_id: null, deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-01-15T10:00:00Z' },
   ],
   suppliers: [
-    { id: 'demo-s1', name: 'Textiles Abidjan SARL', contact_person: 'Koffi Yao', email: 'textiles@abidjan.ci', phone: '+225 27 20 30 40', address: 'Zone Industrielle, Abidjan', category: 'Tissus', is_active: true, company_id: 'demo-company-id', created_at: '2025-09-01T10:00:00Z', supplier_number: 'FRN-001', city: 'Abidjan', country: 'Côte d\'Ivoire', payment_terms: 30, credit_limit: 5000000, rating: 4, tax_id: null, notes: 'Fournisseur principal', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-09-01T10:00:00Z' },
-    { id: 'demo-s2', name: 'Mercerie du Plateau', contact_person: 'Awa Cissé', email: 'mercerie@plateau.ci', phone: '+225 27 21 31 41', address: 'Plateau, Abidjan', category: 'Mercerie', is_active: true, company_id: 'demo-company-id', created_at: '2025-09-15T10:00:00Z', supplier_number: 'FRN-002', city: 'Abidjan', country: 'Côte d\'Ivoire', payment_terms: 15, credit_limit: 2000000, rating: 5, tax_id: null, notes: '', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-09-15T10:00:00Z' },
-    { id: 'demo-s3', name: 'Import Tissus Lagos', contact_person: 'Chukwu Emeka', email: 'import@lagos.ng', phone: '+234 801 234 5678', address: 'Lagos, Nigeria', category: 'Tissus', is_active: true, company_id: 'demo-company-id', created_at: '2025-10-01T10:00:00Z', supplier_number: 'FRN-003', city: 'Lagos', country: 'Nigeria', payment_terms: 45, credit_limit: 10000000, rating: 3, tax_id: null, notes: 'Importateur', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-10-01T10:00:00Z' },
+    { id: 'demo-s1', name: 'Textiles Abidjan SARL', contact_person: 'Koffi Yao', email: 'textiles@abidjan.ci', phone: '+225 27 20 30 40', address: 'Zone Industrielle, Abidjan', category: 'Tissus', is_active: true, company_id: 'demo-company-id', created_at: '2025-09-01T10:00:00Z', supplier_number: 'FRN-001', city: 'Abidjan', country: "Côte d'Ivoire", payment_terms: 30, credit_limit: 5000000, rating: 4, tax_id: null, notes: 'Fournisseur principal', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-09-01T10:00:00Z' },
+    { id: 'demo-s2', name: 'Mercerie du Plateau', contact_person: 'Awa Cissé', email: 'mercerie@plateau.ci', phone: '+225 27 21 31 41', address: 'Plateau, Abidjan', category: 'Mercerie', is_active: true, company_id: 'demo-company-id', created_at: '2025-09-15T10:00:00Z', supplier_number: 'FRN-002', city: 'Abidjan', country: "Côte d'Ivoire", payment_terms: 15, credit_limit: 2000000, rating: 5, tax_id: null, notes: '', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-09-15T10:00:00Z' },
   ],
   employees: [
     { id: 'demo-e1', employee_number: 'EMP-001', profile_id: null, hire_date: '2024-01-15', hourly_rate: 2500, is_active: true, company_id: 'demo-company-id', created_at: '2024-01-15T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2024-01-15T10:00:00Z' },
@@ -44,17 +40,60 @@ export const DEMO_DATA = {
     { id: 'demo-ta1', account_name: 'Caisse Principale', account_type: 'cash', account_number: null, bank_name: null, initial_balance: 500000, current_balance: 1250000, currency: 'XOF', is_active: true, company_id: 'demo-company-id', created_at: '2025-01-01T10:00:00Z', notes: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
     { id: 'demo-ta2', account_name: 'Compte Bancaire BIAO', account_type: 'bank', account_number: 'CI001-12345678', bank_name: 'BIAO-CI', initial_balance: 2000000, current_balance: 3500000, currency: 'XOF', is_active: true, company_id: 'demo-company-id', created_at: '2025-01-01T10:00:00Z', notes: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
   ],
+  treasury_movements: [
+    { id: 'demo-tm1', movement_number: 'MOV-001', movement_type: 'income', category: 'Paiement client', description: 'Paiement CMD-2026-004', amount: 95000, movement_date: '2026-02-28', treasury_account_id: 'demo-ta1', company_id: 'demo-company-id', beneficiary: 'Fatou Diallo', reference: 'CMD-2026-004', is_reconciled: true, notes: null, transfer_to_account_id: null, created_at: '2026-02-28T10:00:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-02-28T10:00:00Z' },
+    { id: 'demo-tm2', movement_number: 'MOV-002', movement_type: 'expense', category: 'Achat matières', description: 'Achat tissus Bazin', amount: 450000, movement_date: '2026-03-01', treasury_account_id: 'demo-ta2', company_id: 'demo-company-id', beneficiary: 'Textiles Abidjan SARL', reference: 'FA-2026-012', is_reconciled: false, notes: null, transfer_to_account_id: null, created_at: '2026-03-01T10:00:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
+  ],
+  customer_invoices: [
+    { id: 'demo-ci1', invoice_number: 'FAC-2026-001', order_id: 'demo-o4', invoice_date: '2026-02-25', due_date: '2026-03-25', total_amount: 95000, tax_amount: 17100, total_with_tax: 112100, is_paid: true, paid_at: '2026-02-28T10:00:00Z', paid_by: 'demo-user-id', notes: null, company_id: 'demo-company-id', created_at: '2026-02-25T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-02-28T10:00:00Z' },
+    { id: 'demo-ci2', invoice_number: 'FAC-2026-002', order_id: 'demo-o5', invoice_date: '2026-02-20', due_date: '2026-03-20', total_amount: 55000, tax_amount: 9900, total_with_tax: 64900, is_paid: true, paid_at: '2026-02-22T10:00:00Z', paid_by: 'demo-user-id', notes: null, company_id: 'demo-company-id', created_at: '2026-02-20T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-02-22T10:00:00Z' },
+    { id: 'demo-ci3', invoice_number: 'FAC-2026-003', order_id: 'demo-o1', invoice_date: '2026-03-05', due_date: '2026-04-05', total_amount: 75000, tax_amount: 13500, total_with_tax: 88500, is_paid: false, paid_at: null, paid_by: null, notes: 'En attente de paiement', company_id: 'demo-company-id', created_at: '2026-03-05T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-05T10:00:00Z' },
+  ],
+  patterns: [
+    { id: 'demo-pat1', name: 'Robe Droite Classique', description: 'Patron robe droite taille 38-44', size: '38-44', model_id: null, file_url: null, company_id: 'demo-company-id', created_at: '2025-10-01T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-10-01T10:00:00Z' },
+    { id: 'demo-pat2', name: 'Costume Homme 3 Pièces', description: 'Patron costume complet', size: 'M-XXL', model_id: null, file_url: null, company_id: 'demo-company-id', created_at: '2025-10-15T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-10-15T10:00:00Z' },
+    { id: 'demo-pat3', name: 'Boubou Grand Modèle', description: 'Patron boubou traditionnel', size: 'Unique', model_id: null, file_url: null, company_id: 'demo-company-id', created_at: '2025-11-01T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-11-01T10:00:00Z' },
+  ],
+  client_measurements: [
+    { id: 'demo-cm1', client_id: 'demo-c1', measurement_type: 'standard', chest: 92, waist: 72, hips: 98, shoulder_width: 38, arm_length: 58, back_length: 40, neck: 36, inseam: null, notes: 'Mesures prises le 15/11', company_id: 'demo-company-id', created_at: '2025-11-15T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-11-15T10:00:00Z' },
+    { id: 'demo-cm2', client_id: 'demo-c2', measurement_type: 'standard', chest: 104, waist: 88, hips: 100, shoulder_width: 46, arm_length: 64, back_length: 44, neck: 42, inseam: 82, notes: 'Costume sur mesure', company_id: 'demo-company-id', created_at: '2025-12-01T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-12-01T10:00:00Z' },
+    { id: 'demo-cm3', client_id: 'demo-c3', measurement_type: 'standard', chest: 88, waist: 68, hips: 94, shoulder_width: 36, arm_length: 56, back_length: 38, neck: 34, inseam: null, notes: '', company_id: 'demo-company-id', created_at: '2026-01-10T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-01-10T10:00:00Z' },
+  ],
+  production_tasks: [
+    { id: 'demo-pt1', task_name: 'Découpe robe cérémonie', order_id: 'demo-o1', assigned_to: null, status: 'pending', due_date: '2026-03-12', notes: 'Tissu Bazin', company_id: 'demo-company-id', created_at: '2026-02-15T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-02-15T10:00:00Z' },
+    { id: 'demo-pt2', task_name: 'Assemblage costume', order_id: 'demo-o2', assigned_to: null, status: 'in_progress', due_date: '2026-03-18', notes: '', company_id: 'demo-company-id', created_at: '2026-02-20T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
+    { id: 'demo-pt3', task_name: 'Finition ensemble pagne', order_id: 'demo-o3', assigned_to: null, status: 'in_progress', due_date: '2026-03-10', notes: 'Broderie en cours', company_id: 'demo-company-id', created_at: '2026-02-10T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-05T10:00:00Z' },
+  ],
+  work_hours: [
+    { id: 'demo-wh1', employee_id: 'demo-e1', work_date: '2026-03-07', start_time: '08:00', end_time: '17:00', total_hours: 8, notes: null, company_id: 'demo-company-id', created_at: '2026-03-07T17:00:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-07T17:00:00Z' },
+    { id: 'demo-wh2', employee_id: 'demo-e2', work_date: '2026-03-07', start_time: '08:30', end_time: '16:30', total_hours: 7.5, notes: null, company_id: 'demo-company-id', created_at: '2026-03-07T16:30:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-07T16:30:00Z' },
+    { id: 'demo-wh3', employee_id: 'demo-e3', work_date: '2026-03-07', start_time: '09:00', end_time: '18:00', total_hours: 8, notes: 'Heures sup broderie', company_id: 'demo-company-id', created_at: '2026-03-07T18:00:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-07T18:00:00Z' },
+  ],
+  purchase_orders: [
+    { id: 'demo-po1', order_number: 'ACH-2026-001', supplier_id: 'demo-s1', status: 'received', total_amount: 450000, tax_amount: 81000, total_with_tax: 531000, expected_delivery: '2026-03-05', notes: 'Commande Bazin', company_id: 'demo-company-id', created_at: '2026-02-20T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-05T10:00:00Z' },
+    { id: 'demo-po2', order_number: 'ACH-2026-002', supplier_id: 'demo-s2', status: 'ordered', total_amount: 85000, tax_amount: 15300, total_with_tax: 100300, expected_delivery: '2026-03-15', notes: 'Mercerie diverse', company_id: 'demo-company-id', created_at: '2026-03-01T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
+  ],
+  models: [
+    { id: 'demo-m1', name: 'Robe de Cérémonie', description: 'Collection cérémonie 2026', category: 'Robes', image_url: null, company_id: 'demo-company-id', created_at: '2025-10-01T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-10-01T10:00:00Z' },
+    { id: 'demo-m2', name: 'Costume Africain Moderne', description: 'Costume mixte tradition-moderne', category: 'Costumes', image_url: null, company_id: 'demo-company-id', created_at: '2025-11-01T10:00:00Z', deleted_at: null, created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2025-11-01T10:00:00Z' },
+  ],
+  alerts: [
+    { id: 'demo-a1', title: 'Stock bas : Fermeture éclair', message: 'Le stock de fermetures éclair est en dessous du seuil minimum (5/10).', level: 'warning', is_read: false, company_id: 'demo-company-id', created_at: '2026-03-08T08:00:00Z', created_by: null },
+    { id: 'demo-a2', title: 'Commande en retard', message: 'La commande CMD-2026-003 devait être livrée le 15/03.', level: 'error', is_read: false, company_id: 'demo-company-id', created_at: '2026-03-08T09:00:00Z', created_by: null },
+    { id: 'demo-a3', title: 'Facture impayée', message: 'La facture FAC-2026-003 de 88 500 XOF est en attente.', level: 'info', is_read: true, company_id: 'demo-company-id', created_at: '2026-03-06T10:00:00Z', created_by: null },
+  ],
+  fixed_assets: [
+    { id: 'demo-fa1', asset_code: 'IMM-001', asset_name: 'Machine à coudre industrielle', asset_category: 'Matériel', acquisition_date: '2024-01-15', acquisition_cost: 1500000, salvage_value: 150000, useful_life: 10, depreciation_type: 'linear', depreciation_rate: 10, accumulated_depreciation: 270000, net_book_value: 1230000, is_active: true, notes: null, company_id: 'demo-company-id', created_at: '2024-01-15T10:00:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
+    { id: 'demo-fa2', asset_code: 'IMM-002', asset_name: 'Surjeteuse professionnelle', asset_category: 'Matériel', acquisition_date: '2024-06-01', acquisition_cost: 800000, salvage_value: 80000, useful_life: 8, depreciation_type: 'linear', depreciation_rate: 12.5, accumulated_depreciation: 135000, net_book_value: 665000, is_active: true, notes: null, company_id: 'demo-company-id', created_at: '2024-06-01T10:00:00Z', created_by: 'demo-user-id', updated_by: 'demo-user-id', updated_at: '2026-03-01T10:00:00Z' },
+  ],
+  receptions: [],
+  depreciations: [],
+  order_items: [],
+  production_tracking: [],
+  payment_reminders: [],
+  product_categories: [],
 };
 
-// Hook pour obtenir les données démo d'une table
 export function useDemoData<T>(table: string): T[] | null {
-  const tableMap: Record<string, any[]> = {
-    clients: DEMO_DATA.clients,
-    products: DEMO_DATA.products,
-    orders: DEMO_DATA.orders,
-    suppliers: DEMO_DATA.suppliers,
-    employees: DEMO_DATA.employees,
-    treasury_accounts: DEMO_DATA.treasury_accounts,
-  };
-  return (tableMap[table] as T[]) || [];
+  return (DEMO_DATA[table] as T[]) || [];
 }

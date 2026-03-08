@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -158,12 +159,17 @@ export function Login({ onSwitchToRegister }: LoginProps) {
               </Button>
 
               <div className="text-center text-sm space-y-2">
+                <div>
+                  <Link to="/forgot-password" className="text-primary hover:text-primary/80 underline text-sm">
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
                 <div className="text-muted-foreground">
                   Pas encore d'atelier ?{' '}
                   <button
                     type="button"
                     onClick={onSwitchToRegister}
-                    className="text-primary hover:text-primary-dark underline"
+                    className="text-primary hover:text-primary/80 underline"
                     disabled={loading}
                   >
                     Créer votre entreprise

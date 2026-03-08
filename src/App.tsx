@@ -68,6 +68,8 @@ const AlertsPage = lazy(() => import('./pages/AlertsPage').then(module => ({ def
 const AuditTrailPage = lazy(() => import('./pages/AuditTrailPage').then(module => ({ default: module.AuditTrailPage })));
 const AdvancedExportPage = lazy(() => import('./pages/AdvancedExportPage').then(module => ({ default: module.AdvancedExportPage })));
 const InstallPage = lazy(() => import('./pages/InstallPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 
 // Composant principal de l'application
 function AppContent() {
@@ -84,6 +86,8 @@ function AppContent() {
           <Route path="/" element={<AuthLayout />} />
           <Route path="/login" element={<AuthLayout />} />
           <Route path="/register" element={<AuthLayout />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/install" element={<InstallPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
