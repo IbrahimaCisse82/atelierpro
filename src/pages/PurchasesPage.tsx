@@ -62,7 +62,7 @@ export function PurchasesPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const pendingDeliveries = purchasesList.filter(p => p.status === 'confirmed' || p.status === 'shipped');
+  const pendingDeliveries = purchasesList.filter(p => p.status === 'ordered' || p.status === 'in_transit');
 
   const handleCreatePurchase = async () => {
     if (!newOrder.order_number || !newOrder.supplier_id) {
