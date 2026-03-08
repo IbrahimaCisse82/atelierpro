@@ -58,6 +58,7 @@
     "@tanstack/react-query-devtools": "^5.17.9",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^29.5.0",
     "axe-core": "^4.8.0",
     "chart.js": "^4.5.0",
