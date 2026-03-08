@@ -6,269 +6,372 @@ import { toast } from 'sonner';
 export interface ModuleDefinition {
   key: string;
   label: string;
-  description: string;
+  shortDesc: string;
+  fullDesc: string;
   icon: string;
-  category: 'core' | 'commercial' | 'production' | 'achats' | 'finance' | 'rh' | 'rapports';
-  sidebarGroup: string;
-  routes: string[];
-  defaultEnabled: boolean;
+  category: string;
+  dependencies: string[];
+  version: string;
+  author: string;
+  price: 'Gratuit' | string;
+  screenshots?: string[];
+  features: string[];
 }
 
 export const ALL_MODULES: ModuleDefinition[] = [
-  // Core — toujours visible
+  // ── Essentiel Couture ─────────────────────
   {
     key: 'clients',
     label: 'Clients',
-    description: 'Gestion de la clientèle, fiches clients',
+    shortDesc: 'Gestion de la clientèle',
+    fullDesc: 'Gérez votre portefeuille clients avec fiches détaillées, historique des commandes, et suivi de la fidélité.',
     icon: '👥',
-    category: 'core',
-    sidebarGroup: 'commercial',
-    routes: ['/dashboard/clients'],
-    defaultEnabled: true,
+    category: 'Couture',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Fiches clients complètes', 'Historique des commandes', 'Recherche et filtrage', 'Import/Export'],
   },
   {
     key: 'orders',
     label: 'Commandes',
-    description: 'Prise de commandes, suivi des statuts',
+    shortDesc: 'Prise et suivi des commandes',
+    fullDesc: 'Créez des commandes clients avec suivi du statut, des acomptes, et des délais de livraison.',
     icon: '📋',
-    category: 'core',
-    sidebarGroup: 'commercial',
-    routes: ['/dashboard/orders'],
-    defaultEnabled: true,
+    category: 'Couture',
+    dependencies: ['clients'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Création de commandes', '14 étapes de production', 'Suivi des acomptes', 'Attribution aux tailleurs'],
   },
   {
     key: 'measurements',
     label: 'Mensurations',
-    description: 'Prise de mesures corporelles des clients',
+    shortDesc: 'Prise de mesures corporelles',
+    fullDesc: 'Enregistrez et consultez les mensurations de vos clients pour chaque type de vêtement.',
     icon: '📏',
-    category: 'core',
-    sidebarGroup: 'commercial',
-    routes: ['/dashboard/measurements'],
-    defaultEnabled: true,
+    category: 'Couture',
+    dependencies: ['clients'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['8+ mesures corporelles', 'Types de vêtements', 'Historique des mesures', 'Notes par client'],
   },
-  // Production
   {
     key: 'patterns',
     label: 'Modèles & Patrons',
-    description: 'Catalogue de modèles et patrons de coupe',
+    shortDesc: 'Catalogue de modèles de couture',
+    fullDesc: 'Organisez votre catalogue de modèles avec photos, catégories, et patrons de coupe associés.',
     icon: '✂️',
-    category: 'production',
-    sidebarGroup: 'commercial',
-    routes: ['/dashboard/patterns'],
-    defaultEnabled: true,
+    category: 'Couture',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Catalogue de modèles', 'Patrons par taille', 'Catégorisation', 'Photos de référence'],
   },
+  // ── Production ─────────────────────
   {
     key: 'production',
     label: 'Production',
-    description: 'Suivi des tâches de fabrication (coupe, assemblage, finition)',
+    shortDesc: 'Suivi de la fabrication',
+    fullDesc: 'Planifiez et suivez les tâches de production : coupe, assemblage, finition, contrôle qualité.',
     icon: '🏭',
-    category: 'production',
-    sidebarGroup: 'production',
-    routes: ['/dashboard/production'],
-    defaultEnabled: true,
+    category: 'Production',
+    dependencies: ['orders'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Tâches de production', 'Attribution aux tailleurs', 'Suivi des étapes', 'Tableau Kanban'],
   },
   {
     key: 'stocks',
     label: 'Stocks & Inventaire',
-    description: 'Gestion des tissus, fournitures et alertes de réapprovisionnement',
+    shortDesc: 'Gestion des tissus et fournitures',
+    fullDesc: 'Gérez votre inventaire de tissus, boutons, fils et autres fournitures avec alertes de réapprovisionnement.',
     icon: '📦',
-    category: 'production',
-    sidebarGroup: 'production',
-    routes: ['/dashboard/stocks'],
-    defaultEnabled: false,
+    category: 'Production',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Catalogue produits', 'Niveaux de stock', 'Alertes stock faible', 'Catégories'],
   },
-  // Commercial avancé
+  // ── Commercial ─────────────────────
   {
     key: 'customer_invoices',
-    label: 'Facturation Clients',
-    description: 'Édition et suivi des factures clients',
+    label: 'Facturation',
+    shortDesc: 'Édition de factures clients',
+    fullDesc: 'Créez des factures professionnelles, suivez les paiements et envoyez des relances automatiques.',
     icon: '🧾',
-    category: 'commercial',
-    sidebarGroup: 'commercial',
-    routes: ['/dashboard/customer-invoices'],
-    defaultEnabled: false,
+    category: 'Commercial',
+    dependencies: ['clients', 'orders'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Factures PDF', 'Suivi des paiements', 'Relances automatiques', 'TVA configurable'],
   },
-  // Achats
+  // ── Achats ─────────────────────
   {
     key: 'suppliers',
     label: 'Fournisseurs',
-    description: 'Carnet de fournisseurs de tissus et fournitures',
+    shortDesc: 'Carnet de fournisseurs',
+    fullDesc: 'Gérez vos fournisseurs de tissus et matériaux avec évaluation, conditions de paiement et historique.',
     icon: '🚚',
-    category: 'achats',
-    sidebarGroup: 'achats',
-    routes: ['/dashboard/suppliers'],
-    defaultEnabled: false,
+    category: 'Achats',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Fiches fournisseurs', 'Évaluation / notation', 'Conditions de paiement', 'Contacts'],
   },
   {
     key: 'purchases',
-    label: 'Achats',
-    description: 'Bons de commande fournisseurs',
+    label: 'Bons de Commande',
+    shortDesc: 'Commandes fournisseurs',
+    fullDesc: 'Créez des bons de commande fournisseurs et suivez leur statut jusqu\'au paiement.',
     icon: '🛒',
-    category: 'achats',
-    sidebarGroup: 'achats',
-    routes: ['/dashboard/purchases'],
-    defaultEnabled: false,
+    category: 'Achats',
+    dependencies: ['suppliers'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Bons de commande', 'Suivi des statuts', 'Dates de livraison', 'Montants TTC'],
   },
   {
     key: 'receptions',
     label: 'Réceptions',
-    description: 'Contrôle et validation des livraisons',
+    shortDesc: 'Contrôle des livraisons',
+    fullDesc: 'Réceptionnez et contrôlez les livraisons fournisseurs, avec validation et mise à jour automatique du stock.',
     icon: '📥',
-    category: 'achats',
-    sidebarGroup: 'achats',
-    routes: ['/dashboard/receptions'],
-    defaultEnabled: false,
+    category: 'Achats',
+    dependencies: ['suppliers', 'purchases'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Bons de réception', 'Contrôle qualité', 'Mise à jour stock', 'Validation'],
   },
   {
     key: 'supplier_invoices',
     label: 'Factures Fournisseurs',
-    description: 'Suivi des factures fournisseurs',
+    shortDesc: 'Suivi des factures d\'achat',
+    fullDesc: 'Enregistrez et suivez les factures de vos fournisseurs pour une comptabilité précise.',
     icon: '🧾',
-    category: 'achats',
-    sidebarGroup: 'achats',
-    routes: ['/dashboard/invoices'],
-    defaultEnabled: false,
+    category: 'Achats',
+    dependencies: ['suppliers'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Saisie des factures', 'Rapprochement', 'Échéances', 'Historique'],
   },
-  // Finance
+  // ── Finance ─────────────────────
   {
     key: 'finance_dashboard',
-    label: 'Tableau de Bord Financier',
-    description: 'Vue d\'ensemble de la situation financière',
+    label: 'Finance',
+    shortDesc: 'Vue d\'ensemble financière',
+    fullDesc: 'Tableau de bord financier avec revenus, dépenses, marges et indicateurs clés.',
     icon: '💳',
-    category: 'finance',
-    sidebarGroup: 'finance',
-    routes: ['/dashboard/finances'],
-    defaultEnabled: false,
+    category: 'Finance',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Revenus & dépenses', 'Marges', 'Graphiques', 'KPI financiers'],
   },
   {
     key: 'treasury',
     label: 'Trésorerie',
-    description: 'Comptes bancaires et mouvements de trésorerie',
+    shortDesc: 'Comptes et mouvements',
+    fullDesc: 'Gérez vos comptes bancaires, mouvements de trésorerie et soldes en temps réel.',
     icon: '🏦',
-    category: 'finance',
-    sidebarGroup: 'finance',
-    routes: ['/dashboard/treasury'],
-    defaultEnabled: false,
+    category: 'Finance',
+    dependencies: ['finance_dashboard'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Multi-comptes', 'Mouvements', 'Soldes temps réel', 'Catégories'],
   },
   {
     key: 'fixed_assets',
     label: 'Immobilisations',
-    description: 'Gestion des machines, équipements et amortissements',
+    shortDesc: 'Machines et équipements',
+    fullDesc: 'Suivez vos machines à coudre, surjeteuses et autres équipements avec calcul automatique des amortissements.',
     icon: '🏢',
-    category: 'finance',
-    sidebarGroup: 'finance',
-    routes: ['/dashboard/fixed-assets'],
-    defaultEnabled: false,
+    category: 'Finance',
+    dependencies: ['finance_dashboard'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Registre des actifs', 'Amortissements', 'Valeur nette comptable', 'SYSCOHADA'],
   },
   {
     key: 'financial_reports',
     label: 'Rapports Financiers',
-    description: 'Bilan, compte de résultat, balance',
+    shortDesc: 'Bilan et compte de résultat',
+    fullDesc: 'Générez des rapports financiers conformes : bilan, compte de résultat, balance des comptes.',
     icon: '📊',
-    category: 'finance',
-    sidebarGroup: 'finance',
-    routes: ['/dashboard/financial-reports'],
-    defaultEnabled: false,
+    category: 'Finance',
+    dependencies: ['finance_dashboard'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Bilan', 'Compte de résultat', 'Balance', 'Export PDF'],
   },
   {
     key: 'bank_reconciliation',
     label: 'Rapprochement Bancaire',
-    description: 'Réconciliation des relevés bancaires',
+    shortDesc: 'Réconciliation bancaire',
+    fullDesc: 'Rapprochez automatiquement vos écritures comptables avec vos relevés bancaires.',
     icon: '🔄',
-    category: 'finance',
-    sidebarGroup: 'finance',
-    routes: ['/dashboard/bank-reconciliation'],
-    defaultEnabled: false,
+    category: 'Finance',
+    dependencies: ['treasury'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Import relevés', 'Rapprochement auto', 'Écarts', 'Validation'],
   },
   {
     key: 'syscohada',
     label: 'SYSCOHADA',
-    description: 'Plan comptable OHADA pour l\'Afrique de l\'Ouest',
+    shortDesc: 'Plan comptable OHADA',
+    fullDesc: 'Conformité au plan comptable SYSCOHADA pour l\'Afrique de l\'Ouest et Centrale.',
     icon: '📚',
-    category: 'finance',
-    sidebarGroup: 'finance',
-    routes: ['/dashboard/syscohada'],
-    defaultEnabled: false,
+    category: 'Finance',
+    dependencies: ['finance_dashboard'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Plan comptable OHADA', 'Classes de comptes', 'Journaux', 'Grand livre'],
   },
-  // RH
+  // ── RH ─────────────────────
   {
     key: 'employees',
     label: 'Employés',
-    description: 'Gestion du personnel de l\'atelier',
+    shortDesc: 'Gestion du personnel',
+    fullDesc: 'Gérez les fiches employés, contrats, heures de travail et compétences de votre atelier.',
     icon: '👤',
-    category: 'rh',
-    sidebarGroup: 'rh',
-    routes: ['/dashboard/hr'],
-    defaultEnabled: false,
+    category: 'Ressources Humaines',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Fiches employés', 'Heures de travail', 'Taux horaire', 'Statut actif'],
   },
   {
     key: 'remunerations',
-    label: 'Rémunérations',
-    description: 'Paie et fiches de salaire',
+    label: 'Paie',
+    shortDesc: 'Rémunérations et fiches de paie',
+    fullDesc: 'Calculez les salaires, générez les fiches de paie et suivez les coûts RH.',
     icon: '💰',
-    category: 'rh',
-    sidebarGroup: 'rh',
-    routes: ['/dashboard/remunerations'],
-    defaultEnabled: false,
+    category: 'Ressources Humaines',
+    dependencies: ['employees'],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Calcul de paie', 'Fiches de salaire', 'Heures supplémentaires', 'Historique'],
   },
-  // Rapports
+  // ── Outils ─────────────────────
   {
     key: 'reports',
-    label: 'Rapports Généraux',
-    description: 'Rapports d\'activité et statistiques',
+    label: 'Rapports',
+    shortDesc: 'Rapports d\'activité',
+    fullDesc: 'Générez des rapports personnalisés sur l\'activité de votre atelier.',
     icon: '📑',
-    category: 'rapports',
-    sidebarGroup: 'rapports',
-    routes: ['/dashboard/reports'],
-    defaultEnabled: false,
+    category: 'Outils',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Rapports personnalisés', 'Filtres avancés', 'Export PDF/Excel', 'Graphiques'],
   },
   {
     key: 'alerts',
     label: 'Alertes',
-    description: 'Notifications et alertes automatiques',
+    shortDesc: 'Notifications automatiques',
+    fullDesc: 'Recevez des alertes en temps réel : stock faible, commande en retard, paiement en attente.',
     icon: '🔔',
-    category: 'rapports',
-    sidebarGroup: 'rapports',
-    routes: ['/dashboard/alerts'],
-    defaultEnabled: false,
+    category: 'Outils',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Alertes temps réel', 'Stock faible', 'Retards', 'Personnalisation'],
   },
   {
     key: 'audit',
-    label: "Journal d'Activité",
-    description: 'Traçabilité de toutes les actions',
+    label: 'Journal d\'Activité',
+    shortDesc: 'Traçabilité complète',
+    fullDesc: 'Consultez l\'historique de toutes les actions effectuées dans votre atelier.',
     icon: '📝',
-    category: 'rapports',
-    sidebarGroup: 'rapports',
-    routes: ['/dashboard/audit'],
-    defaultEnabled: false,
+    category: 'Outils',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['Historique complet', 'Qui a fait quoi', 'Filtres par date', 'Export'],
   },
   {
     key: 'export',
     label: 'Export Avancé',
-    description: 'Export des données en PDF, Excel, CSV',
+    shortDesc: 'Export multi-format',
+    fullDesc: 'Exportez vos données en PDF, Excel, CSV pour vos déclarations et archives.',
     icon: '📤',
-    category: 'rapports',
-    sidebarGroup: 'rapports',
-    routes: ['/dashboard/export'],
-    defaultEnabled: false,
+    category: 'Outils',
+    dependencies: [],
+    version: '1.0.0',
+    author: 'AteliérPro',
+    price: 'Gratuit',
+    features: ['PDF', 'Excel', 'CSV', 'Sélection de tables'],
   },
 ];
 
 export const MODULE_CATEGORIES = [
-  { key: 'core', label: '🧵 Essentiel Couture', description: 'Les bases pour tout couturier' },
-  { key: 'production', label: '🏭 Production', description: 'Fabrication et stocks' },
-  { key: 'commercial', label: '💼 Commercial', description: 'Facturation et ventes' },
-  { key: 'achats', label: '🛒 Achats', description: 'Fournisseurs et approvisionnement' },
-  { key: 'finance', label: '💰 Finance', description: 'Comptabilité et trésorerie' },
-  { key: 'rh', label: '👥 Ressources Humaines', description: 'Employés et paie' },
-  { key: 'rapports', label: '📈 Rapports', description: 'Analyses et exports' },
+  'Couture', 'Production', 'Commercial', 'Achats', 'Finance', 'Ressources Humaines', 'Outils'
 ];
+
+// Map module keys to sidebar routes
+const MODULE_ROUTE_MAP: Record<string, string[]> = {};
+ALL_MODULES.forEach(m => {
+  const routes = getModuleRoutes(m.key);
+  if (routes.length) MODULE_ROUTE_MAP[m.key] = routes;
+});
+
+function getModuleRoutes(key: string): string[] {
+  const map: Record<string, string[]> = {
+    clients: ['/dashboard/clients'],
+    orders: ['/dashboard/orders'],
+    measurements: ['/dashboard/measurements'],
+    patterns: ['/dashboard/patterns'],
+    production: ['/dashboard/production'],
+    stocks: ['/dashboard/stocks'],
+    customer_invoices: ['/dashboard/customer-invoices'],
+    suppliers: ['/dashboard/suppliers'],
+    purchases: ['/dashboard/purchases'],
+    receptions: ['/dashboard/receptions'],
+    supplier_invoices: ['/dashboard/invoices'],
+    finance_dashboard: ['/dashboard/finances'],
+    treasury: ['/dashboard/treasury'],
+    fixed_assets: ['/dashboard/fixed-assets'],
+    financial_reports: ['/dashboard/financial-reports'],
+    bank_reconciliation: ['/dashboard/bank-reconciliation'],
+    syscohada: ['/dashboard/syscohada'],
+    employees: ['/dashboard/hr'],
+    remunerations: ['/dashboard/remunerations'],
+    reports: ['/dashboard/reports'],
+    alerts: ['/dashboard/alerts'],
+    audit: ['/dashboard/audit'],
+    export: ['/dashboard/export'],
+  };
+  return map[key] || [];
+}
 
 export function useCompanyModules() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: enabledModules, isLoading } = useQuery({
+  const { data: installedModules, isLoading } = useQuery({
     queryKey: ['company-modules', user?.companyId],
     queryFn: async () => {
       if (!user?.companyId) return [];
@@ -283,99 +386,128 @@ export function useCompanyModules() {
     enabled: !!user?.companyId,
   });
 
-  // Si aucun module n'est configuré en DB, on utilise les défauts
-  const isModuleEnabled = (moduleKey: string): boolean => {
-    if (!enabledModules || enabledModules.length === 0) {
-      const mod = ALL_MODULES.find(m => m.key === moduleKey);
-      return mod?.defaultEnabled ?? false;
-    }
-    const dbEntry = enabledModules.find(m => m.module_key === moduleKey);
-    if (!dbEntry) {
-      const mod = ALL_MODULES.find(m => m.key === moduleKey);
-      return mod?.defaultEnabled ?? false;
-    }
-    return dbEntry.is_enabled;
+  const isModuleInstalled = (moduleKey: string): boolean => {
+    if (!installedModules || installedModules.length === 0) return false;
+    return installedModules.some(m => m.module_key === moduleKey && m.is_enabled);
   };
 
   const isRouteEnabled = (route: string): boolean => {
-    // Dashboard, settings, profile are always accessible
-    if (['/dashboard', '/', '/dashboard/settings', '/dashboard/profile'].includes(route)) return true;
-    const mod = ALL_MODULES.find(m => m.routes.includes(route));
-    if (!mod) return true; // Unknown routes are allowed
-    return isModuleEnabled(mod.key);
+    const alwaysAllowed = ['/dashboard', '/', '/dashboard/settings', '/dashboard/profile', '/dashboard/apps'];
+    if (alwaysAllowed.includes(route)) return true;
+    
+    // If no modules installed yet, allow all (first-time user)
+    if (!installedModules || installedModules.length === 0) return true;
+    
+    const mod = ALL_MODULES.find(m => getModuleRoutes(m.key).includes(route));
+    if (!mod) return true;
+    return isModuleInstalled(mod.key);
   };
 
-  const hasConfiguredModules = !!enabledModules && enabledModules.length > 0;
+  const getInstalledModules = () => {
+    if (!installedModules) return [];
+    return installedModules.filter(m => m.is_enabled).map(m => m.module_key);
+  };
 
-  const toggleModule = useMutation({
-    mutationFn: async ({ moduleKey, enabled }: { moduleKey: string; enabled: boolean }) => {
+  const getMissingDependencies = (moduleKey: string): string[] => {
+    const mod = ALL_MODULES.find(m => m.key === moduleKey);
+    if (!mod) return [];
+    return mod.dependencies.filter(dep => !isModuleInstalled(dep));
+  };
+
+  const getDependentModules = (moduleKey: string): string[] => {
+    return ALL_MODULES
+      .filter(m => m.dependencies.includes(moduleKey) && isModuleInstalled(m.key))
+      .map(m => m.key);
+  };
+
+  const installModule = useMutation({
+    mutationFn: async (moduleKey: string) => {
       if (!user?.companyId) throw new Error('No company');
       
-      const { data: existing } = await supabase
-        .from('company_modules')
-        .select('id')
-        .eq('company_id', user.companyId)
-        .eq('module_key', moduleKey)
-        .maybeSingle();
+      const mod = ALL_MODULES.find(m => m.key === moduleKey);
+      if (!mod) throw new Error('Module not found');
 
-      if (existing) {
-        const { error } = await supabase
+      // Install dependencies first
+      const missingDeps = getMissingDependencies(moduleKey);
+      const allToInstall = [...missingDeps, moduleKey];
+
+      for (const key of allToInstall) {
+        const { data: existing } = await supabase
           .from('company_modules')
-          .update({ is_enabled: enabled })
-          .eq('id', existing.id);
-        if (error) throw error;
+          .select('id')
+          .eq('company_id', user.companyId)
+          .eq('module_key', key)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from('company_modules')
+            .update({ is_enabled: true })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('company_modules')
+            .insert({
+              company_id: user.companyId,
+              module_key: key,
+              is_enabled: true,
+              enabled_by: user.id,
+            });
+        }
+      }
+
+      return { installed: allToInstall };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['company-modules'] });
+      if (data.installed.length > 1) {
+        toast.success(`Module installé avec ${data.installed.length - 1} dépendance(s)`);
       } else {
-        const { error } = await supabase
-          .from('company_modules')
-          .insert({ 
-            company_id: user.companyId, 
-            module_key: moduleKey, 
-            is_enabled: enabled,
-            enabled_by: user.id,
-          });
-        if (error) throw error;
+        toast.success('Module installé !');
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['company-modules'] });
-    },
     onError: () => {
-      toast.error('Erreur lors de la mise à jour du module');
+      toast.error('Erreur lors de l\'installation');
     },
   });
 
-  const initializeModules = useMutation({
-    mutationFn: async (moduleKeys: string[]) => {
+  const uninstallModule = useMutation({
+    mutationFn: async (moduleKey: string) => {
       if (!user?.companyId) throw new Error('No company');
-      
-      const rows = ALL_MODULES.map(mod => ({
-        company_id: user.companyId!,
-        module_key: mod.key,
-        is_enabled: moduleKeys.includes(mod.key),
-        enabled_by: user.id,
-      }));
+
+      // Check if other installed modules depend on this one
+      const dependents = getDependentModules(moduleKey);
+      if (dependents.length > 0) {
+        const depLabels = dependents.map(k => ALL_MODULES.find(m => m.key === k)?.label).join(', ');
+        throw new Error(`Impossible de désinstaller : utilisé par ${depLabels}`);
+      }
 
       const { error } = await supabase
         .from('company_modules')
-        .upsert(rows, { onConflict: 'company_id,module_key' });
+        .update({ is_enabled: false })
+        .eq('company_id', user.companyId)
+        .eq('module_key', moduleKey);
+
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-modules'] });
-      toast.success('Modules configurés avec succès !');
+      toast.success('Module désinstallé');
     },
-    onError: () => {
-      toast.error('Erreur lors de la configuration des modules');
+    onError: (err: Error) => {
+      toast.error(err.message);
     },
   });
 
   return {
-    enabledModules,
+    installedModules,
     isLoading,
-    isModuleEnabled,
+    isModuleInstalled,
     isRouteEnabled,
-    hasConfiguredModules,
-    toggleModule,
-    initializeModules,
+    getInstalledModules,
+    getMissingDependencies,
+    getDependentModules,
+    installModule,
+    uninstallModule,
   };
 }
