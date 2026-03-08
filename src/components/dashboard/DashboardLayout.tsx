@@ -271,7 +271,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                             <SidebarMenuButton
                               isActive={active}
                               onClick={() => navigate(item.path)}
-                              tooltip={item.label}
                               className={cn(
                                 "h-8 gap-3 rounded-md text-sm transition-colors",
                                 active
