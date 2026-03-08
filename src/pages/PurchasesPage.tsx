@@ -225,11 +225,11 @@ export function PurchasesPage() {
                         <TableCell>
                           <div className="flex items-center space-x-1">
                             {purchase.status === 'draft' && (
-                              <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(purchase.id, 'confirmed')}>
+                              <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(purchase.id, 'ordered')}>
                                 <CheckCircle className="h-4 w-4 mr-1" />Valider
                               </Button>
                             )}
-                            {(purchase.status === 'confirmed' || purchase.status === 'shipped') && (
+                            {(purchase.status === 'ordered' || purchase.status === 'in_transit') && (
                               <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(purchase.id, 'received')}>
                                 <Truck className="h-4 w-4 mr-1" />Réceptionner
                               </Button>

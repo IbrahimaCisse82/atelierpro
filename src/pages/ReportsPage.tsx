@@ -180,7 +180,7 @@ export function ReportsPage() {
                   </TableRow>
                   <TableRow>
                     <TableCell>Commandes en cours</TableCell>
-                    <TableCell>{ordersList.filter(o => o.status !== 'delivered' && o.status !== 'ready').length}</TableCell>
+                    <TableCell>{ordersList.filter(o => o.status !== 'delivered').length}</TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
