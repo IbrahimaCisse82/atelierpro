@@ -75,17 +75,14 @@ const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'));
 function AppContent() {
   const { user, loading } = useAuth();
 
-  if (loading) {
-    return <LoadingPage />;
-  }
-
+  // While loading auth, show public routes (login, register, etc.) instead of blocking
   if (!user) {
     return (
       <Suspense fallback={<LoadingPage />}>
         <Routes>
-          <Route path="/" element={<AuthLayout />} />
-          <Route path="/login" element={<AuthLayout />} />
-          <Route path="/register" element={<AuthLayout />} />
+          <Route path="/" element={loading ? <LoadingPage /> : <AuthLayout />} />
+          <Route path="/login" element={loading ? <LoadingPage /> : <AuthLayout />} />
+          <Route path="/register" element={loading ? <LoadingPage /> : <AuthLayout />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/install" element={<InstallPage />} />
