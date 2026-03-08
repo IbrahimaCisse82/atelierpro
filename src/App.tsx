@@ -5,6 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashboard";
