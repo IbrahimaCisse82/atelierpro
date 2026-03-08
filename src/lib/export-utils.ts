@@ -129,118 +129,61 @@ export const exportToPDF = (data: ExportData, filename: string = 'rapport.pdf') 
   doc.save(filename);
 };
 
-// Export Excel
-export const exportToExcel = (data: ExportData, filename: string = 'rapport.xlsx') => {
-  const workbook = XLSX.utils.book_new();
-
-  // Préparer les données pour Excel
-  const excelData = [
-    // En-tête avec titre
-    [data.title],
-    [],
-    [`Exporté le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`],
-    [],
-    // En-têtes du tableau
-    data.headers,
-    // Données
-    ...data.rows.map(row => 
-      row.map((cell: any) => {
-        if (typeof cell === 'number') {
-          return cell;
-        }
-        if (cell instanceof Date) {
-          return cell;
-        }
-        return cell?.toString() || '';
-      })
-    )
-  ];
-
-  // Créer la feuille de calcul
-  const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-
-  // Appliquer les styles
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-
-  // Style pour le titre
-  if (!worksheet['A1']) worksheet['A1'] = { v: data.title };
-  worksheet['A1'].s = {
-    font: { bold: true, size: 16 },
-    alignment: { horizontal: 'center' }
+// Export Excel (CSV compatible - sans dépendance vulnérable)
+export const exportToExcel = (data: ExportData, filename: string = 'rapport.csv') => {
+  const csvFilename = filename.replace(/\.xlsx$/, '.csv');
+  
+  const escapeCSV = (value: any): string => {
+    const str = value?.toString() || '';
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
   };
 
-  // Fusionner les cellules pour le titre
-  worksheet['!merges'] = [
-    { s: { r: 0, c: 0 }, e: { r: 0, c: data.headers.length - 1 } }
-  ];
-
-  // Style pour les en-têtes
-  const headerRow = 4; // Après le titre et les métadonnées
-  for (let col = 0; col < data.headers.length; col++) {
-    const cellRef = XLSX.utils.encode_cell({ r: headerRow, c: col });
-    if (worksheet[cellRef]) {
-      worksheet[cellRef].s = {
-        font: { bold: true },
-        fill: { fgColor: { rgb: "4A90E2" } },
-        alignment: { horizontal: 'center' }
-      };
-    }
-  }
-
-  // Style pour les montants
-  data.rows.forEach((row, rowIndex) => {
-    row.forEach((cell, colIndex) => {
-      if (typeof cell === 'number') {
-        const cellRef = XLSX.utils.encode_cell({ r: headerRow + 1 + rowIndex, c: colIndex });
-        if (worksheet[cellRef]) {
-          worksheet[cellRef].s = {
-            numFmt: cell > 1000 ? '#,##0' : '0.00'
-          };
-        }
+  const lines: string[] = [];
+  
+  // Titre
+  lines.push(escapeCSV(data.title));
+  lines.push('');
+  lines.push(`Exporté le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}`);
+  lines.push('');
+  
+  // En-têtes
+  lines.push(data.headers.map(escapeCSV).join(','));
+  
+  // Données
+  data.rows.forEach(row => {
+    lines.push(row.map((cell: any) => {
+      if (cell instanceof Date) {
+        return escapeCSV(cell.toLocaleDateString('fr-FR'));
       }
-    });
+      return escapeCSV(cell);
+    }).join(','));
   });
 
-  // Ajouter la feuille au classeur
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Rapport');
-
-  // Ajouter une feuille de résumé si disponible
+  // Résumé
   if (data.summary && data.summary.length > 0) {
-    const summaryData = [
-      ['Résumé'],
-      [],
-      ...data.summary.map(item => [
-        item.label,
-        item.type === 'currency' ? item.value : 
-        item.type === 'number' ? item.value : 
-        item.value
-      ])
-    ];
-
-    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-    
-    // Style pour le titre du résumé
-    if (summarySheet['A1']) {
-      summarySheet['A1'].s = {
-        font: { bold: true, size: 14 }
-      };
-    }
-
-    // Style pour les montants du résumé
-    data.summary.forEach((item, index) => {
-      const cellRef = XLSX.utils.encode_cell({ r: 2 + index, c: 1 });
-      if (summarySheet[cellRef] && item.type === 'currency') {
-        summarySheet[cellRef].s = {
-          numFmt: '#,##0'
-        };
-      }
+    lines.push('');
+    lines.push('Résumé');
+    data.summary.forEach(item => {
+      const value = item.type === 'currency' ? formatAmount(item.value) :
+                   item.type === 'number' ? item.value.toLocaleString('fr-FR') :
+                   item.value.toString();
+      lines.push(`${escapeCSV(item.label)},${escapeCSV(value)}`);
     });
-
-    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Résumé');
   }
 
-  // Téléchargement
-  XLSX.writeFile(workbook, filename);
+  // BOM pour Excel UTF-8
+  const BOM = '\uFEFF';
+  const csvContent = BOM + lines.join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = csvFilename;
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
 // Fonction pour exporter la balance des comptes
