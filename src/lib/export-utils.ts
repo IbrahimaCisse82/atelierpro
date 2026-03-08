@@ -1,8 +1,7 @@
-// Utilitaires d'export PDF et Excel pour les rapports financiers
+// Utilitaires d'export PDF et CSV pour les rapports financiers
 
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 
 // Types pour les données d'export
 export interface ExportData {
