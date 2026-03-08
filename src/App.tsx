@@ -11,6 +11,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashboard";
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
+import { useRealtimeAlerts } from "@/hooks/use-realtime-alerts";
 import { lazy, Suspense } from 'react';
 
 // Configuration optimisée de React Query
