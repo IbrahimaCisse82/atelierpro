@@ -86,6 +86,8 @@ function AppContent() {
           <Route path="/" element={<AuthLayout />} />
           <Route path="/login" element={<AuthLayout />} />
           <Route path="/register" element={<AuthLayout />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/install" element={<InstallPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
