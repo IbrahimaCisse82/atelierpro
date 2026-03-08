@@ -81,7 +81,14 @@ export function SettingsPage() {
         .update({
           name: company.name,
           email: company.email,
-        })
+          phone: company.phone || null,
+          address: company.address || null,
+          city: company.city || null,
+          country: company.country || null,
+          ninea: company.ninea || null,
+          rccm: company.rccm || null,
+          legal_notice: company.legal || null,
+        } as any)
         .eq('id', user.companyId);
 
       if (error) throw error;
