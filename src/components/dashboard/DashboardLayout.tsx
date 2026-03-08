@@ -166,9 +166,9 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
     }))
     .filter(group => group.items.length > 0), [allMenuGroups, installedModules]);
 
-  const toggleGroup = (groupKey: string) => {
+  const toggleGroup = React.useCallback((groupKey: string) => {
     setOpenGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
-  };
+  }, []);
 
   const isActive = (path: string) => location.pathname === path;
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
