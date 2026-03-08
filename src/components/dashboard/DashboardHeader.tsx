@@ -157,4 +157,4 @@ export const DashboardHeader = React.memo(function DashboardHeader() {
       </div>
     </header>
   );
-}
+});
