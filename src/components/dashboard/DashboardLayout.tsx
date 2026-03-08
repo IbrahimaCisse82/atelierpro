@@ -214,7 +214,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenuButton
                 isActive={isDashboard}
                 onClick={() => navigate('/dashboard')}
-                tooltip="Tableau de bord"
                 className={cn(
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isDashboard
