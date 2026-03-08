@@ -5,9 +5,12 @@ import { isDemoMode } from '@/contexts/DemoContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, UserPlus, Shield, ShieldAlert } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Loader2, UserPlus, Shield, ShieldAlert, Mail } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface CompanyUser {
@@ -43,6 +46,9 @@ export function UserManagement() {
   const [users, setUsers] = useState<CompanyUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: '', firstName: '', lastName: '', role: 'tailor' });
   const isDemo = user ? isDemoMode(user.id) : false;
   const isOwner = user?.role === 'owner';
 
@@ -63,7 +69,6 @@ export function UserManagement() {
 
   const loadUsers = async () => {
     try {
-      // Get all profiles for this company
       const { data: profiles, error: pErr } = await supabase
         .from('profiles')
         .select('user_id, email, first_name, last_name, is_active, created_at')
@@ -71,7 +76,6 @@ export function UserManagement() {
 
       if (pErr) throw pErr;
 
-      // Get all roles for this company
       const { data: roles, error: rErr } = await supabase
         .from('user_roles')
         .select('user_id, role')
@@ -129,6 +133,71 @@ export function UserManagement() {
     }
   };
 
+  const handleInvite = async () => {
+    if (!inviteForm.email || !inviteForm.firstName || !inviteForm.lastName) {
+      toast({ title: 'Erreur', description: 'Veuillez remplir tous les champs.', variant: 'destructive' });
+      return;
+    }
+
+    if (isDemo) {
+      toast({ title: 'Mode démo', description: 'Invitation non disponible en mode démo.' });
+      return;
+    }
+
+    setInviting(true);
+    try {
+      // Create a new user via signUp (they'll get a confirmation email)
+      const tempPassword = crypto.randomUUID().slice(0, 16) + 'A1!';
+      
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: inviteForm.email,
+        password: tempPassword,
+        options: {
+          data: {
+            company_name: '', // Won't create a new company since we'll override
+            first_name: inviteForm.firstName,
+            last_name: inviteForm.lastName,
+          },
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (signUpData.user) {
+        // Wait a moment for the trigger to create profile + company
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Update the user's profile to point to THIS company
+        await supabase
+          .from('profiles')
+          .update({ company_id: user!.companyId })
+          .eq('user_id', signUpData.user.id);
+
+        // Update their role to the selected one
+        await supabase
+          .from('user_roles')
+          .update({ 
+            company_id: user!.companyId,
+            role: inviteForm.role as any 
+          })
+          .eq('user_id', signUpData.user.id);
+      }
+
+      toast({ 
+        title: 'Invitation envoyée', 
+        description: `Un email de confirmation a été envoyé à ${inviteForm.email}. L'utilisateur devra confirmer son email puis se connecter.` 
+      });
+
+      setInviteOpen(false);
+      setInviteForm({ email: '', firstName: '', lastName: '', role: 'tailor' });
+      loadUsers();
+    } catch (err: any) {
+      toast({ title: 'Erreur', description: err.message, variant: 'destructive' });
+    } finally {
+      setInviting(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -140,15 +209,79 @@ export function UserManagement() {
             </CardTitle>
             <CardDescription>
               {isOwner
-                ? 'Consultez et modifiez les rôles des membres de votre entreprise'
+                ? 'Consultez, modifiez les rôles et invitez des membres'
                 : 'Consultez les membres de votre entreprise'}
             </CardDescription>
           </div>
           {isOwner && (
-            <Button variant="outline" size="sm" disabled>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Inviter (bientôt)
-            </Button>
+            <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Inviter
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Inviter un utilisateur
+                  </DialogTitle>
+                  <DialogDescription>
+                    L'utilisateur recevra un email pour confirmer son compte et pourra ensuite se connecter.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Prénom *</Label>
+                      <Input
+                        value={inviteForm.firstName}
+                        onChange={e => setInviteForm(f => ({ ...f, firstName: e.target.value }))}
+                        placeholder="Prénom"
+                      />
+                    </div>
+                    <div>
+                      <Label>Nom *</Label>
+                      <Input
+                        value={inviteForm.lastName}
+                        onChange={e => setInviteForm(f => ({ ...f, lastName: e.target.value }))}
+                        placeholder="Nom"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Email *</Label>
+                    <Input
+                      type="email"
+                      value={inviteForm.email}
+                      onChange={e => setInviteForm(f => ({ ...f, email: e.target.value }))}
+                      placeholder="email@exemple.com"
+                    />
+                  </div>
+                  <div>
+                    <Label>Rôle</Label>
+                    <Select value={inviteForm.role} onValueChange={val => setInviteForm(f => ({ ...f, role: val }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(ROLE_LABELS).filter(([k]) => k !== 'owner').map(([value, label]) => (
+                          <SelectItem key={value} value={value}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setInviteOpen(false)}>Annuler</Button>
+                  <Button onClick={handleInvite} disabled={inviting}>
+                    {inviting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Envoyer l'invitation
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
       </CardHeader>

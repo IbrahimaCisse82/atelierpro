@@ -12,14 +12,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/ui/logo';
-import { ChevronDown, LogOut, Settings, User, Building2 } from 'lucide-react';
+import { ChevronDown, LogOut, Settings, User, Building2, Moon, Sun } from 'lucide-react';
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 
 export function DashboardHeader() {
   const { user, company, logout, switchRole } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
 
   if (!user || !company) return null;
@@ -30,6 +32,10 @@ export function DashboardHeader() {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
 
   return (
@@ -43,8 +49,13 @@ export function DashboardHeader() {
         </div>
       </div>
 
-      {/* Profil utilisateur + bouton déconnexion direct */}
-      <div className="flex items-center gap-4">
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <Button variant="ghost" size="icon" onClick={toggleTheme} title={resolvedTheme === 'dark' ? 'Mode clair' : 'Mode sombre'}>
+          {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
+
         {/* Badge de rôle */}
         <Badge variant="secondary" className="hidden sm:flex">
           {roleInfo.label}
@@ -99,46 +110,40 @@ export function DashboardHeader() {
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem className="flex items-center gap-2">
+            <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/dashboard/profile')}>
               <User className="h-4 w-4" />
               Mon profil
             </DropdownMenuItem>
             
-            {user.role === 'owner' && (
-              <DropdownMenuItem className="flex items-center gap-2">
+            {(user.role === 'owner' || user.role === 'manager') && (
+              <DropdownMenuItem className="flex items-center gap-2" onClick={() => navigate('/dashboard/settings')}>
                 <Settings className="h-4 w-4" />
                 Paramètres entreprise
               </DropdownMenuItem>
             )}
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem className="flex items-center gap-2" onClick={toggleTheme}>
+              {resolvedTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {resolvedTheme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+            </DropdownMenuItem>
             
             <DropdownMenuSeparator />
             
-            {/* Section démo - Changement de rôle (uniquement en mode démo) */}
+            {/* Section démo */}
             {user.id === 'demo-user-id' && (
               <>
                 <DropdownMenuLabel className="text-xs text-accent">Mode Démonstration</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => switchRole('owner')}>
-                  🏢 Propriétaire
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchRole('manager')}>
-                  👨‍💼 Gérant
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchRole('tailor')}>
-                  ✂️ Couturier
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchRole('orders')}>
-                  📋 Resp. Commandes
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchRole('stocks')}>
-                  📦 Resp. Stocks
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => switchRole('customer_service')}>
-                  📞 Service Client
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('owner')}>🏢 Propriétaire</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('manager')}>👨‍💼 Gérant</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('tailor')}>✂️ Couturier</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('orders')}>📋 Resp. Commandes</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('stocks')}>📦 Resp. Stocks</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => switchRole('customer_service')}>📞 Service Client</DropdownMenuItem>
+                <DropdownMenuSeparator />
               </>
             )}
-            
-            <DropdownMenuSeparator />
             
             <DropdownMenuItem 
               onClick={() => logout()}

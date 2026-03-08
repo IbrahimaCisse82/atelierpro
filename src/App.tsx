@@ -5,11 +5,13 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { RoleSpecificDashboard } from "./components/dashboard/RoleSpecificDashboard";
 import { UserProfile } from "./components/dashboard/UserProfile";
 import { LoadingPage } from "@/components/ui/loading";
+import { useRealtimeAlerts } from "@/hooks/use-realtime-alerts";
 import { lazy, Suspense } from 'react';
 
 // Configuration optimisée de React Query
@@ -75,6 +77,7 @@ const LandingPage = lazy(() => import('./pages/LandingPage'));
 // Composant principal de l'application
 function AppContent() {
   const { user, loading } = useAuth();
+  useRealtimeAlerts();
 
   // While loading auth, show public routes (login, register, etc.) instead of blocking
   if (!user) {
@@ -140,15 +143,17 @@ function App() {
   };
   return (
     <QueryClientProvider client={queryClient}>
-      <Router future={future}>
-        <AuthProvider>
-          <TooltipProvider>
-            <AppContent />
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </AuthProvider>
-      </Router>
+      <ThemeProvider>
+        <Router future={future}>
+          <AuthProvider>
+            <TooltipProvider>
+              <AppContent />
+              <Toaster />
+              <Sonner />
+            </TooltipProvider>
+          </AuthProvider>
+        </Router>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

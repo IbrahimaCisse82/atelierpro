@@ -8,14 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Users, Settings, Save, Calculator, Loader2 } from 'lucide-react';
+import { Building2, Users, Settings, Save, Calculator, Loader2, Moon, Sun, Monitor } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
 import { UserManagement } from '@/components/settings/UserManagement';
 import { DataExport } from '@/components/settings/DataExport';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('company');
   const [saving, setSaving] = useState(false);
   const [loadingCompany, setLoadingCompany] = useState(true);
@@ -201,7 +204,26 @@ export function SettingsPage() {
               <CardDescription>Personnalisez l'expérience de l'application</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <Label>Thème</Label>
+                  <Select value={theme} onValueChange={(val: any) => setTheme(val)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">
+                        <span className="flex items-center gap-2"><Sun className="h-4 w-4" /> Clair</span>
+                      </SelectItem>
+                      <SelectItem value="dark">
+                        <span className="flex items-center gap-2"><Moon className="h-4 w-4" /> Sombre</span>
+                      </SelectItem>
+                      <SelectItem value="system">
+                        <span className="flex items-center gap-2"><Monitor className="h-4 w-4" /> Système</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label htmlFor="pref-lang">Langue</Label>
                   <Input id="pref-lang" value={preferences.language} onChange={e => setPreferences(p => ({ ...p, language: e.target.value }))} />
