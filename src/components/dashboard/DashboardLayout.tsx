@@ -299,7 +299,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <SidebarMenuButton
                 isActive={isActive('/dashboard/apps')}
                 onClick={() => navigate('/dashboard/apps')}
-                tooltip="Applications"
                 className={cn(
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isActive('/dashboard/apps')
