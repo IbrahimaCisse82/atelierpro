@@ -1,209 +1,187 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseQuery } from '@/hooks/use-supabase-query';
 import {
-	Card,
-	CardContent,
-	CardHeader,
-	CardTitle,
-	CardDescription,
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-	AlertTriangle,
-	DollarSign,
-	Download,
-	Plus,
-	FileText,
-	CreditCard,
+  AlertTriangle, DollarSign, Download, Plus, FileText, CreditCard, TrendingUp, TrendingDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-
-// Importation des composants des modules existants
+import { formatFCFA } from '@/lib/utils';
 import { FinancialReportsPage } from '@/pages/FinancialReportsPage';
 import { BankReconciliationPage } from '@/pages/BankReconciliationPage';
 
 export function FinancesPage() {
-	const { user } = useAuth();
-	const role = user?.role;
-	const [activeTab, setActiveTab] = useState('overview');
+  const { user } = useAuth();
+  const role = user?.role;
+  const [activeTab, setActiveTab] = useState('overview');
 
-	// Permissions désactivées pour activer tous les boutons
-	const canViewAll = true;
-	const canViewPayments = true;
-	const canViewReadOnly = true;
+  // Données réelles depuis la base
+  const { data: treasuryAccounts } = useSupabaseQuery('treasury_accounts', {
+    select: '*',
+    orderBy: { column: 'account_name', ascending: true }
+  });
 
-	if (!role) {
-		return <div className="p-8 text-center">Chargement...</div>;
-	}
+  const { data: invoices } = useSupabaseQuery('customer_invoices', {
+    select: '*',
+    orderBy: { column: 'created_at', ascending: false }
+  });
 
-	if (!canViewAll && !canViewPayments && !canViewReadOnly) {
-		return (
-			<div className="flex items-center justify-center h-64">
-				<Card className="w-full max-w-md">
-					<CardContent className="p-6 text-center">
-						<AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-						<h3 className="text-lg font-semibold mb-2">
-							Accès restreint
-						</h3>
-						<p className="text-muted-foreground">
-							Vous n'avez pas les permissions nécessaires pour accéder à ce
-							module.
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		);
-	}
+  const { data: movements } = useSupabaseQuery('treasury_movements', {
+    select: '*',
+    orderBy: { column: 'movement_date', ascending: false },
+    limit: 100
+  });
 
-	// Actions réelles pour les finances
-	const handleCreateTransaction = () => {
-		toast({
-			title: "Créer une transaction",
-			description: "Fonctionnalité de création de transaction activée.",
-		});
-	};
+  if (!role) {
+    return <div className="p-8 text-center">Chargement...</div>;
+  }
 
-	const handleExportFinances = () => {
-		toast({
-			title: "Export des finances",
-			description: "Export des données financières en cours...",
-		});
-	};
+  // Calculs réels
+  const totalTreasury = treasuryAccounts?.reduce((sum: number, a: any) => sum + Number(a.current_balance || 0), 0) || 0;
+  const totalReceivables = invoices?.filter((i: any) => !i.is_paid).reduce((sum: number, i: any) => sum + Number(i.total_with_tax || 0), 0) || 0;
+  const totalPaid = invoices?.filter((i: any) => i.is_paid).reduce((sum: number, i: any) => sum + Number(i.total_with_tax || 0), 0) || 0;
 
-	return (
-		<div className="space-y-6">
-			<div className="flex items-center gap-2 mb-4">
-				<DollarSign className="h-6 w-6 text-primary" />
-				<h1 className="text-3xl font-bold">Finances</h1>
-				<Badge variant="outline">{role}</Badge>
-			</div>
+  const recentIncome = movements?.filter((m: any) => m.movement_type === 'income').reduce((sum: number, m: any) => sum + Number(m.amount || 0), 0) || 0;
+  const recentExpenses = movements?.filter((m: any) => m.movement_type === 'expense').reduce((sum: number, m: any) => sum + Number(m.amount || 0), 0) || 0;
 
-			{/* Onglets principaux */}
-			<Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-				<TabsList className="grid w-full grid-cols-3">
-					<TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-					<TabsTrigger value="reports">Rapports Financiers</TabsTrigger>
-					<TabsTrigger value="reconciliation">Rapprochement Bancaire</TabsTrigger>
-				</TabsList>
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-4">
+        <DollarSign className="h-6 w-6 text-primary" />
+        <h1 className="text-3xl font-bold">Finances</h1>
+        <Badge variant="outline">{role}</Badge>
+      </div>
 
-				{/* Onglet Vue d'ensemble */}
-				<TabsContent value="overview" className="space-y-4">
-					{canViewAll && (
-						<Card>
-							<CardHeader>
-								<CardTitle>Tableau de bord financier</CardTitle>
-								<CardDescription>
-									Accès complet à la trésorerie, comptabilité et rapports financiers.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="flex items-center gap-2 mb-4">
-									<Button onClick={handleCreateTransaction}>
-										<Plus className="h-4 w-4 mr-2" /> Nouvelle transaction
-									</Button>
-									<Button variant="outline" onClick={handleExportFinances}>
-										<Download className="h-4 w-4 mr-2" /> Exporter
-									</Button>
-								</div>
-								
-								{/* Statistiques financières */}
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-									<Card>
-										<CardContent className="p-4">
-											<div className="flex items-center gap-2">
-												<DollarSign className="h-8 w-8 text-green-600" />
-												<div>
-													<p className="text-sm text-muted-foreground">Trésorerie</p>
-													<p className="text-2xl font-bold">2 450 000 F CFA</p>
-												</div>
-											</div>
-										</CardContent>
-									</Card>
-									<Card>
-										<CardContent className="p-4">
-											<div className="flex items-center gap-2">
-												<FileText className="h-8 w-8 text-blue-600" />
-												<div>
-													<p className="text-sm text-muted-foreground">Créances</p>
-													<p className="text-2xl font-bold">1 850 000 F CFA</p>
-												</div>
-											</div>
-										</CardContent>
-									</Card>
-									<Card>
-										<CardContent className="p-4">
-											<div className="flex items-center gap-2">
-												<CreditCard className="h-8 w-8 text-red-600" />
-												<div>
-													<p className="text-sm text-muted-foreground">Dettes</p>
-													<p className="text-2xl font-bold">750 000 F CFA</p>
-												</div>
-											</div>
-										</CardContent>
-									</Card>
-								</div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+          <TabsTrigger value="reports">Rapports Financiers</TabsTrigger>
+          <TabsTrigger value="reconciliation">Rapprochement Bancaire</TabsTrigger>
+        </TabsList>
 
-								<div className="text-muted-foreground">
-									Accédez aux différents modules financiers via les onglets ci-dessus :
-									<ul className="list-disc list-inside mt-2 space-y-1">
-										<li><strong>Rapports Financiers</strong> : Balance, grand livre, compte de résultat</li>
-										<li><strong>Rapprochement Bancaire</strong> : Rapprochement des comptes bancaires</li>
-									</ul>
-									<p className="mt-2 text-sm italic">
-										Note : Le paramétrage SYSCOHADA est maintenant disponible dans les Paramètres.
-									</p>
-								</div>
-							</CardContent>
-						</Card>
-					)}
+        <TabsContent value="overview" className="space-y-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Trésorerie</p>
+                    <p className="text-2xl font-bold">{formatFCFA(totalTreasury)}</p>
+                    <p className="text-xs text-muted-foreground">{treasuryAccounts?.length || 0} comptes</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Créances clients</p>
+                    <p className="text-2xl font-bold">{formatFCFA(totalReceivables)}</p>
+                    <p className="text-xs text-muted-foreground">{invoices?.filter((i: any) => !i.is_paid).length || 0} factures impayées</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-8 w-8 text-emerald-600" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Revenus récents</p>
+                    <p className="text-2xl font-bold">{formatFCFA(recentIncome)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="h-8 w-8 text-red-600" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Dépenses récentes</p>
+                    <p className="text-2xl font-bold">{formatFCFA(recentExpenses)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-					{canViewPayments && !canViewAll && (
-						<Card>
-							<CardHeader>
-								<CardTitle>Paiements</CardTitle>
-								<CardDescription>
-									Gestion des paiements clients et fournisseurs.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="text-muted-foreground">
-									Module de gestion des paiements disponible via les onglets spécialisés.
-								</div>
-							</CardContent>
-						</Card>
-					)}
+          {/* Comptes de trésorerie */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Comptes de trésorerie</CardTitle>
+              <CardDescription>Soldes actuels de vos comptes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!treasuryAccounts?.length ? (
+                <p className="text-muted-foreground text-center py-8">Aucun compte de trésorerie. Créez-en dans le module Trésorerie.</p>
+              ) : (
+                <div className="space-y-3">
+                  {treasuryAccounts.map((account: any) => (
+                    <div key={account.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{account.account_name}</p>
+                        <p className="text-sm text-muted-foreground">{account.account_type} • {account.bank_name || 'N/A'}</p>
+                      </div>
+                      <p className={`text-lg font-bold ${Number(account.current_balance) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatFCFA(Number(account.current_balance))}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-					{canViewReadOnly && !canViewAll && !canViewPayments && (
-						<Card>
-							<CardHeader>
-								<CardTitle>Consultation financière</CardTitle>
-								<CardDescription>
-									Consultation des données financières en lecture seule.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="text-muted-foreground">
-									Accès en lecture seule aux rapports financiers via l'onglet correspondant.
-								</div>
-							</CardContent>
-						</Card>
-					)}
-				</TabsContent>
+          {/* Dernières factures impayées */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Factures impayées</CardTitle>
+              <CardDescription>Créances en cours</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!invoices?.filter((i: any) => !i.is_paid).length ? (
+                <p className="text-muted-foreground text-center py-8">Aucune facture impayée.</p>
+              ) : (
+                <div className="space-y-2">
+                  {invoices.filter((i: any) => !i.is_paid).slice(0, 10).map((inv: any) => (
+                    <div key={inv.id} className="flex items-center justify-between p-2 border rounded">
+                      <div>
+                        <p className="font-medium">{inv.invoice_number}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Échéance : {inv.due_date ? new Date(inv.due_date).toLocaleDateString('fr-FR') : 'Non définie'}
+                        </p>
+                      </div>
+                      <Badge variant={inv.due_date && new Date(inv.due_date) < new Date() ? 'destructive' : 'outline'}>
+                        {formatFCFA(Number(inv.total_with_tax))}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-				{/* Onglet Rapports Financiers */}
-				<TabsContent value="reports">
-					<FinancialReportsPage />
-				</TabsContent>
+        <TabsContent value="reports">
+          <FinancialReportsPage />
+        </TabsContent>
 
-				{/* Onglet Rapprochement Bancaire */}
-				<TabsContent value="reconciliation">
-					<BankReconciliationPage />
-				</TabsContent>
-			</Tabs>
-		</div>
-	);
+        <TabsContent value="reconciliation">
+          <BankReconciliationPage />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 }
 
 export default FinancesPage;
