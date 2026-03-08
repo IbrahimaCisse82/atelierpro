@@ -73,7 +73,7 @@ interface MenuGroup {
   key: string;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+export const DashboardLayout = React.memo(function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, company } = useAuth();
