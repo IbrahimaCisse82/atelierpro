@@ -117,19 +117,13 @@ export function SettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="company"><Building2 className="inline h-4 w-4 mr-1" />Entreprise</TabsTrigger>
-          <TabsTrigger value="modules"><Package className="inline h-4 w-4 mr-1" />Modules</TabsTrigger>
           <TabsTrigger value="users"><Users className="inline h-4 w-4 mr-1" />Utilisateurs</TabsTrigger>
           <TabsTrigger value="syscohada"><Calculator className="inline h-4 w-4 mr-1" />SYSCOHADA</TabsTrigger>
           <TabsTrigger value="preferences"><Settings className="inline h-4 w-4 mr-1" />Préférences</TabsTrigger>
           <TabsTrigger value="backup"><Save className="inline h-4 w-4 mr-1" />Sauvegarde</TabsTrigger>
         </TabsList>
-
-        {/* Modules Tab */}
-        <TabsContent value="modules">
-          <ModuleSetup mode="settings" />
-        </TabsContent>
 
         {/* Company Tab */}
         <TabsContent value="company" className="space-y-4">
