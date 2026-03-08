@@ -126,6 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isActive: companyData.is_active
       };
 
+      // Mettre à jour last_login
+      supabase
+        .from('profiles')
+        .update({ last_login: new Date().toISOString() })
+        .eq('user_id', session.user.id)
+        .then();
+
       dispatch({ type: 'LOGIN_SUCCESS', payload: { user, company } });
     } catch {
       dispatch({ type: 'SET_ERROR', payload: 'Erreur lors du chargement du profil.' });
