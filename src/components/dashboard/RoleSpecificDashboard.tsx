@@ -1,5 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCompanyModules } from '@/hooks/use-company-modules';
+import { ModuleSetup } from '@/components/modules/ModuleSetup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -425,8 +427,25 @@ const mockMetrics = {
 
 export function RoleSpecificDashboard() {
   const { user } = useAuth();
+  const { hasConfiguredModules, isLoading: modulesLoading } = useCompanyModules();
   const userRole = user?.role || 'customer_service';
   const navigate = useNavigate();
+  const [showOnboarding, setShowOnboarding] = React.useState(false);
+
+  // Show module onboarding for owners who haven't configured modules yet
+  React.useEffect(() => {
+    if (!modulesLoading && !hasConfiguredModules && user?.role === 'owner') {
+      setShowOnboarding(true);
+    }
+  }, [modulesLoading, hasConfiguredModules, user?.role]);
+
+  if (showOnboarding) {
+    return (
+      <div className="py-8">
+        <ModuleSetup mode="onboarding" onComplete={() => setShowOnboarding(false)} />
+      </div>
+    );
+  }
 
   // Actions rapides dynamiques selon le rôle
   const quickActions = [
