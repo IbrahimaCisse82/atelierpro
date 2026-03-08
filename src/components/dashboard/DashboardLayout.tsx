@@ -236,7 +236,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             return (
               <SidebarGroup key={group.key} className="py-0">
                 <SidebarGroupLabel
-                  asChild
                   className="px-0"
                 >
                   <button
