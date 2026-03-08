@@ -52,6 +52,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useCompanyModules } from '@/hooks/use-company-modules';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
