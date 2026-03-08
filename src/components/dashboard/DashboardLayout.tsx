@@ -157,14 +157,14 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
     },
   ], []);
 
-  const menuGroups = allMenuGroups
+  const menuGroups = React.useMemo(() => allMenuGroups
     .map(group => ({
       ...group,
       items: group.items.filter(item =>
         !item.moduleKey || isModuleInstalled(item.moduleKey)
       ),
     }))
-    .filter(group => group.items.length > 0);
+    .filter(group => group.items.length > 0), [allMenuGroups, installedModules]);
 
   const toggleGroup = (groupKey: string) => {
     setOpenGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
