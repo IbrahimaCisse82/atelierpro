@@ -371,10 +371,16 @@ export function useCompanyModules() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const isDemoMode = user?.id === 'demo-user-id';
+
   const { data: installedModules, isLoading } = useQuery({
     queryKey: ['company-modules', user?.companyId],
     queryFn: async () => {
       if (!user?.companyId) return [];
+      // In demo mode, return all modules as installed
+      if (isDemoMode) {
+        return ALL_MODULES.map(m => ({ module_key: m.key, is_enabled: true }));
+      }
       const { data, error } = await supabase
         .from('company_modules')
         .select('module_key, is_enabled')
