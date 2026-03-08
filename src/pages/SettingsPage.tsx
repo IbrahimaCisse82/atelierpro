@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('company');
   const [saving, setSaving] = useState(false);
   const [loadingCompany, setLoadingCompany] = useState(true);
