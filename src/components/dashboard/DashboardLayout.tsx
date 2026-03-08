@@ -89,7 +89,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
     rapports: false,
   });
 
-  const allMenuGroups: MenuGroup[] = [
+  const allMenuGroups: MenuGroup[] = React.useMemo(() => [
     {
       key: 'commercial',
       label: 'Commercial',
@@ -155,7 +155,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
         { path: '/dashboard/export', label: 'Export', icon: Download, moduleKey: 'export' },
       ],
     },
-  ];
+  ], []);
 
   const menuGroups = allMenuGroups
     .map(group => ({
