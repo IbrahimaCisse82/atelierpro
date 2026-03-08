@@ -16,6 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DashboardHeader } from './DashboardHeader';
 import { ChevronDown, ChevronRight, Home, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCompanyModules, ALL_MODULES } from '@/hooks/use-company-modules';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ interface MenuItem {
   path: string;
   label: string;
   icon: string;
+  moduleKey?: string;
 }
 
 interface MenuGroup {
@@ -39,6 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const { user } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
+  const { isModuleEnabled } = useCompanyModules();
   
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
@@ -49,17 +52,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     rapports: false,
   });
 
-  const menuGroups: MenuGroup[] = [
+  const allMenuGroups: MenuGroup[] = [
     {
       key: 'commercial',
       label: 'Gestion Commerciale',
       icon: '📊',
       items: [
-        { path: '/dashboard/clients', label: 'Clients', icon: '👥' },
-        { path: '/dashboard/orders', label: 'Commandes', icon: '📋' },
-        { path: '/dashboard/measurements', label: 'Mesures', icon: '📏' },
-        { path: '/dashboard/patterns', label: 'Modèles/Patrons', icon: '✂️' },
-        { path: '/dashboard/customer-invoices', label: 'Factures Clients', icon: '🧾' },
+        { path: '/dashboard/clients', label: 'Clients', icon: '👥', moduleKey: 'clients' },
+        { path: '/dashboard/orders', label: 'Commandes', icon: '📋', moduleKey: 'orders' },
+        { path: '/dashboard/measurements', label: 'Mesures', icon: '📏', moduleKey: 'measurements' },
+        { path: '/dashboard/patterns', label: 'Modèles/Patrons', icon: '✂️', moduleKey: 'patterns' },
+        { path: '/dashboard/customer-invoices', label: 'Factures Clients', icon: '🧾', moduleKey: 'customer_invoices' },
       ],
     },
     {
@@ -67,8 +70,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       label: 'Production & Stocks',
       icon: '🏭',
       items: [
-        { path: '/dashboard/production', label: 'Production', icon: '🏭' },
-        { path: '/dashboard/stocks', label: 'Stocks', icon: '📦' },
+        { path: '/dashboard/production', label: 'Production', icon: '🏭', moduleKey: 'production' },
+        { path: '/dashboard/stocks', label: 'Stocks', icon: '📦', moduleKey: 'stocks' },
       ],
     },
     {
@@ -76,10 +79,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       label: 'Achats & Fournisseurs',
       icon: '🛒',
       items: [
-        { path: '/dashboard/suppliers', label: 'Fournisseurs', icon: '🚚' },
-        { path: '/dashboard/purchases', label: 'Achats', icon: '🛒' },
-        { path: '/dashboard/receptions', label: 'Réceptions', icon: '📥' },
-        { path: '/dashboard/invoices', label: 'Factures Fournisseurs', icon: '🧾' },
+        { path: '/dashboard/suppliers', label: 'Fournisseurs', icon: '🚚', moduleKey: 'suppliers' },
+        { path: '/dashboard/purchases', label: 'Achats', icon: '🛒', moduleKey: 'purchases' },
+        { path: '/dashboard/receptions', label: 'Réceptions', icon: '📥', moduleKey: 'receptions' },
+        { path: '/dashboard/invoices', label: 'Factures Fournisseurs', icon: '🧾', moduleKey: 'supplier_invoices' },
       ],
     },
     {
@@ -87,12 +90,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       label: 'Finance & Comptabilité',
       icon: '💰',
       items: [
-        { path: '/dashboard/finances', label: 'Tableau de Bord', icon: '💳' },
-        { path: '/dashboard/treasury', label: 'Trésorerie', icon: '🏦' },
-        { path: '/dashboard/fixed-assets', label: 'Immobilisations', icon: '🏢' },
-        { path: '/dashboard/financial-reports', label: 'Rapports Financiers', icon: '📊' },
-        { path: '/dashboard/bank-reconciliation', label: 'Rapprochement Bancaire', icon: '🔄' },
-        { path: '/dashboard/syscohada', label: 'SYSCOHADA', icon: '📚' },
+        { path: '/dashboard/finances', label: 'Tableau de Bord', icon: '💳', moduleKey: 'finance_dashboard' },
+        { path: '/dashboard/treasury', label: 'Trésorerie', icon: '🏦', moduleKey: 'treasury' },
+        { path: '/dashboard/fixed-assets', label: 'Immobilisations', icon: '🏢', moduleKey: 'fixed_assets' },
+        { path: '/dashboard/financial-reports', label: 'Rapports Financiers', icon: '📊', moduleKey: 'financial_reports' },
+        { path: '/dashboard/bank-reconciliation', label: 'Rapprochement Bancaire', icon: '🔄', moduleKey: 'bank_reconciliation' },
+        { path: '/dashboard/syscohada', label: 'SYSCOHADA', icon: '📚', moduleKey: 'syscohada' },
       ],
     },
     {
@@ -100,8 +103,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       label: 'Ressources Humaines',
       icon: '👥',
       items: [
-        { path: '/dashboard/hr', label: 'Employés', icon: '👤' },
-        { path: '/dashboard/remunerations', label: 'Rémunérations', icon: '💰' },
+        { path: '/dashboard/hr', label: 'Employés', icon: '👤', moduleKey: 'employees' },
+        { path: '/dashboard/remunerations', label: 'Rémunérations', icon: '💰', moduleKey: 'remunerations' },
       ],
     },
     {
@@ -109,13 +112,23 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       label: 'Rapports & Analyses',
       icon: '📈',
       items: [
-        { path: '/dashboard/reports', label: 'Rapports Généraux', icon: '📑' },
-        { path: '/dashboard/alerts', label: 'Alertes', icon: '🔔' },
-        { path: '/dashboard/audit', label: "Journal d'Activité", icon: '📝' },
-        { path: '/dashboard/export', label: 'Export Avancé', icon: '📤' },
+        { path: '/dashboard/reports', label: 'Rapports Généraux', icon: '📑', moduleKey: 'reports' },
+        { path: '/dashboard/alerts', label: 'Alertes', icon: '🔔', moduleKey: 'alerts' },
+        { path: '/dashboard/audit', label: "Journal d'Activité", icon: '📝', moduleKey: 'audit' },
+        { path: '/dashboard/export', label: 'Export Avancé', icon: '📤', moduleKey: 'export' },
       ],
     },
   ];
+
+  // Filter menu groups based on enabled modules
+  const menuGroups = allMenuGroups
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => 
+        !item.moduleKey || isModuleEnabled(item.moduleKey)
+      ),
+    }))
+    .filter(group => group.items.length > 0);
 
   const toggleGroup = (groupKey: string) => {
     setOpenGroups(prev => ({ ...prev, [groupKey]: !prev[groupKey] }));
@@ -240,11 +253,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header avec profil utilisateur et déconnexion */}
         <DashboardHeader />
         
         <main className="flex-1 overflow-y-auto">
-          {/* Header mobile avec trigger */}
           <div className="md:hidden sticky top-0 z-10 bg-background border-b p-4 flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={toggleSidebar}>
               <PanelLeft className="h-4 w-4" />
