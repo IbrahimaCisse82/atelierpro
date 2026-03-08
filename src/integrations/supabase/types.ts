@@ -252,6 +252,44 @@ export type Database = {
         }
         Relationships: []
       }
+      company_modules: {
+        Row: {
+          company_id: string
+          created_at: string
+          enabled_at: string | null
+          enabled_by: string | null
+          id: string
+          is_enabled: boolean
+          module_key: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          enabled_at?: string | null
+          enabled_by?: string | null
+          id?: string
+          is_enabled?: boolean
+          module_key: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          enabled_at?: string | null
+          enabled_by?: string | null
+          id?: string
+          is_enabled?: boolean
+          module_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_modules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_invoices: {
         Row: {
           company_id: string
