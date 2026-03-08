@@ -153,8 +153,8 @@ export function InvoicesPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Total facturé</p><p className="text-2xl font-bold">{formatFCFA(totalInvoiced)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Payé</p><p className="text-2xl font-bold text-green-600">{formatFCFA(totalPaid)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Impayé</p><p className="text-2xl font-bold text-orange-600">{formatFCFA(totalUnpaid)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Payé</p><p className="text-2xl font-bold text-primary">{formatFCFA(totalPaid)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Impayé</p><p className="text-2xl font-bold text-accent-foreground">{formatFCFA(totalUnpaid)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">En retard</p><p className="text-2xl font-bold text-destructive">{overdueInvoices.length}</p></CardContent></Card>
       </div>
 
