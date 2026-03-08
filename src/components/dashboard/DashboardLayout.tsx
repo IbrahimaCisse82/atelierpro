@@ -120,12 +120,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     },
   ];
 
-  // Filter menu groups based on enabled modules
   const menuGroups = allMenuGroups
     .map(group => ({
       ...group,
       items: group.items.filter(item => 
-        !item.moduleKey || isModuleEnabled(item.moduleKey)
+        !item.moduleKey || isModuleInstalled(item.moduleKey)
       ),
     }))
     .filter(group => group.items.length > 0);

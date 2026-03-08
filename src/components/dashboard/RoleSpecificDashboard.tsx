@@ -426,25 +426,18 @@ const mockMetrics = {
 
 export function RoleSpecificDashboard() {
   const { user } = useAuth();
-  const { hasConfiguredModules, isLoading: modulesLoading } = useCompanyModules();
+  const { installedModules, isLoading: modulesLoading } = useCompanyModules();
   const userRole = user?.role || 'customer_service';
   const navigate = useNavigate();
-  const [showOnboarding, setShowOnboarding] = React.useState(false);
 
-  // Show module onboarding for owners who haven't configured modules yet
+  // If owner has no modules installed, redirect to apps store
+  const hasModules = !!installedModules && installedModules.length > 0;
+  
   React.useEffect(() => {
-    if (!modulesLoading && !hasConfiguredModules && user?.role === 'owner') {
-      setShowOnboarding(true);
+    if (!modulesLoading && !hasModules && user?.role === 'owner') {
+      navigate('/dashboard/apps');
     }
-  }, [modulesLoading, hasConfiguredModules, user?.role]);
-
-  if (showOnboarding) {
-    return (
-      <div className="py-8">
-        <ModuleSetup mode="onboarding" onComplete={() => setShowOnboarding(false)} />
-      </div>
-    );
-  }
+  }, [modulesLoading, hasModules, user?.role, navigate]);
 
   // Actions rapides dynamiques selon le rôle
   const quickActions = [
