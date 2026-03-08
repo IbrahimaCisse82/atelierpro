@@ -53,8 +53,8 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+    if (formData.password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères');
       return;
     }
 
@@ -203,8 +203,8 @@ export function CompanyRegistration({ onSwitchToLogin }: CompanyRegistrationProp
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Minimum 6 caractères"
-                  disabled={loading}
+                    placeholder="Minimum 8 caractères"
+                    disabled={loading}
                   required
                   autoComplete="new-password"
                 />

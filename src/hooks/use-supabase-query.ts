@@ -63,12 +63,22 @@ export function useSupabaseQuery<T = any>(
     setLoading(true);
     setError(null);
 
+    // Tables sans colonne deleted_at
+    const tablesWithoutDeletedAt = [
+      'alerts', 'companies', 'profiles', 'user_roles', 'depreciations',
+      'production_tracking', 'treasury_accounts', 'treasury_movements',
+      'work_hours', 'payment_reminders'
+    ];
+
     try {
       let query = supabase
         .from(table as any)
         .select(select)
-        .eq('company_id', userProfile.companyId)
-        .is('deleted_at', null);
+        .eq('company_id', userProfile.companyId);
+
+      if (!tablesWithoutDeletedAt.includes(table)) {
+        query = query.is('deleted_at', null);
+      }
 
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {

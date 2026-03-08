@@ -216,15 +216,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      const { data: existingCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('name', data.companyName)
-        .single();
-
-      if (existingCompany) {
-        throw new Error('Ce nom d\'entreprise existe déjà');
-      }
+      // Note: company name uniqueness is not checked here because
+      // the companies table has RLS that prevents anonymous reads.
+      // The trigger will create the company regardless.
 
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.ownerEmail,
