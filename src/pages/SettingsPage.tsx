@@ -13,6 +13,8 @@ import { toast } from '@/hooks/use-toast';
 import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
 import { UserManagement } from '@/components/settings/UserManagement';
 import { DataExport } from '@/components/settings/DataExport';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export function SettingsPage() {
   const { user } = useAuth();
