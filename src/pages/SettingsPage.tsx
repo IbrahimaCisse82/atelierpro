@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Users, Settings, Save, Download, Upload, Calculator, Loader2 } from 'lucide-react';
+import { Building2, Users, Settings, Save, Calculator, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { SyscohadaSettingsPage } from '@/pages/SyscohadaSettingsPage';
+import { UserManagement } from '@/components/settings/UserManagement';
+import { DataExport } from '@/components/settings/DataExport';
 
 export function SettingsPage() {
   const { user } = useAuth();
@@ -30,7 +32,6 @@ export function SettingsPage() {
 
   const canManageSettings = ['owner', 'manager'].includes(user?.role || '');
 
-  // Load company data
   useEffect(() => {
     if (!user || isDemo) {
       setLoadingCompany(false);
@@ -51,13 +52,13 @@ export function SettingsPage() {
           setCompany({
             name: data.name || '',
             email: data.email || '',
-            phone: (data as any).phone || '',
-            address: (data as any).address || '',
-            city: (data as any).city || '',
-            country: (data as any).country || '',
-            ninea: (data as any).ninea || '',
-            rccm: (data as any).rccm || '',
-            legal: (data as any).legal_notice || '',
+            phone: data.phone || '',
+            address: data.address || '',
+            city: data.city || '',
+            country: data.country || '',
+            ninea: data.ninea || '',
+            rccm: data.rccm || '',
+            legal: data.legal_notice || '',
           });
         }
       } catch (err: any) {
@@ -88,7 +89,7 @@ export function SettingsPage() {
           ninea: company.ninea || null,
           rccm: company.rccm || null,
           legal_notice: company.legal || null,
-        } as any)
+        })
         .eq('id', user.companyId);
 
       if (error) throw error;
@@ -102,14 +103,6 @@ export function SettingsPage() {
 
   const handleSavePreferences = () => {
     toast({ title: 'Succès', description: 'Préférences enregistrées.' });
-  };
-
-  const handleBackup = () => {
-    toast({ title: 'Export', description: 'Fonctionnalité en cours de développement.' });
-  };
-
-  const handleRestore = () => {
-    toast({ title: 'Import', description: 'Fonctionnalité en cours de développement.' });
   };
 
   return (
@@ -192,17 +185,7 @@ export function SettingsPage() {
 
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gestion des utilisateurs</CardTitle>
-              <CardDescription>Invitez, modifiez ou désactivez les utilisateurs</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-muted-foreground text-center py-8">
-                Fonctionnalité en cours de développement
-              </div>
-            </CardContent>
-          </Card>
+          <UserManagement />
         </TabsContent>
 
         {/* SYSCOHADA Tab */}
@@ -237,22 +220,7 @@ export function SettingsPage() {
 
         {/* Backup Tab */}
         <TabsContent value="backup" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sauvegarde & Restauration</CardTitle>
-              <CardDescription>Exportez ou importez les données</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={handleBackup}>
-                  <Download className="h-4 w-4 mr-2" />Exporter les données
-                </Button>
-                <Button variant="outline" onClick={handleRestore}>
-                  <Upload className="h-4 w-4 mr-2" />Importer une sauvegarde
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <DataExport />
         </TabsContent>
       </Tabs>
     </div>
