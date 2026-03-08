@@ -78,7 +78,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
   const location = useLocation();
   const { user, company } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
-  const { isModuleInstalled } = useCompanyModules();
+  const { isModuleInstalled, installedModules } = useCompanyModules();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
