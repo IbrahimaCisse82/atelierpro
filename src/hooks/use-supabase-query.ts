@@ -68,7 +68,8 @@ export function useSupabaseQuery<T = any>(
       'alerts', 'companies', 'profiles', 'user_roles', 'depreciations',
       'production_tracking', 'treasury_accounts', 'treasury_movements',
       'work_hours', 'payment_reminders', 'syscohada_accounts', 'accounting_journals',
-      'journal_entries', 'journal_entry_lines', 'bank_reconciliations', 'bank_statements'
+      'journal_entries', 'journal_entry_lines', 'bank_reconciliations', 'bank_statements',
+      'payments'
     ];
 
     try {
