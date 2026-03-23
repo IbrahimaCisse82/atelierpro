@@ -303,7 +303,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isActive('/dashboard/apps')
                     ? "bg-sidebar-primary/15 text-sidebar-primary"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <Puzzle className="h-4 w-4 shrink-0" />
