@@ -218,7 +218,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isDashboard
                     ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
@@ -244,7 +244,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                       "w-full flex items-center gap-3 h-9 px-3 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors",
                       hasActiveItem
                         ? "text-sidebar-primary"
-                        : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70"
+                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                     )}
                   >
                     <GroupIcon className="h-3.5 w-3.5 shrink-0" />
@@ -275,7 +275,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                                 "h-8 gap-3 rounded-md text-sm transition-colors",
                                 active
                                   ? "bg-sidebar-primary/15 text-sidebar-primary font-medium"
-                                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                               )}
                             >
                               <ItemIcon className="h-4 w-4 shrink-0" />
@@ -303,7 +303,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isActive('/dashboard/apps')
                     ? "bg-sidebar-primary/15 text-sidebar-primary"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <Puzzle className="h-4 w-4 shrink-0" />
@@ -318,7 +318,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isActive('/dashboard/settings')
                     ? "bg-sidebar-primary/15 text-sidebar-primary"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <Settings className="h-4 w-4 shrink-0" />
@@ -344,7 +344,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                 <span className="text-sm font-medium text-sidebar-foreground truncate w-full">
                   {user?.firstName} {user?.lastName}
                 </span>
-                <span className="text-[10px] text-sidebar-foreground/50 truncate w-full">
+                <span className="text-[10px] text-sidebar-foreground/70 truncate w-full">
                   {company?.name}
                 </span>
               </div>
