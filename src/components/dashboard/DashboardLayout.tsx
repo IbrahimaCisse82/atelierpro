@@ -244,7 +244,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                       "w-full flex items-center gap-3 h-9 px-3 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors",
                       hasActiveItem
                         ? "text-sidebar-primary"
-                        : "text-sidebar-foreground/40 hover:text-sidebar-foreground/70"
+                        : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
                     )}
                   >
                     <GroupIcon className="h-3.5 w-3.5 shrink-0" />
