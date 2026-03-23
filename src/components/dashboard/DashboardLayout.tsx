@@ -275,7 +275,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                                 "h-8 gap-3 rounded-md text-sm transition-colors",
                                 active
                                   ? "bg-sidebar-primary/15 text-sidebar-primary font-medium"
-                                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                               )}
                             >
                               <ItemIcon className="h-4 w-4 shrink-0" />
