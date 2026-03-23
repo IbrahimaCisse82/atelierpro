@@ -507,6 +507,7 @@ export type Database = {
           order_id: string | null
           paid_at: string | null
           paid_by: string | null
+          payment_method: string | null
           tax_amount: number
           total_amount: number
           total_with_tax: number
@@ -527,6 +528,7 @@ export type Database = {
           order_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
+          payment_method?: string | null
           tax_amount?: number
           total_amount?: number
           total_with_tax?: number
@@ -547,6 +549,7 @@ export type Database = {
           order_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
+          payment_method?: string | null
           tax_amount?: number
           total_amount?: number
           total_with_tax?: number
@@ -1156,6 +1159,83 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "customer_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          client_id: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          order_id: string | null
+          payment_date: string
+          payment_method: string
+          reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          client_id?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          order_id?: string | null
+          payment_date?: string
+          payment_method?: string
+          reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          client_id?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          order_id?: string | null
+          payment_date?: string
+          payment_method?: string
+          reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "customer_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1826,6 +1906,7 @@ export type Database = {
           movement_number: string
           movement_type: string
           notes: string | null
+          payment_method: string | null
           reference: string | null
           transfer_to_account_id: string | null
           treasury_account_id: string
@@ -1846,6 +1927,7 @@ export type Database = {
           movement_number: string
           movement_type: string
           notes?: string | null
+          payment_method?: string | null
           reference?: string | null
           transfer_to_account_id?: string | null
           treasury_account_id: string
@@ -1866,6 +1948,7 @@ export type Database = {
           movement_number?: string
           movement_type?: string
           notes?: string | null
+          payment_method?: string | null
           reference?: string | null
           transfer_to_account_id?: string | null
           treasury_account_id?: string
