@@ -218,7 +218,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                   "h-9 gap-3 rounded-md font-medium transition-colors",
                   isDashboard
                     ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
