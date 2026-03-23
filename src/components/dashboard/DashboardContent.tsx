@@ -6,166 +6,51 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Package,
-  ShoppingCart,
-  DollarSign,
-  AlertCircle,
-  CheckCircle,
-  Clock,
-  Scissors,
-  FileText,
-  Briefcase,
-  Warehouse,
-  CreditCard
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from 'recharts';
+import {
+  TrendingUp, TrendingDown, Users, Package, ShoppingCart, DollarSign,
+  AlertCircle, CheckCircle, Clock, Scissors, FileText, Briefcase,
+  Warehouse, CreditCard, Truck
 } from 'lucide-react';
+import { formatFCFA } from '@/lib/utils';
 
-// Configuration des sections du dashboard par domaine fonctionnel
-interface StatCard {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  trend?: { value: number; isPositive: boolean };
-}
-
-interface DashboardSection {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  cards: StatCard[];
-  requiredRoles?: string[];
-}
-
-const formatFCFA = (amount: number) => {
-  return `${amount.toLocaleString('fr-FR')} FCFA`;
-};
-
-const getDashboardSections = (stats: any): DashboardSection[] => {
-  if (!stats) return [];
-
-  return [
-    {
-      title: 'Gestion Commerciale',
-      icon: Briefcase,
-      requiredRoles: ['owner', 'manager', 'orders'],
-      cards: [
-        {
-          title: 'Commandes Actives',
-          value: stats.activeOrders || 0,
-          description: 'En cours de traitement',
-          icon: ShoppingCart,
-          color: 'text-blue-600',
-        },
-        {
-          title: 'Clients Actifs',
-          value: stats.activeClients || 0,
-          description: `+${stats.thisMonthClients || 0} ce mois`,
-          icon: Users,
-          color: 'text-green-600',
-          trend: { value: stats.thisMonthClients || 0, isPositive: true },
-        },
-        {
-          title: 'Factures Impayées',
-          value: stats.unpaidInvoicesCount || 0,
-          description: `${formatFCFA(stats.unpaidInvoicesTotal || 0)} en attente`,
-          icon: FileText,
-          color: 'text-orange-600',
-        },
-      ],
-    },
-    {
-      title: 'Production & Stocks',
-      icon: Warehouse,
-      requiredRoles: ['owner', 'manager', 'tailor', 'stocks'],
-      cards: [
-        {
-          title: 'Tâches en Production',
-          value: stats.productionActive || 0,
-          description: 'En cours de fabrication',
-          icon: Scissors,
-          color: 'text-purple-600',
-        },
-        {
-          title: 'Stock Faible',
-          value: stats.lowStockCount || 0,
-          description: 'Articles à réapprovisionner',
-          icon: Package,
-          color: 'text-red-600',
-        },
-      ],
-    },
-    {
-      title: 'Finance',
-      icon: CreditCard,
-      requiredRoles: ['owner', 'manager'],
-      cards: [
-        {
-          title: 'Revenu Total',
-          value: formatFCFA(stats.totalRevenue || 0),
-          description: 'Encaissements reçus',
-          icon: DollarSign,
-          color: 'text-emerald-600',
-        },
-        {
-          title: 'Factures à Encaisser',
-          value: formatFCFA(stats.unpaidInvoicesTotal || 0),
-          description: `${stats.unpaidInvoicesCount || 0} facture(s) impayée(s)`,
-          icon: AlertCircle,
-          color: 'text-amber-600',
-        },
-      ],
-    },
-  ];
-};
+const COLORS = ['hsl(220,60%,35%)', 'hsl(35,65%,55%)', 'hsl(145,60%,35%)', 'hsl(0,75%,55%)', 'hsl(280,50%,50%)'];
 
 export function DashboardContent() {
   const { user } = useAuth();
   const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
   const { data: alerts, isLoading: isLoadingAlerts } = useDashboardAlerts();
 
-  const sections = getDashboardSections(stats).filter((section) => {
-    if (!section.requiredRoles) return true;
-    return section.requiredRoles.some(role => role === user?.role);
-  });
+  const productionChartData = stats ? [
+    { name: 'En attente', value: stats.productionStatuses?.cutting || 0 },
+    { name: 'En cours', value: stats.productionStatuses?.sewing || 0 },
+    { name: 'Terminées', value: stats.productionStatuses?.finishing || 0 },
+  ] : [];
+
+  const kpiCards = [
+    { title: 'Chiffre d\'affaires', value: formatFCFA(stats?.totalRevenue || 0), icon: DollarSign, color: 'text-success', desc: 'Encaissé' },
+    { title: 'Commandes actives', value: stats?.activeOrders || 0, icon: ShoppingCart, color: 'text-primary', desc: `${stats?.urgentDeliveries || 0} livraison(s) urgente(s)` },
+    { title: 'Clients actifs', value: stats?.activeClients || 0, icon: Users, color: 'text-accent', desc: `+${stats?.thisMonthClients || 0} ce mois` },
+    { title: 'Stock faible', value: stats?.lowStockCount || 0, icon: Package, color: stats?.lowStockCount ? 'text-destructive' : 'text-muted-foreground', desc: 'Alertes réapprovisionnement' },
+    { title: 'Factures impayées', value: stats?.unpaidInvoicesCount || 0, icon: FileText, color: 'text-warning', desc: formatFCFA(stats?.unpaidInvoicesTotal || 0) },
+    { title: 'Production', value: stats?.productionActive || 0, icon: Scissors, color: 'text-primary', desc: 'Tâches en cours' },
+  ];
 
   const getAlertIcon = (level: string) => {
-    switch (level) {
-      case 'critical':
-      case 'error':
-        return <AlertCircle className="h-4 w-4" />;
-      case 'warning':
-        return <Clock className="h-4 w-4" />;
-      default:
-        return <CheckCircle className="h-4 w-4" />;
-    }
-  };
-
-  const getAlertColor = (level: string) => {
-    switch (level) {
-      case 'critical':
-      case 'error':
-        return 'destructive';
-      case 'warning':
-        return 'default';
-      default:
-        return 'secondary';
-    }
+    if (level === 'critical' || level === 'error') return <AlertCircle className="h-4 w-4" />;
+    if (level === 'warning') return <Clock className="h-4 w-4" />;
+    return <CheckCircle className="h-4 w-4" />;
   };
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* En-tête avec bienvenue */}
+    <div className="space-y-6 pb-8">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Tableau de Bord
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Bienvenue, {user?.firstName || user?.email?.split('@')[0]}
-          </p>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Tableau de Bord</h1>
+          <p className="text-muted-foreground mt-1">Bienvenue, {user?.firstName || user?.email?.split('@')[0]}</p>
         </div>
         <Badge variant="outline" className="text-sm w-fit">
           {user?.role === 'owner' && '👑 Propriétaire'}
@@ -176,202 +61,115 @@ export function DashboardContent() {
         </Badge>
       </div>
 
-      {/* Sections par domaine fonctionnel */}
-      {sections.map((section, sectionIndex) => {
-        const SectionIcon = section.icon;
-        return (
-          <div key={sectionIndex} className="space-y-4">
-            <div className="flex items-center gap-2 border-b pb-2">
-              <SectionIcon className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">{section.title}</h2>
-            </div>
+      {/* KPI Grid */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3">
+        {isLoadingStats ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+          ))
+        ) : (
+          kpiCards.map((kpi, i) => {
+            const Icon = kpi.icon;
+            return (
+              <Card key={i} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">{kpi.title}</p>
+                      <p className="text-2xl font-bold mt-1">{kpi.value}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{kpi.desc}</p>
+                    </div>
+                    <Icon className={`h-8 w-8 ${kpi.color} opacity-80`} />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {isLoadingStats ? (
-                Array.from({ length: section.cards.length }).map((_, i) => (
-                  <Card key={i}>
-                    <CardHeader className="pb-2">
-                      <Skeleton className="h-4 w-32" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-8 w-24 mb-2" />
-                      <Skeleton className="h-3 w-40" />
-                    </CardContent>
-                  </Card>
-                ))
-              ) : (
-                section.cards.map((card, cardIndex) => {
-                  const CardIcon = card.icon;
-                  return (
-                    <Card
-                      key={cardIndex}
-                      className="hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-                    >
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">
-                          {card.title}
-                        </CardTitle>
-                        <CardIcon className={`h-5 w-5 ${card.color}`} />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{card.value}</div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {card.description}
-                        </p>
-                        {card.trend && (
-                          <div className="flex items-center mt-2 text-xs">
-                            {card.trend.isPositive ? (
-                              <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-                            ) : (
-                              <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
-                            )}
-                            <span
-                              className={
-                                card.trend.isPositive
-                                  ? 'text-green-600'
-                                  : 'text-red-600'
-                              }
-                            >
-                              +{card.trend.value}
-                            </span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Détail Production pour les rôles concernés */}
-      {user?.role && ['owner', 'manager', 'tailor'].includes(user.role) && (
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Scissors className="h-5 w-5 text-purple-600" />
-              Détail de la Production
+      {/* Charts Row */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Production Pie */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Scissors className="h-4 w-4 text-primary" /> Répartition Production
             </CardTitle>
-            <CardDescription>
-              Répartition des tâches par étape de fabrication
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingStats ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {[
-                  {
-                    label: 'En attente',
-                    value: stats?.productionStatuses?.cutting || 0,
-                    color: 'bg-blue-500',
-                    icon: Clock,
-                  },
-                  {
-                    label: 'En cours',
-                    value: stats?.productionStatuses?.sewing || 0,
-                    color: 'bg-purple-500',
-                    icon: Scissors,
-                  },
-                  {
-                    label: 'Terminées',
-                    value: stats?.productionStatuses?.finishing || 0,
-                    color: 'bg-green-500',
-                    icon: CheckCircle,
-                  },
-                ].map((status, index) => {
-                  const StatusIcon = status.icon;
-                  return (
-                    <div key={index} className="flex items-center gap-4">
-                      <div className="flex-shrink-0">
-                        <StatusIcon className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">
-                            {status.label}
-                          </span>
-                          <span className="text-sm font-bold">
-                            {status.value} tâches
-                          </span>
-                        </div>
-                        <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${status.color} transition-all duration-500`}
-                            style={{
-                              width: `${Math.min(
-                                (status.value / Math.max(stats?.productionActive || 1, 10)) * 100,
-                                100
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            {isLoadingStats ? <Skeleton className="h-48 w-full" /> : (
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={productionChartData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={4}>
+                    {productionChartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => `${v} tâche(s)`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
-      )}
 
-      {/* Alertes récentes */}
-      <Card className="border-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            Alertes Récentes
+        {/* Revenue Bar */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <DollarSign className="h-4 w-4 text-success" /> Revenus vs Créances
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingStats ? <Skeleton className="h-48 w-full" /> : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={[
+                  { name: 'Encaissé', montant: stats?.totalRevenue || 0 },
+                  { name: 'Impayé', montant: stats?.unpaidInvoicesTotal || 0 },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220,20%,85%)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+                  <Tooltip formatter={(v: number) => formatFCFA(v)} />
+                  <Bar dataKey="montant" fill="hsl(220,60%,35%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Alerts */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-warning" /> Alertes Récentes
           </CardTitle>
-          <CardDescription>
-            Les 5 dernières notifications importantes
-          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoadingAlerts ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full" />
-              ))}
-            </div>
+            <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
           ) : alerts && alerts.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {alerts.map((alert) => (
-                <Alert key={alert.id} variant={getAlertColor(alert.level) as any}>
+                <Alert key={alert.id} variant={alert.level === 'critical' || alert.level === 'error' ? 'destructive' : 'default'}>
                   <div className="flex items-start gap-3">
                     {getAlertIcon(alert.level)}
-                    <div className="flex-1 space-y-1">
+                    <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">
-                          {alert.title}
-                        </p>
-                        <Badge variant="outline" className="text-xs">
-                          {alert.level}
-                        </Badge>
+                        <p className="text-sm font-medium">{alert.title}</p>
+                        <Badge variant="outline" className="text-xs">{alert.level}</Badge>
                       </div>
-                      <AlertDescription className="text-xs">
-                        {alert.message}
-                      </AlertDescription>
-                      <p className="text-xs text-muted-foreground">
-                        {alert.time}
-                      </p>
+                      <AlertDescription className="text-xs">{alert.message}</AlertDescription>
+                      <p className="text-xs text-muted-foreground">{alert.time}</p>
                     </div>
                   </div>
                 </Alert>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              <CheckCircle className="h-16 w-16 mx-auto mb-3 opacity-20" />
-              <p className="text-sm font-medium">Aucune alerte active</p>
-              <p className="text-xs mt-1">Tout fonctionne correctement</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <CheckCircle className="h-12 w-12 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">Aucune alerte active</p>
             </div>
           )}
         </CardContent>
