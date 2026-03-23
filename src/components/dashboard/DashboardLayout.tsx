@@ -344,7 +344,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
                 <span className="text-sm font-medium text-sidebar-foreground truncate w-full">
                   {user?.firstName} {user?.lastName}
                 </span>
-                <span className="text-[10px] text-sidebar-foreground/50 truncate w-full">
+                <span className="text-[10px] text-sidebar-foreground/70 truncate w-full">
                   {company?.name}
                 </span>
               </div>
