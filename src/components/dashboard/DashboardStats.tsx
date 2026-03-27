@@ -20,7 +20,7 @@ import {
 const getStatsForRole = (role: string) => {
   const baseStats = {
     owner: [
-      { title: 'Chiffre d\'affaires mensuel', value: '28 450 €', icon: DollarSign, trend: '+12%', color: 'text-green-600' },
+      { title: 'Chiffre d\'affaires mensuel', value: '2 845 000 FCFA', icon: DollarSign, trend: '+12%', color: 'text-green-600' },
       { title: 'Commandes actives', value: '47', icon: ShoppingBag, trend: '+5', color: 'text-blue-600' },
       { title: 'Équipe', value: '8 personnes', icon: Users, trend: '+1', color: 'text-purple-600' },
       { title: 'Délai moyen', value: '12 jours', icon: Clock, trend: '-2j', color: 'text-orange-600' }
@@ -40,12 +40,12 @@ const getStatsForRole = (role: string) => {
     orders: [
       { title: 'Nouvelles commandes', value: '12', icon: ShoppingBag, trend: '+4', color: 'text-blue-600' },
       { title: 'Clients actifs', value: '89', icon: Users, trend: '+7', color: 'text-green-600' },
-      { title: 'Facturation mensuelle', value: '24 300 €', icon: DollarSign, trend: '+8%', color: 'text-green-600' },
+      { title: 'Facturation mensuelle', value: '2 430 000 FCFA', icon: DollarSign, trend: '+8%', color: 'text-green-600' },
       { title: 'Satisfaction client', value: '92%', icon: Heart, trend: '+3%', color: 'text-red-600' }
     ],
     stocks: [
       { title: 'Articles en stock', value: '342', icon: Package, trend: '+15', color: 'text-blue-600' },
-      { title: 'Valeur du stock', value: '8 450 €', icon: DollarSign, trend: '-200€', color: 'text-green-600' },
+      { title: 'Valeur du stock', value: '845 000 FCFA', icon: DollarSign, trend: '-20 000', color: 'text-green-600' },
       { title: 'Alertes stock bas', value: '7', icon: AlertTriangle, trend: '+2', color: 'text-red-600' },
       { title: 'Rotation stock', value: '85%', icon: TrendingUp, trend: '+5%', color: 'text-green-600' }
     ],
