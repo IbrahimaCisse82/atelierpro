@@ -146,46 +146,21 @@ export function UserManagement() {
 
     setInviting(true);
     try {
-      // Create a new user via signUp (they'll get a confirmation email)
-      const tempPassword = crypto.randomUUID().slice(0, 16) + 'A1!';
-      
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: inviteForm.email,
-        password: tempPassword,
-        options: {
-          data: {
-            company_name: '', // Won't create a new company since we'll override
-            first_name: inviteForm.firstName,
-            last_name: inviteForm.lastName,
-          },
+      const { data, error } = await supabase.functions.invoke('invite-user', {
+        body: {
+          email: inviteForm.email,
+          firstName: inviteForm.firstName,
+          lastName: inviteForm.lastName,
+          role: inviteForm.role,
         },
       });
 
-      if (signUpError) throw signUpError;
-
-      if (signUpData.user) {
-        // Wait a moment for the trigger to create profile + company
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Update the user's profile to point to THIS company
-        await supabase
-          .from('profiles')
-          .update({ company_id: user!.companyId })
-          .eq('user_id', signUpData.user.id);
-
-        // Update their role to the selected one
-        await supabase
-          .from('user_roles')
-          .update({ 
-            company_id: user!.companyId,
-            role: inviteForm.role as any 
-          })
-          .eq('user_id', signUpData.user.id);
-      }
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({ 
-        title: 'Invitation envoyée', 
-        description: `Un email de confirmation a été envoyé à ${inviteForm.email}. L'utilisateur devra confirmer son email puis se connecter.` 
+        title: 'Utilisateur ajouté', 
+        description: `${inviteForm.firstName} ${inviteForm.lastName} a été ajouté. Mot de passe temporaire : ${data.tempPassword}`,
       });
 
       setInviteOpen(false);
