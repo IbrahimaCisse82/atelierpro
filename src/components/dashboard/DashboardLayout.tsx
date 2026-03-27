@@ -208,7 +208,8 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
 
         <Separator className="bg-sidebar-border" />
 
-        <SidebarContent className="px-2 py-2">
+        <SidebarContent className="px-2 py-2 overflow-hidden">
+          <ScrollArea className="h-full">
           {/* Dashboard link */}
           <SidebarMenu>
             <SidebarMenuItem>
@@ -327,6 +328,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          </ScrollArea>
         </SidebarContent>
 
         {/* Footer - User info */}
