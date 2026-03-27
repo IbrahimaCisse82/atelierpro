@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Download, Upload, CheckCircle, RefreshCw, FileText, Search, History } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { formatFCFA } from '@/lib/utils';
 
 export function AuditTrailPage() {
   const [activeTab, setActiveTab] = useState('reconciliations');
@@ -81,9 +82,9 @@ export function AuditTrailPage() {
                     <TableRow key={row.id}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.compte}</TableCell>
-                      <TableCell>{row.soldeBanque.toLocaleString('fr-FR')} XOF</TableCell>
-                      <TableCell>{row.soldeComptable.toLocaleString('fr-FR')} XOF</TableCell>
-                      <TableCell className={row.ecart === 0 ? 'text-green-600' : 'text-red-600'}>{row.ecart.toLocaleString('fr-FR')} XOF</TableCell>
+                      <TableCell>{formatFCFA(row.soldeBanque)}</TableCell>
+                      <TableCell>{formatFCFA(row.soldeComptable)}</TableCell>
+                      <TableCell className={row.ecart === 0 ? 'text-green-600' : 'text-red-600'}>{formatFCFA(row.ecart)}</TableCell>
                       <TableCell>{row.statut}</TableCell>
                       <TableCell>
                         <Button size="sm" variant="outline" onClick={() => handleValidate(row.id)} disabled={row.statut === 'Validé'}>
@@ -131,7 +132,7 @@ export function AuditTrailPage() {
                     <TableRow key={row.id}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.libelle}</TableCell>
-                      <TableCell>{row.montant.toLocaleString('fr-FR')} XOF</TableCell>
+                      <TableCell>{formatFCFA(row.montant)}</TableCell>
                       <TableCell>{row.sens}</TableCell>
                     </TableRow>
                   ))}
@@ -165,7 +166,7 @@ export function AuditTrailPage() {
                     <TableRow key={row.id}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.libelle}</TableCell>
-                      <TableCell>{row.montant.toLocaleString('fr-FR')} XOF</TableCell>
+                      <TableCell>{formatFCFA(row.montant)}</TableCell>
                       <TableCell>{row.rapprochement}</TableCell>
                       <TableCell>{row.statut}</TableCell>
                       <TableCell>
@@ -210,9 +211,9 @@ export function AuditTrailPage() {
                     <TableRow key={row.id}>
                       <TableCell>{row.date}</TableCell>
                       <TableCell>{row.compte}</TableCell>
-                      <TableCell>{row.soldeBanque.toLocaleString('fr-FR')} XOF</TableCell>
-                      <TableCell>{row.soldeComptable.toLocaleString('fr-FR')} XOF</TableCell>
-                      <TableCell className={row.ecart === 0 ? 'text-green-600' : 'text-red-600'}>{row.ecart.toLocaleString('fr-FR')} XOF</TableCell>
+                      <TableCell>{formatFCFA(row.soldeBanque)}</TableCell>
+                      <TableCell>{formatFCFA(row.soldeComptable)}</TableCell>
+                      <TableCell className={row.ecart === 0 ? 'text-green-600' : 'text-red-600'}>{formatFCFA(row.ecart)}</TableCell>
                       <TableCell>{row.statut}</TableCell>
                     </TableRow>
                   ))}

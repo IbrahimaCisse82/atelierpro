@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/use-employees';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatFCFA } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -134,8 +135,8 @@ export function HRPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Employés actifs</p><p className="text-2xl font-bold">{activeEmployees.length}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Masse salariale est.</p><p className="text-2xl font-bold">{new Intl.NumberFormat('fr-FR').format(totalPayroll)} FCFA</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Taux moyen</p><p className="text-2xl font-bold">{activeEmployees.length > 0 ? Math.round(activeEmployees.reduce((s: number, e: any) => s + (e.hourly_rate || 0), 0) / activeEmployees.length) : 0} FCFA/h</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Masse salariale est.</p><p className="text-2xl font-bold">{formatFCFA(totalPayroll)}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Taux moyen</p><p className="text-2xl font-bold">{formatFCFA(activeEmployees.length > 0 ? Math.round(activeEmployees.reduce((s: number, e: any) => s + (e.hourly_rate || 0), 0) / activeEmployees.length) : 0)}/h</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Total employés</p><p className="text-2xl font-bold">{employees?.length || 0}</p></CardContent></Card>
       </div>
 
@@ -179,7 +180,7 @@ export function HRPage() {
                         <TableCell>{emp.profiles?.first_name || ''} {emp.profiles?.last_name || ''}</TableCell>
                         <TableCell>{emp.profiles?.email || '-'}</TableCell>
                         <TableCell>{emp.hire_date ? new Date(emp.hire_date).toLocaleDateString('fr-FR') : '-'}</TableCell>
-                        <TableCell>{emp.hourly_rate ? `${emp.hourly_rate} FCFA/h` : '-'}</TableCell>
+                        <TableCell>{emp.hourly_rate ? `${formatFCFA(emp.hourly_rate)}/h` : '-'}</TableCell>
                         <TableCell><Badge variant={emp.is_active ? 'default' : 'secondary'}>{emp.is_active ? 'Actif' : 'Inactif'}</Badge></TableCell>
                       </TableRow>
                     ))}
@@ -210,14 +211,14 @@ export function HRPage() {
                     {activeEmployees.map((emp: any) => (
                       <TableRow key={emp.id}>
                         <TableCell>{emp.profiles?.first_name || ''} {emp.profiles?.last_name || emp.employee_number || '-'}</TableCell>
-                        <TableCell>{emp.hourly_rate || 0} FCFA</TableCell>
+                        <TableCell>{formatFCFA(emp.hourly_rate || 0)}</TableCell>
                         <TableCell>160h</TableCell>
-                        <TableCell className="font-bold">{new Intl.NumberFormat('fr-FR').format((emp.hourly_rate || 0) * 160)} FCFA</TableCell>
+                        <TableCell className="font-bold">{formatFCFA((emp.hourly_rate || 0) * 160)}</TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="font-bold border-t-2">
                       <TableCell colSpan={3}>Total masse salariale estimée</TableCell>
-                      <TableCell>{new Intl.NumberFormat('fr-FR').format(totalPayroll)} FCFA</TableCell>
+                      <TableCell>{formatFCFA(totalPayroll)}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
