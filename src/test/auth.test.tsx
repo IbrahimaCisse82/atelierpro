@@ -172,9 +172,13 @@ describe('AuthContext', () => {
     });
 
     screen.getByTestId('switch-tailor').click();
-    expect(screen.getByTestId('current-role').textContent).toBe('tailor');
+    await waitFor(() => {
+      expect(screen.getByTestId('current-role').textContent).toBe('tailor');
+    });
 
     screen.getByTestId('switch-manager').click();
-    expect(screen.getByTestId('current-role').textContent).toBe('manager');
+    await waitFor(() => {
+      expect(screen.getByTestId('current-role').textContent).toBe('manager');
+    });
   });
 });
