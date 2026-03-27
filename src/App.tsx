@@ -147,6 +147,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Router future={future}>
+          <ScrollToTop />
           <AuthProvider>
             <TooltipProvider>
               <AppContent />

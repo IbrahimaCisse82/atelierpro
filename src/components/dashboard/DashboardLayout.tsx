@@ -54,6 +54,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCompanyModules } from '@/hooks/use-company-modules';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
