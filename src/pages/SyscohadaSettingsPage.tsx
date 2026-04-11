@@ -110,7 +110,7 @@ export function SyscohadaSettingsPage() {
     setIsSeeding(true);
     try {
       const { data, error } = await supabase.rpc('seed_syscohada_accounts', {
-        p_company_id: user?.company_id || '',
+        p_company_id: user?.companyId || '',
         p_user_id: user?.id || ''
       } as any);
       if (error) throw error;
