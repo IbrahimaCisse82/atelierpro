@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupabaseQuery, useSupabaseMutation } from '@/hooks/use-supabase-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Calculator, Plus, Search, Edit, Save, X, Download, Upload, Settings, BookOpen, AlertTriangle
+  Calculator, Plus, Search, Edit, Save, X, Download, Upload, Settings, BookOpen, AlertTriangle, Loader2
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { SYSCOHADA_CLASSES, SYSCOHADA_CLASS_SHORT, SYSCOHADA_CLASS_COLORS, getClassFromAccountNumber } from '@/lib/syscohada-constants';
+
+const journalTypeLabels: Record<string, string> = {
+  sales: 'Ventes', treasury: 'Trésorerie', payroll: 'Paie', stock: 'Stocks',
+  general: 'Général', purchase: 'Achats', bank_reconciliation: 'Rapprochement'
+};
 
 export function SyscohadaSettingsPage() {
   const { user } = useAuth();
@@ -24,15 +31,15 @@ export function SyscohadaSettingsPage() {
   const [showAddAccountDialog, setShowAddAccountDialog] = useState(false);
   const [showAddJournalDialog, setShowAddJournalDialog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const [accountForm, setAccountForm] = useState({
-    account_number: '', account_name: '', account_type: 'asset', account_category: '', is_active: true
+    account_number: '', account_name: '', account_type: 'classe_1', account_category: '', is_active: true
   });
   const [journalForm, setJournalForm] = useState({
     journal_code: '', journal_name: '', journal_type: 'general', is_active: true
   });
 
-  // Données réelles
   const { data: accounts, loading: accountsLoading, refetch: refetchAccounts } = useSupabaseQuery('syscohada_accounts', {
     select: '*', orderBy: { column: 'account_number', ascending: true }
   });
@@ -52,6 +59,16 @@ export function SyscohadaSettingsPage() {
     return matchSearch && matchType;
   }) || [];
 
+  // Auto-detect class when account number changes
+  const handleAccountNumberChange = (value: string) => {
+    const detectedClass = getClassFromAccountNumber(value);
+    setAccountForm(prev => ({ 
+      ...prev, 
+      account_number: value,
+      account_type: detectedClass !== 'autre' ? detectedClass : prev.account_type 
+    }));
+  };
+
   const handleAddAccount = async () => {
     if (!accountForm.account_number || !accountForm.account_name) {
       toast({ title: "Erreur", description: "Numéro et intitulé requis.", variant: "destructive" });
@@ -59,9 +76,9 @@ export function SyscohadaSettingsPage() {
     }
     try {
       await createAccount(accountForm);
-      toast({ title: "Compte créé", description: `Compte ${accountForm.account_number} ajouté.` });
+      toast({ title: "Compte créé", description: `Compte ${accountForm.account_number} – ${SYSCOHADA_CLASS_SHORT[accountForm.account_type] || ''} ajouté.` });
       setShowAddAccountDialog(false);
-      setAccountForm({ account_number: '', account_name: '', account_type: 'asset', account_category: '', is_active: true });
+      setAccountForm({ account_number: '', account_name: '', account_type: 'classe_1', account_category: '', is_active: true });
       refetchAccounts();
     } catch { toast({ title: "Erreur", description: "Impossible de créer le compte.", variant: "destructive" }); }
   };
@@ -89,12 +106,21 @@ export function SyscohadaSettingsPage() {
     } catch { toast({ title: "Erreur", variant: "destructive" }); }
   };
 
-  const typeLabels: Record<string, string> = {
-    asset: 'Actif', liability: 'Passif', equity: 'Capitaux', revenue: 'Produit', expense: 'Charge'
-  };
-  const journalTypeLabels: Record<string, string> = {
-    sales: 'Ventes', treasury: 'Trésorerie', payroll: 'Paie', stock: 'Stocks',
-    general: 'Général', purchase: 'Achats', bank_reconciliation: 'Rapprochement'
+  const handleSeedAccounts = async () => {
+    setIsSeeding(true);
+    try {
+      const { data, error } = await supabase.rpc('seed_syscohada_accounts', {
+        p_company_id: user?.companyId || '',
+        p_user_id: user?.id || ''
+      } as any);
+      if (error) throw error;
+      toast({ title: "Plan comptable chargé", description: `${data} comptes SYSCOHADA standard ont été ajoutés.` });
+      refetchAccounts();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   if (!user || (user.role !== 'owner' && user.role !== 'manager')) {
@@ -114,7 +140,7 @@ export function SyscohadaSettingsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Paramétrage SYSCOHADA</h1>
-          <p className="text-muted-foreground">Plan comptable et journaux</p>
+          <p className="text-muted-foreground">Plan comptable (9 classes) et journaux</p>
         </div>
       </div>
 
@@ -124,50 +150,58 @@ export function SyscohadaSettingsPage() {
           <TabsTrigger value="journals">Journaux Comptables</TabsTrigger>
         </TabsList>
 
-        {/* Plan Comptable */}
         <TabsContent value="accounts" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Plan Comptable SYSCOHADA</CardTitle>
-                  <CardDescription>{accounts?.length || 0} comptes</CardDescription>
+                  <CardDescription>{accounts?.length || 0} comptes • 9 classes</CardDescription>
                 </div>
-                <Button onClick={() => setShowAddAccountDialog(true)}>
-                  <Plus className="h-4 w-4 mr-2" /> Ajouter
-                </Button>
+                <div className="flex gap-2">
+                  {(!accounts?.length || accounts.length < 10) && (
+                    <Button variant="outline" onClick={handleSeedAccounts} disabled={isSeeding}>
+                      {isSeeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                      Charger plan standard
+                    </Button>
+                  )}
+                  <Button onClick={() => setShowAddAccountDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> Ajouter
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4 mb-4">
                 <div className="flex-1">
-                  <Input placeholder="Rechercher..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                  <Input placeholder="Rechercher par numéro ou intitulé..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                 </div>
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="asset">Actifs</SelectItem>
-                    <SelectItem value="liability">Passifs</SelectItem>
-                    <SelectItem value="equity">Capitaux</SelectItem>
-                    <SelectItem value="revenue">Produits</SelectItem>
-                    <SelectItem value="expense">Charges</SelectItem>
+                    <SelectItem value="all">Toutes les classes</SelectItem>
+                    {Object.entries(SYSCOHADA_CLASSES).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               {!filteredAccounts.length ? (
-                <p className="text-center text-muted-foreground py-8">
-                  {accountsLoading ? 'Chargement...' : 'Aucun compte. Créez votre plan comptable SYSCOHADA.'}
-                </p>
+                <div className="text-center py-8">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    {accountsLoading ? 'Chargement...' : 'Aucun compte. Cliquez sur "Charger plan standard" pour initialiser le plan comptable SYSCOHADA.'}
+                  </p>
+                </div>
               ) : (
                 <div className="border rounded-lg">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>N°</TableHead>
+                        <TableHead>N° Compte</TableHead>
                         <TableHead>Intitulé</TableHead>
-                        <TableHead>Type</TableHead>
+                        <TableHead>Classe</TableHead>
                         <TableHead>Catégorie</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead>Actions</TableHead>
@@ -178,15 +212,12 @@ export function SyscohadaSettingsPage() {
                         <TableRow key={a.id}>
                           {editingId === a.id ? (
                             <>
-                              <TableCell><Input value={accountForm.account_number} onChange={e => setAccountForm({...accountForm, account_number: e.target.value})} className="w-20" /></TableCell>
+                              <TableCell><Input value={accountForm.account_number} onChange={e => handleAccountNumberChange(e.target.value)} className="w-24" /></TableCell>
                               <TableCell><Input value={accountForm.account_name} onChange={e => setAccountForm({...accountForm, account_name: e.target.value})} /></TableCell>
                               <TableCell>
-                                <Select value={accountForm.account_type} onValueChange={v => setAccountForm({...accountForm, account_type: v})}>
-                                  <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                                  </SelectContent>
-                                </Select>
+                                <Badge className={cn('text-xs', SYSCOHADA_CLASS_COLORS[accountForm.account_type])}>
+                                  {SYSCOHADA_CLASS_SHORT[accountForm.account_type] || accountForm.account_type}
+                                </Badge>
                               </TableCell>
                               <TableCell><Input value={accountForm.account_category} onChange={e => setAccountForm({...accountForm, account_category: e.target.value})} /></TableCell>
                               <TableCell>-</TableCell>
@@ -197,9 +228,13 @@ export function SyscohadaSettingsPage() {
                             </>
                           ) : (
                             <>
-                              <TableCell className="font-mono">{a.account_number}</TableCell>
+                              <TableCell className="font-mono font-bold">{a.account_number}</TableCell>
                               <TableCell>{a.account_name}</TableCell>
-                              <TableCell><Badge variant="outline">{typeLabels[a.account_type] || a.account_type}</Badge></TableCell>
+                              <TableCell>
+                                <Badge className={cn('text-xs', SYSCOHADA_CLASS_COLORS[a.account_type])}>
+                                  {SYSCOHADA_CLASS_SHORT[a.account_type] || a.account_type}
+                                </Badge>
+                              </TableCell>
                               <TableCell>{a.account_category || '-'}</TableCell>
                               <TableCell><Badge variant={a.is_active ? 'default' : 'secondary'}>{a.is_active ? 'Actif' : 'Inactif'}</Badge></TableCell>
                               <TableCell>
@@ -220,7 +255,6 @@ export function SyscohadaSettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Journaux */}
         <TabsContent value="journals" className="space-y-4">
           <Card>
             <CardHeader>
@@ -271,18 +305,26 @@ export function SyscohadaSettingsPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Ajouter un compte SYSCOHADA</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>N° Compte</Label><Input value={accountForm.account_number} onChange={e => setAccountForm({...accountForm, account_number: e.target.value})} placeholder="Ex: 411" /></div>
+            <div>
+              <Label>N° Compte</Label>
+              <Input value={accountForm.account_number} onChange={e => handleAccountNumberChange(e.target.value)} placeholder="Ex: 411" />
+              {accountForm.account_number && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Classe détectée : <span className="font-semibold">{SYSCOHADA_CLASS_SHORT[getClassFromAccountNumber(accountForm.account_number)] || 'Non reconnu'}</span>
+                </p>
+              )}
+            </div>
             <div><Label>Intitulé</Label><Input value={accountForm.account_name} onChange={e => setAccountForm({...accountForm, account_name: e.target.value})} placeholder="Ex: Clients" /></div>
             <div>
-              <Label>Type</Label>
+              <Label>Classe SYSCOHADA</Label>
               <Select value={accountForm.account_type} onValueChange={v => setAccountForm({...accountForm, account_type: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                  {Object.entries(SYSCOHADA_CLASSES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Catégorie</Label><Input value={accountForm.account_category} onChange={e => setAccountForm({...accountForm, account_category: e.target.value})} placeholder="Ex: Tiers" /></div>
+            <div><Label>Catégorie</Label><Input value={accountForm.account_category} onChange={e => setAccountForm({...accountForm, account_category: e.target.value})} placeholder="Ex: Clients, Personnel, Banques..." /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddAccountDialog(false)}>Annuler</Button>

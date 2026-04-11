@@ -2076,8 +2076,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_syscohada_class: {
+        Args: { p_account_number: string }
+        Returns: string
+      }
       get_user_company_id: { Args: never; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      seed_syscohada_accounts: {
+        Args: { p_company_id: string; p_user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       production_status:
