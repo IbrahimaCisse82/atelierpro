@@ -14,7 +14,7 @@ interface LoginProps {
 }
 
 export function Login({ onSwitchToRegister }: LoginProps) {
-  const { login, loginAsDemo, loading } = useAuth();
+  const { login, loginAsDemo, loading, error: authError, handleRetry } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -82,9 +82,16 @@ export function Login({ onSwitchToRegister }: LoginProps) {
           
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
+              {(error || authError) && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>
+                    {error || authError}
+                    {!error && authError && (
+                      <button type="button" onClick={handleRetry} className="ml-2 underline">
+                        Réessayer
+                      </button>
+                    )}
+                  </AlertDescription>
                 </Alert>
               )}
 

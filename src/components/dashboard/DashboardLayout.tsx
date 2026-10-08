@@ -162,7 +162,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
     .map(group => ({
       ...group,
       items: group.items.filter(item =>
-        !item.moduleKey || isModuleInstalled(item.moduleKey)
+        !item.moduleKey || !installedModules || installedModules.length === 0 || isModuleInstalled(item.moduleKey)
       ),
     }))
     .filter(group => group.items.length > 0), [allMenuGroups, installedModules]);

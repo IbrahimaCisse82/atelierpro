@@ -8,11 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  FileText, TrendingUp, TrendingDown, DollarSign
+  FileText, Download, TrendingUp, TrendingDown, DollarSign, RefreshCw
 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { formatFCFA } from '@/lib/utils';
-import { SYSCOHADA_CLASS_SHORT, SYSCOHADA_CLASS_COLORS } from '@/lib/syscohada-constants';
-import { cn } from '@/lib/utils';
 
 export function FinancialReportsPage() {
   const { user } = useAuth();
@@ -22,21 +21,24 @@ export function FinancialReportsPage() {
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
+  // Données réelles
   const { data: invoices, loading: invoicesLoading } = useSupabaseQuery('customer_invoices', {
     select: '*', orderBy: { column: 'invoice_date', ascending: true }
   });
   const { data: movements, loading: movementsLoading } = useSupabaseQuery('treasury_movements', {
     select: '*', orderBy: { column: 'movement_date', ascending: true }
   });
-  const { data: accounts } = useSupabaseQuery('syscohada_accounts', {
-    select: '*', orderBy: { column: 'account_number', ascending: true }
-  });
+  const { data: treasuryAccounts } = useSupabaseQuery('treasury_accounts', { select: '*' });
   const { data: journalEntries } = useSupabaseQuery('journal_entries', {
     select: '*', orderBy: { column: 'entry_date', ascending: false }
+  });
+  const { data: accounts } = useSupabaseQuery('syscohada_accounts', {
+    select: '*', orderBy: { column: 'account_number', ascending: true }
   });
 
   const isLoading = invoicesLoading || movementsLoading;
 
+  // Filtrer par période
   const filteredInvoices = useMemo(() => 
     invoices?.filter((i: any) => i.invoice_date >= startDate && i.invoice_date <= endDate) || [],
     [invoices, startDate, endDate]
@@ -46,47 +48,28 @@ export function FinancialReportsPage() {
     [movements, startDate, endDate]
   );
 
-  // Soldes Intermédiaires de Gestion (SIG) SYSCOHADA
-  const sig = useMemo(() => {
+  // Compte de résultat calculé
+  const incomeStatement = useMemo(() => {
     const revenue = filteredInvoices.reduce((s: number, i: any) => s + Number(i.total_amount || 0), 0);
     const tax = filteredInvoices.reduce((s: number, i: any) => s + Number(i.tax_amount || 0), 0);
-    
-    const expenses = filteredMovements.filter((m: any) => m.movement_type === 'expense');
-    const achats = expenses.filter((m: any) => ['achat', 'purchase', 'marchandise'].includes(m.category?.toLowerCase() || ''))
+    const expenses = filteredMovements.filter((m: any) => m.movement_type === 'expense')
       .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const transports = expenses.filter((m: any) => m.category?.toLowerCase() === 'transport')
+    const salaries = filteredMovements.filter((m: any) => m.category === 'salaire' || m.category === 'salary')
       .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const servicesExt = expenses.filter((m: any) => ['service', 'loyer', 'entretien'].includes(m.category?.toLowerCase() || ''))
-      .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const impots = expenses.filter((m: any) => ['impot', 'taxe', 'tax'].includes(m.category?.toLowerCase() || ''))
-      .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const personnel = expenses.filter((m: any) => ['salaire', 'salary', 'personnel'].includes(m.category?.toLowerCase() || ''))
-      .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const dotations = expenses.filter((m: any) => ['amortissement', 'depreciation', 'dotation'].includes(m.category?.toLowerCase() || ''))
-      .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const autresCharges = expenses.filter((m: any) => !['achat','purchase','marchandise','transport','service','loyer','entretien','impot','taxe','tax','salaire','salary','personnel','amortissement','depreciation','dotation'].includes(m.category?.toLowerCase() || ''))
-      .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-    const fraisFinanciers = expenses.filter((m: any) => ['interet', 'financier', 'bank_fees'].includes(m.category?.toLowerCase() || ''))
-      .reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-
-    const totalCharges = expenses.reduce((s: number, m: any) => s + Number(m.amount || 0), 0);
-
-    // SIG SYSCOHADA
-    const margeCommerciale = revenue - achats; // Marge commerciale (si négoce)
-    const valeurAjoutee = margeCommerciale - transports - servicesExt; // VA
-    const ebe = valeurAjoutee - impots - personnel; // EBE
-    const resultatExploitation = ebe - dotations - autresCharges; // RE
-    const resultatFinancier = -fraisFinanciers; // RF
-    const resultatActivitesOrdinaires = resultatExploitation + resultatFinancier; // RAO
-    const resultatNet = resultatActivitesOrdinaires; // RN (simplifié, sans HAO)
-
-    return {
-      revenue, tax, achats, transports, servicesExt, impots, personnel, dotations,
-      autresCharges, fraisFinanciers, totalCharges,
-      margeCommerciale, valeurAjoutee, ebe, resultatExploitation,
-      resultatFinancier, resultatActivitesOrdinaires, resultatNet
-    };
+    const otherExpenses = expenses - salaries;
+    const grossProfit = revenue - expenses;
+    return { revenue, tax, expenses, salaries, otherExpenses, grossProfit, netIncome: grossProfit };
   }, [filteredInvoices, filteredMovements]);
+
+  // Balance des comptes (depuis syscohada_accounts + journal_entry_lines)
+  const balanceData = useMemo(() => {
+    if (!accounts?.length) return [];
+    return accounts.map((a: any) => ({
+      ...a,
+      debit: 0,
+      credit: 0,
+    }));
+  }, [accounts]);
 
   if (!user || (user.role !== 'owner' && user.role !== 'manager')) {
     return (
@@ -105,10 +88,11 @@ export function FinancialReportsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Rapports Financiers</h1>
-          <p className="text-muted-foreground">Soldes intermédiaires de gestion (SIG), balance et journaux SYSCOHADA</p>
+          <p className="text-muted-foreground">Compte de résultat, balance et journaux</p>
         </div>
       </div>
 
+      {/* Filtres période */}
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -131,21 +115,21 @@ export function FinancialReportsPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="income">SIG / Compte de Résultat</TabsTrigger>
+          <TabsTrigger value="income">Compte de Résultat</TabsTrigger>
           <TabsTrigger value="balance">Balance des Comptes</TabsTrigger>
           <TabsTrigger value="journals">Écritures Comptables</TabsTrigger>
         </TabsList>
 
-        {/* SIG SYSCOHADA */}
+        {/* Compte de résultat */}
         <TabsContent value="income" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-6 w-6 text-green-600" />
                   <div>
                     <p className="text-sm text-muted-foreground">Chiffre d'affaires</p>
-                    <p className="text-xl font-bold">{formatFCFA(sig.revenue)}</p>
+                    <p className="text-xl font-bold">{formatFCFA(incomeStatement.revenue)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -153,10 +137,10 @@ export function FinancialReportsPage() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
-                  <DollarSign className="h-6 w-6 text-blue-600" />
+                  <TrendingDown className="h-6 w-6 text-red-600" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Valeur Ajoutée</p>
-                    <p className="text-xl font-bold">{formatFCFA(sig.valeurAjoutee)}</p>
+                    <p className="text-sm text-muted-foreground">Total charges</p>
+                    <p className="text-xl font-bold">{formatFCFA(incomeStatement.expenses)}</p>
                   </div>
                 </div>
               </CardContent>
@@ -164,22 +148,11 @@ export function FinancialReportsPage() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-6 w-6 text-emerald-600" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">EBE</p>
-                    <p className="text-xl font-bold">{formatFCFA(sig.ebe)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2">
-                  <DollarSign className={`h-6 w-6 ${sig.resultatNet >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                  <DollarSign className={`h-6 w-6 ${incomeStatement.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
                   <div>
                     <p className="text-sm text-muted-foreground">Résultat net</p>
-                    <p className={`text-xl font-bold ${sig.resultatNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatFCFA(sig.resultatNet)}
+                    <p className={`text-xl font-bold ${incomeStatement.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatFCFA(incomeStatement.netIncome)}
                     </p>
                   </div>
                 </div>
@@ -188,86 +161,40 @@ export function FinancialReportsPage() {
           </div>
 
           <Card>
-            <CardHeader><CardTitle>Soldes Intermédiaires de Gestion (SIG) – SYSCOHADA</CardTitle></CardHeader>
+            <CardHeader><CardTitle>Détail du compte de résultat</CardTitle></CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Solde intermédiaire</TableHead>
+                    <TableHead>Poste</TableHead>
                     <TableHead className="text-right">Montant</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-semibold">Chiffre d'affaires (Comptes 70)</TableCell>
-                    <TableCell className="text-right font-semibold">{formatFCFA(sig.revenue)}</TableCell>
+                    <TableCell className="font-semibold">Chiffre d'affaires HT</TableCell>
+                    <TableCell className="text-right font-semibold">{formatFCFA(incomeStatement.revenue)}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="pl-8 text-muted-foreground">TVA collectée (Compte 443)</TableCell>
-                    <TableCell className="text-right text-muted-foreground">{formatFCFA(sig.tax)}</TableCell>
+                    <TableCell className="pl-8">TVA collectée</TableCell>
+                    <TableCell className="text-right">{formatFCFA(incomeStatement.tax)}</TableCell>
+                  </TableRow>
+                  <TableRow className="border-t-2">
+                    <TableCell className="font-semibold text-red-600">Total charges</TableCell>
+                    <TableCell className="text-right font-semibold text-red-600">-{formatFCFA(incomeStatement.expenses)}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="pl-8">(-) Achats consommés (Comptes 60)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.achats)}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-2 bg-blue-50/50 dark:bg-blue-950/20">
-                    <TableCell className="font-bold">= MARGE COMMERCIALE</TableCell>
-                    <TableCell className="text-right font-bold">{formatFCFA(sig.margeCommerciale)}</TableCell>
+                    <TableCell className="pl-8">Salaires</TableCell>
+                    <TableCell className="text-right">-{formatFCFA(incomeStatement.salaries)}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="pl-8">(-) Transports (Comptes 61)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.transports)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="pl-8">(-) Services extérieurs (Comptes 62-63)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.servicesExt)}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-2 bg-blue-50/50 dark:bg-blue-950/20">
-                    <TableCell className="font-bold">= VALEUR AJOUTÉE</TableCell>
-                    <TableCell className="text-right font-bold">{formatFCFA(sig.valeurAjoutee)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="pl-8">(-) Impôts et taxes (Comptes 64)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.impots)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="pl-8">(-) Charges de personnel (Comptes 66)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.personnel)}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-2 bg-emerald-50/50 dark:bg-emerald-950/20">
-                    <TableCell className="font-bold">= EXCÉDENT BRUT D'EXPLOITATION (EBE)</TableCell>
-                    <TableCell className={`text-right font-bold ${sig.ebe >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatFCFA(sig.ebe)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="pl-8">(-) Dotations aux amortissements (Comptes 68)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.dotations)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="pl-8">(-) Autres charges (Comptes 65)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.autresCharges)}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-2 bg-emerald-50/50 dark:bg-emerald-950/20">
-                    <TableCell className="font-bold">= RÉSULTAT D'EXPLOITATION</TableCell>
-                    <TableCell className={`text-right font-bold ${sig.resultatExploitation >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatFCFA(sig.resultatExploitation)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="pl-8">(-) Frais financiers (Comptes 67)</TableCell>
-                    <TableCell className="text-right text-red-600">-{formatFCFA(sig.fraisFinanciers)}</TableCell>
+                    <TableCell className="pl-8">Autres charges</TableCell>
+                    <TableCell className="text-right">-{formatFCFA(incomeStatement.otherExpenses)}</TableCell>
                   </TableRow>
                   <TableRow className="border-t-2 bg-muted/50">
-                    <TableCell className="font-bold">= RÉSULTAT FINANCIER</TableCell>
-                    <TableCell className={`text-right font-bold ${sig.resultatFinancier >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatFCFA(sig.resultatFinancier)}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-4 bg-primary/5">
-                    <TableCell className="font-bold text-lg">= RÉSULTAT DES ACTIVITÉS ORDINAIRES (RAO)</TableCell>
-                    <TableCell className={`text-right font-bold text-lg ${sig.resultatActivitesOrdinaires >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatFCFA(sig.resultatActivitesOrdinaires)}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-4 bg-primary/10">
-                    <TableCell className="font-bold text-xl">RÉSULTAT NET</TableCell>
-                    <TableCell className={`text-right font-bold text-xl ${sig.resultatNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatFCFA(sig.resultatNet)}
+                    <TableCell className="font-bold text-lg">RÉSULTAT NET</TableCell>
+                    <TableCell className={`text-right font-bold text-lg ${incomeStatement.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatFCFA(incomeStatement.netIncome)}
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -280,15 +207,15 @@ export function FinancialReportsPage() {
         <TabsContent value="balance" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Balance des Comptes SYSCOHADA</CardTitle>
+              <CardTitle>Plan Comptable SYSCOHADA</CardTitle>
               <CardDescription>
-                {accounts?.length || 0} comptes • 9 classes SYSCOHADA
+                {accounts?.length || 0} comptes enregistrés. Configurez votre plan comptable dans Paramètres &gt; SYSCOHADA.
               </CardDescription>
             </CardHeader>
             <CardContent>
               {!accounts?.length ? (
                 <p className="text-center text-muted-foreground py-8">
-                  Aucun compte SYSCOHADA configuré. Allez dans Paramètres &gt; SYSCOHADA pour initialiser le plan comptable.
+                  Aucun compte SYSCOHADA configuré. Allez dans Paramètres &gt; SYSCOHADA pour créer votre plan comptable.
                 </p>
               ) : (
                 <Table>
@@ -296,7 +223,7 @@ export function FinancialReportsPage() {
                     <TableRow>
                       <TableHead>N° Compte</TableHead>
                       <TableHead>Intitulé</TableHead>
-                      <TableHead>Classe</TableHead>
+                      <TableHead>Type</TableHead>
                       <TableHead>Catégorie</TableHead>
                       <TableHead>Statut</TableHead>
                     </TableRow>
@@ -307,9 +234,7 @@ export function FinancialReportsPage() {
                         <TableCell className="font-mono">{a.account_number}</TableCell>
                         <TableCell>{a.account_name}</TableCell>
                         <TableCell>
-                          <Badge className={cn('text-xs', SYSCOHADA_CLASS_COLORS[a.account_type])}>
-                            {SYSCOHADA_CLASS_SHORT[a.account_type] || a.account_type}
-                          </Badge>
+                          <Badge variant="outline">{a.account_type}</Badge>
                         </TableCell>
                         <TableCell>{a.account_category || '-'}</TableCell>
                         <TableCell>
@@ -331,9 +256,7 @@ export function FinancialReportsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Écritures Comptables</CardTitle>
-              <CardDescription>
-                {journalEntries?.length || 0} écritures • Validation débit = crédit obligatoire
-              </CardDescription>
+              <CardDescription>{journalEntries?.length || 0} écritures enregistrées</CardDescription>
             </CardHeader>
             <CardContent>
               {!journalEntries?.length ? (
