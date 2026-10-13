@@ -980,11 +980,14 @@ export type Database = {
       orders: {
         Row: {
           assigned_tailor_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
           client_id: string | null
           company_id: string
           created_at: string
           created_by: string | null
           deleted_at: string | null
+          deposit_handling: string | null
           due_date: string | null
           id: string
           notes: string | null
@@ -997,11 +1000,14 @@ export type Database = {
         }
         Insert: {
           assigned_tailor_id?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           client_id?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          deposit_handling?: string | null
           due_date?: string | null
           id?: string
           notes?: string | null
@@ -1014,11 +1020,14 @@ export type Database = {
         }
         Update: {
           assigned_tailor_id?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
           client_id?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
+          deposit_handling?: string | null
           due_date?: string | null
           id?: string
           notes?: string | null

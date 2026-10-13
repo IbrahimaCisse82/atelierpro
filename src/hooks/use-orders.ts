@@ -25,6 +25,7 @@ export function useOrders(): {
   error: any;
   createOrder: (orderData: Omit<OrderInsert, 'company_id' | 'created_by' | 'updated_by'>) => Promise<void>;
   updateOrderStatus: (orderId: string, status: ProductionStatus, notes?: string) => Promise<void>;
+  cancelOrder: (orderId: string, options: { depositHandling?: 'refund' | 'keep'; reason?: string }) => Promise<void>;
   assignTailor: (orderId: string, tailorId: string) => Promise<void>;
   updateOrder: (orderId: string, orderData: Partial<OrderUpdate>) => Promise<void>;
   deleteOrder: (orderId: string) => Promise<void>;
@@ -114,6 +115,30 @@ export function useOrders(): {
       refetch();
     } catch (error) {
       showErrorToast("Impossible de mettre à jour le statut.");
+      throw error;
+    }
+  }, [update, refetch]);
+
+  // Annuler une commande (Lot 1) : le trigger en base exige deposit_handling
+  // si un acompte existe, et trace l'annulation dans production_tracking.
+  const cancelOrder = useCallback(async (orderId: string, options: { depositHandling?: 'refund' | 'keep'; reason?: string }) => {
+    try {
+      await update(orderId, {
+        status: 'cancelled' as ProductionStatus,
+        deposit_handling: options.depositHandling ?? null,
+        cancellation_reason: options.reason ?? null,
+      });
+      toast({
+        title: "Commande annulée",
+        description: options.depositHandling === 'refund'
+          ? "L'acompte sera remboursé au client."
+          : options.depositHandling === 'keep'
+            ? "L'acompte est conservé par l'atelier."
+            : "La commande a été annulée.",
+      });
+      refetch();
+    } catch (error) {
+      showErrorToast("Impossible d'annuler la commande.");
       throw error;
     }
   }, [update, refetch]);
