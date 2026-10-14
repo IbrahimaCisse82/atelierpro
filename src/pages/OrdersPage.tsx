@@ -13,10 +13,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Plus, Search, Filter, Eye, Edit, Scissors, Package, CheckCircle, Clock, 
-  AlertTriangle, User, Calendar, DollarSign, ShoppingCart, Download, Trash2, Truck
+  AlertTriangle, User, Calendar, DollarSign, ShoppingCart, Download, Trash2, Truck, X
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { formatFCFA } from '@/lib/utils';
+import { needsDepositHandling } from '@/lib/order-rules';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Enums } from '@/integrations/supabase/types';
 
 type ProductionStatus = Enums<'production_status'>;
@@ -41,7 +44,7 @@ const statusLabels: Record<string, { label: string; variant: 'default' | 'second
 export function OrdersPage() {
   const { user } = useAuth();
   const { 
-    orders, loading, createOrder, updateOrderStatus, updateOrder, 
+    orders, loading, createOrder, updateOrderStatus, updateOrder, cancelOrder, 
     deleteOrder, getOrderStats, refetch 
   } = useOrders();
 
@@ -93,6 +96,28 @@ export function OrdersPage() {
   const handleStatusChange = async (orderId: string, newStatus: ProductionStatus) => {
     try {
       await updateOrderStatus(orderId, newStatus);
+    } catch {}
+  };
+
+  // Annulation avec gestion explicite de l'acompte (Lot 1)
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; order_number: string; paid_amount: number; total_amount: number; status: string } | null>(null);
+  const [depositChoice, setDepositChoice] = useState<'refund' | 'keep'>('refund');
+  const [cancelReason, setCancelReason] = useState('');
+
+  const openCancel = (order: { id: string; order_number: string; paid_amount: number; total_amount: number; status: string }) => {
+    setCancelTarget(order);
+    setDepositChoice('refund');
+    setCancelReason('');
+  };
+
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    try {
+      await cancelOrder(cancelTarget.id, {
+        depositHandling: needsDepositHandling(cancelTarget) ? depositChoice : undefined,
+        reason: cancelReason || undefined,
+      });
+      setCancelTarget(null);
     } catch {}
   };
 
@@ -282,6 +307,11 @@ export function OrdersPage() {
                                   {getStatusLabel(next).label}
                                 </Button>
                               )}
+                              {order.status !== 'cancelled' && order.status !== 'paid' && (
+                                <Button variant="ghost" size="sm" onClick={() => openCancel(order)} title="Annuler la commande">
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button variant="ghost" size="sm" onClick={() => handleDelete(order.id)}>
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -382,6 +412,38 @@ export function OrdersPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Annuler la commande {cancelTarget?.order_number}</DialogTitle>
+            <DialogDescription>Cette action est enregistrée dans l'historique de la commande.</DialogDescription>
+          </DialogHeader>
+          {cancelTarget && needsDepositHandling(cancelTarget) && (
+            <div className="space-y-2">
+              <Label>Le client a versé {formatFCFA(cancelTarget.paid_amount)}. Que faire de l'acompte ?</Label>
+              <RadioGroup value={depositChoice} onValueChange={(v) => setDepositChoice(v as 'refund' | 'keep')}>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="refund" id="dep-refund" />
+                  <Label htmlFor="dep-refund">Rembourser le client</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="keep" id="dep-keep" />
+                  <Label htmlFor="dep-keep">Conserver l'acompte</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="cancel-reason">Motif (facultatif)</Label>
+            <Textarea id="cancel-reason" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>Retour</Button>
+            <Button variant="destructive" onClick={confirmCancel}>Confirmer l'annulation</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
