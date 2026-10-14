@@ -492,6 +492,111 @@ export type Database = {
           },
         ]
       }
+      credit_note_lines: {
+        Row: {
+          company_id: string
+          created_at: string
+          credit_note_id: string
+          description: string
+          id: string
+          line_total: number | null
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          credit_note_id: string
+          description: string
+          id?: string
+          line_total?: number | null
+          quantity?: number
+          unit_price: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          credit_note_id?: string
+          description?: string
+          id?: string
+          line_total?: number | null
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_note_lines_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_note_lines_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "credit_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_notes: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          credit_date: string
+          credit_note_number: string
+          id: string
+          invoice_id: string
+          reason: string
+          tax_amount: number
+          total_amount: number
+          total_with_tax: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          credit_note_number?: string
+          id?: string
+          invoice_id: string
+          reason: string
+          tax_amount?: number
+          total_amount: number
+          total_with_tax: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          credit_date?: string
+          credit_note_number?: string
+          id?: string
+          invoice_id?: string
+          reason?: string
+          tax_amount?: number
+          total_amount?: number
+          total_with_tax?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "customer_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_invoices: {
         Row: {
           company_id: string
@@ -508,11 +613,13 @@ export type Database = {
           paid_at: string | null
           paid_by: string | null
           payment_method: string | null
+          status: string
           tax_amount: number
           total_amount: number
           total_with_tax: number
           updated_at: string
           updated_by: string | null
+          validated_at: string | null
         }
         Insert: {
           company_id: string
@@ -522,18 +629,20 @@ export type Database = {
           due_date?: string | null
           id?: string
           invoice_date?: string
-          invoice_number: string
+          invoice_number?: string
           is_paid?: boolean
           notes?: string | null
           order_id?: string | null
           paid_at?: string | null
           paid_by?: string | null
           payment_method?: string | null
+          status?: string
           tax_amount?: number
           total_amount?: number
           total_with_tax?: number
           updated_at?: string
           updated_by?: string | null
+          validated_at?: string | null
         }
         Update: {
           company_id?: string
@@ -550,11 +659,13 @@ export type Database = {
           paid_at?: string | null
           paid_by?: string | null
           payment_method?: string | null
+          status?: string
           tax_amount?: number
           total_amount?: number
           total_with_tax?: number
           updated_at?: string
           updated_by?: string | null
+          validated_at?: string | null
         }
         Relationships: [
           {
@@ -671,6 +782,53 @@ export type Database = {
           },
         ]
       }
+      fiscal_years: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          created_at: string
+          end_date: string
+          id: string
+          name: string
+          net_result: number
+          start_date: string
+          status: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id: string
+          created_at?: string
+          end_date: string
+          id?: string
+          name: string
+          net_result?: number
+          start_date: string
+          status?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          name?: string
+          net_result?: number
+          start_date?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiscal_years_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fixed_assets: {
         Row: {
           accumulated_depreciation: number
@@ -745,6 +903,57 @@ export type Database = {
           },
         ]
       }
+      invoice_lines: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          line_total: number | null
+          quantity: number
+          tax_rate: number
+          unit_price: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          line_total?: number | null
+          quantity?: number
+          tax_rate?: number
+          unit_price?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          line_total?: number | null
+          quantity?: number
+          tax_rate?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "customer_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           company_id: string
@@ -753,11 +962,14 @@ export type Database = {
           description: string
           entry_date: string
           entry_number: string
+          fiscal_year_id: string | null
           id: string
           is_posted: boolean
           journal_id: string
           posted_at: string | null
           posted_by: string | null
+          source_id: string | null
+          source_type: string | null
           updated_at: string
           updated_by: string | null
         }
@@ -768,11 +980,14 @@ export type Database = {
           description?: string
           entry_date?: string
           entry_number: string
+          fiscal_year_id?: string | null
           id?: string
           is_posted?: boolean
           journal_id: string
           posted_at?: string | null
           posted_by?: string | null
+          source_id?: string | null
+          source_type?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -783,11 +998,14 @@ export type Database = {
           description?: string
           entry_date?: string
           entry_number?: string
+          fiscal_year_id?: string | null
           id?: string
           is_posted?: boolean
           journal_id?: string
           posted_at?: string | null
           posted_by?: string | null
+          source_id?: string | null
+          source_type?: string | null
           updated_at?: string
           updated_by?: string | null
         }
@@ -797,6 +1015,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_fiscal_year_id_fkey"
+            columns: ["fiscal_year_id"]
+            isOneToOne: false
+            referencedRelation: "fiscal_years"
             referencedColumns: ["id"]
           },
           {
@@ -906,6 +1131,32 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "models_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      number_counters: {
+        Row: {
+          company_id: string
+          last_value: number
+          scope: string
+        }
+        Insert: {
+          company_id: string
+          last_value?: number
+          scope: string
+        }
+        Update: {
+          company_id?: string
+          last_value?: number
+          scope?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "number_counters_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -2085,12 +2336,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      close_fiscal_year: { Args: { p_fiscal_year_id: string }; Returns: number }
+      ensure_accounting_setup: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
       get_syscohada_class: {
         Args: { p_account_number: string }
         Returns: string
       }
       get_user_company_id: { Args: never; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      next_number: {
+        Args: { p_company_id: string; p_scope: string }
+        Returns: number
+      }
+      post_entry: {
+        Args: {
+          p_company_id: string
+          p_date: string
+          p_description: string
+          p_journal_code: string
+          p_lines: Json
+          p_source_id: string
+          p_source_type: string
+        }
+        Returns: string
+      }
       seed_syscohada_accounts: {
         Args: { p_company_id: string; p_user_id: string }
         Returns: number
