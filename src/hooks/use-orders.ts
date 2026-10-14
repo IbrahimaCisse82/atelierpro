@@ -278,6 +278,7 @@ export function useOrders(): {
     error,
     createOrder,
     updateOrderStatus,
+    cancelOrder,
     assignTailor,
     updateOrder,
     deleteOrder,
