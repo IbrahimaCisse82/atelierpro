@@ -412,6 +412,38 @@ export function OrdersPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!cancelTarget} onOpenChange={(o) => !o && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Annuler la commande {cancelTarget?.order_number}</DialogTitle>
+            <DialogDescription>Cette action est enregistrée dans l'historique de la commande.</DialogDescription>
+          </DialogHeader>
+          {cancelTarget && needsDepositHandling(cancelTarget) && (
+            <div className="space-y-2">
+              <Label>Le client a versé {formatFCFA(cancelTarget.paid_amount)}. Que faire de l'acompte ?</Label>
+              <RadioGroup value={depositChoice} onValueChange={(v) => setDepositChoice(v as 'refund' | 'keep')}>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="refund" id="dep-refund" />
+                  <Label htmlFor="dep-refund">Rembourser le client</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="keep" id="dep-keep" />
+                  <Label htmlFor="dep-keep">Conserver l'acompte</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="cancel-reason">Motif (facultatif)</Label>
+            <Textarea id="cancel-reason" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>Retour</Button>
+            <Button variant="destructive" onClick={confirmCancel}>Confirmer l'annulation</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
