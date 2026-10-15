@@ -86,22 +86,13 @@ export const useCustomerInvoices = () => {
 
       if (!profile) throw new Error('Profil non trouvé');
 
-      const { data: existingInvoices } = await supabase
-        .from('customer_invoices')
-        .select('invoice_number')
-        .eq('company_id', profile.company_id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      const count = existingInvoices?.length || 0;
-      const invoiceNumber = `FACT-${new Date().getFullYear()}-${String(count + 1).padStart(6, '0')}`;
-
+      // Le numéro officiel est attribué par la base à la validation (sans trou).
       const { data, error } = await supabase
         .from('customer_invoices')
         .insert({
           ...invoice,
-          invoice_number: invoiceNumber,
           company_id: profile.company_id,
+          status: 'draft',
           is_paid: false,
           created_by: user.id,
           updated_by: user.id,
@@ -180,15 +171,18 @@ export const useCustomerInvoices = () => {
     },
   });
 
+  const onErr = (error: Error) => toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+
   const markAsPaid = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (args: string | { id: string; paymentMethod?: string }) => {
+      const { id, paymentMethod } = typeof args === 'string' ? { id: args, paymentMethod: 'cash' } : args;
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Non authentifié');
-
       const { data, error } = await supabase
         .from('customer_invoices')
         .update({
           is_paid: true,
+          payment_method: paymentMethod || 'cash',
           paid_at: new Date().toISOString(),
           paid_by: user.id,
           updated_by: user.id,
@@ -196,24 +190,57 @@ export const useCustomerInvoices = () => {
         .eq('id', id)
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer_invoices'] });
-      toast({
-        title: 'Facture payée',
-        description: 'La facture a été marquée comme payée.',
-      });
+      toast({ title: 'Facture encaissée', description: 'Les écritures comptables ont été créées.' });
     },
-    onError: (error: Error) => {
-      toast({
-        title: 'Erreur',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: onErr,
+  });
+
+  const validateInvoice = useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('customer_invoices')
+        .update({ status: 'validated' } as any)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
     },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['customer_invoices'] });
+      toast({ title: 'Facture validée', description: `Numéro attribué : ${data?.invoice_number}` });
+    },
+    onError: onErr,
+  });
+
+  const createCreditNote = useMutation({
+    mutationFn: async (args: { invoiceId: string; companyId: string; reason: string; amount: number; taxAmount?: number }) => {
+      const tax = args.taxAmount || 0;
+      const { data, error } = await supabase
+        .from('credit_notes')
+        .insert({
+          invoice_id: args.invoiceId,
+          company_id: args.companyId,
+          reason: args.reason,
+          total_amount: args.amount,
+          tax_amount: tax,
+          total_with_tax: args.amount + tax,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['customer_invoices'] });
+      toast({ title: 'Avoir créé', description: `Avoir ${data?.credit_note_number}` });
+    },
+    onError: onErr,
   });
 
   return {
@@ -223,6 +250,8 @@ export const useCustomerInvoices = () => {
     createInvoice: createInvoice.mutate,
     createReminder: createReminder.mutate,
     markAsPaid: markAsPaid.mutate,
+    validateInvoice: validateInvoice.mutate,
+    createCreditNote: createCreditNote.mutate,
     isCreatingInvoice: createInvoice.isPending,
     isCreatingReminder: createReminder.isPending,
     isMarkingPaid: markAsPaid.isPending,
