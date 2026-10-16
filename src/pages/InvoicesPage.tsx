@@ -21,7 +21,7 @@ import { formatFCFA } from '@/lib/utils';
 
 export function InvoicesPage() {
   const { user } = useAuth();
-  const { invoices, reminders, isLoading, createInvoice, createReminder, markAsPaid, isCreatingInvoice } = useCustomerInvoices();
+  const { invoices, reminders, isLoading, createInvoice, createReminder, markAsPaid, validateInvoice, createCreditNote, isCreatingInvoice } = useCustomerInvoices();
   const { orders, getDeliveredOrders, getInvoicedOrders } = useOrders();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,6 +69,25 @@ export function InvoicesPage() {
     } as any);
     setCreateDialogOpen(false);
     setNewInvoice({ order_id: '', due_date: '', total_amount: 0, tax_amount: 0, notes: '' });
+  };
+
+  const handleCreditNote = (inv: any) => {
+    const reason = window.prompt(`Motif de l'avoir sur ${inv.invoice_number} :`);
+    if (!reason) return;
+    const raw = window.prompt('Montant HT de l\'avoir (FCFA) :', String(inv.total_amount));
+    const amount = Math.round(Number(raw));
+    if (!amount || amount <= 0) {
+      toast({ title: 'Montant invalide', variant: 'destructive' });
+      return;
+    }
+    const ratio = inv.total_amount > 0 ? amount / inv.total_amount : 0;
+    createCreditNote({
+      invoiceId: inv.id,
+      companyId: inv.company_id,
+      reason,
+      amount,
+      taxAmount: Math.round((inv.tax_amount || 0) * ratio),
+    });
   };
 
   const handleSendReminder = (invoiceId: string) => {
@@ -201,7 +220,9 @@ export function InvoicesPage() {
                           <TableCell>{inv.due_date ? new Date(inv.due_date).toLocaleDateString('fr-FR') : '-'}</TableCell>
                           <TableCell>{formatFCFA(inv.total_with_tax)}</TableCell>
                           <TableCell>
-                            {inv.is_paid ? (
+                            {inv.status === 'draft' ? (
+                              <Badge variant="outline"><FileText className="h-3 w-3 mr-1" /> Brouillon</Badge>
+                            ) : inv.is_paid ? (
                               <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" /> Payée</Badge>
                             ) : isOverdue ? (
                               <Badge variant="destructive"><AlertTriangle className="h-3 w-3 mr-1" /> En retard</Badge>
@@ -211,15 +232,25 @@ export function InvoicesPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              {!inv.is_paid && (
+                              {inv.status === 'draft' && (
+                                <Button size="sm" onClick={() => validateInvoice(inv.id)}>
+                                  <CheckCircle className="h-4 w-4 mr-1" /> Valider
+                                </Button>
+                              )}
+                              {inv.status === 'validated' && !inv.is_paid && (
                                 <>
                                   <Button variant="outline" size="sm" onClick={() => markAsPaid(inv.id)}>
-                                    <DollarSign className="h-4 w-4 mr-1" /> Payer
+                                    <DollarSign className="h-4 w-4 mr-1" /> Encaisser
                                   </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => handleSendReminder(inv.id)}>
+                                  <Button variant="ghost" size="sm" onClick={() => handleSendReminder(inv.id)} title="Relancer">
                                     <Send className="h-4 w-4" />
                                   </Button>
                                 </>
+                              )}
+                              {inv.status === 'validated' && (
+                                <Button variant="ghost" size="sm" onClick={() => handleCreditNote(inv)} title="Créer un avoir">
+                                  <Receipt className="h-4 w-4" />
+                                </Button>
                               )}
                             </div>
                           </TableCell>
