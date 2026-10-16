@@ -105,6 +105,42 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          changed_fields: Json | null
+          company_id: string
+          created_at: string
+          id: number
+          record_id: string | null
+          table_name: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changed_fields?: Json | null
+          company_id: string
+          created_at?: string
+          id?: number
+          record_id?: string | null
+          table_name: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changed_fields?: Json | null
+          company_id?: string
+          created_at?: string
+          id?: number
+          record_id?: string | null
+          table_name?: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bank_reconciliations: {
         Row: {
           bank_statement_balance: number

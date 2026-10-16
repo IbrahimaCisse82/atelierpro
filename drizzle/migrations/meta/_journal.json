@@ -22,6 +22,13 @@
       "when": 1792025679845,
       "tag": "0002_lot2_fix_journal_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792109603330,
+      "tag": "0003_lot3_security_audit",
+      "breakpoints": true
     }
   ]
 }
