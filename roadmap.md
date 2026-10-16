@@ -3,7 +3,7 @@
 Source : MAJ ATELIERPRO.pdf (collection MAJ). Exécution dans l'ordre, critères d'acceptation vérifiés par lot.
 
 - [x] LOT 1 — Intégrité des paiements (critique)
-- [ ] LOT 2 — Comptabilité SYSCOHADA et facturation (critique)
+- [x] LOT 2 — Comptabilité SYSCOHADA et facturation (critique) — reste : test concurrence, contrôle bilan Actif=Passif
 - [ ] LOT 3 — Sécurité multi-tenant (critique)
 - [ ] LOT 4 — Modules, onboarding et mode démo (important)
 - [ ] LOT 5 — Stocks et production (important)
