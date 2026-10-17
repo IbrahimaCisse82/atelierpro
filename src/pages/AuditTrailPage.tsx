@@ -23,7 +23,7 @@ const ACTION_LABELS: Record<string, { label: string; variant: 'default' | 'secon
 
 export function AuditTrailPage() {
   const { user } = useAuth() as any;
-  const companyId = user?.profile?.company_id ?? user?.company_id;
+  const companyId = user?.companyId;
   const isDemo = !companyId || companyId === 'demo-company-id';
   const [search, setSearch] = useState('');
   const [table, setTable] = useState('all');
