@@ -52,6 +52,17 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useCompanyModules } from '@/hooks/use-company-modules';
+import { canRoleAccess } from '@/lib/route-access';
+
+function AccessDenied({ text, onBack }: { text: string; onBack: () => void }) {
+  return (
+    <div className="mx-auto mt-16 max-w-md text-center space-y-4">
+      <h2 className="text-xl font-semibold">Accès refusé</h2>
+      <p className="text-muted-foreground">{text}</p>
+      <Button onClick={onBack}>Retour au tableau de bord</Button>
+    </div>
+  );
+}
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -79,7 +90,7 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
   const location = useLocation();
   const { user, company } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
-  const { isModuleInstalled, installedModules } = useCompanyModules();
+  const { isModuleInstalled, installedModules, isRouteEnabled } = useCompanyModules();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     commercial: true,
@@ -396,7 +407,11 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
           </div>
 
           <div className="p-6">
-            {children}
+            {!canRoleAccess(location.pathname, user?.role) ? (
+              <AccessDenied text="Votre rôle ne permet pas d'ouvrir cette page." onBack={() => navigate('/dashboard')} />
+            ) : !isRouteEnabled(location.pathname) ? (
+              <AccessDenied text="Ce module n'est pas installé dans votre atelier." onBack={() => navigate('/dashboard')} />
+            ) : children}
           </div>
         </main>
       </div>
