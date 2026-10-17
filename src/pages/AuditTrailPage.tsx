@@ -1,233 +1,119 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Download, Upload, CheckCircle, RefreshCw, FileText, Search, History } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { formatFCFA } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Shield } from 'lucide-react';
+
+const TABLE_LABELS: Record<string, string> = {
+  clients: 'Clients', orders: 'Commandes', payments: 'Paiements', customer_invoices: 'Factures',
+  credit_notes: 'Avoirs', journal_entries: 'Écritures', products: 'Produits', suppliers: 'Fournisseurs',
+  purchase_orders: 'Achats', receptions: 'Réceptions', employees: 'Employés', treasury_accounts: 'Comptes trésorerie',
+  treasury_movements: 'Mouvements trésorerie', user_roles: 'Rôles', company_modules: 'Modules', companies: 'Entreprise',
+};
+const ACTION_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+  INSERT: { label: 'Création', variant: 'default' },
+  UPDATE: { label: 'Modification', variant: 'secondary' },
+  DELETE: { label: 'Suppression', variant: 'destructive' },
+};
 
 export function AuditTrailPage() {
-  const [activeTab, setActiveTab] = useState('reconciliations');
+  const { user } = useAuth() as any;
+  const companyId = user?.profile?.company_id ?? user?.company_id;
+  const isDemo = !companyId || companyId === 'demo-company-id';
+  const [search, setSearch] = useState('');
+  const [table, setTable] = useState('all');
+  const [action, setAction] = useState('all');
 
-  // Données mockées
-  const reconciliations = [
-    { id: 1, date: '2024-07-01', compte: 'BICIS', soldeBanque: 1200000, soldeComptable: 1198000, ecart: 2000, statut: 'Validé' },
-    { id: 2, date: '2024-07-10', compte: 'ORANGE MONEY', soldeBanque: 500000, soldeComptable: 500000, ecart: 0, statut: 'Validé' },
-    { id: 3, date: '2024-07-15', compte: 'BICIS', soldeBanque: 900000, soldeComptable: 900000, ecart: 0, statut: 'En attente' },
-  ];
-  const importPreview = [
-    { id: 1, date: '2024-07-15', libelle: 'Virement client', montant: 150000, sens: 'Crédit' },
-    { id: 2, date: '2024-07-16', libelle: 'Paiement fournisseur', montant: -80000, sens: 'Débit' },
-  ];
-  const autoMatches = [
-    { id: 1, date: '2024-07-15', libelle: 'Virement client', montant: 150000, rapprochement: 'Trouvé', statut: 'Validé' },
-    { id: 2, date: '2024-07-16', libelle: 'Paiement fournisseur', montant: -80000, rapprochement: 'À valider', statut: 'En attente' },
-  ];
-  const history = [
-    { id: 1, date: '2024-06-30', compte: 'BICIS', soldeBanque: 1000000, soldeComptable: 1000000, ecart: 0, statut: 'Validé' },
-    { id: 2, date: '2024-06-15', compte: 'ORANGE MONEY', soldeBanque: 300000, soldeComptable: 300000, ecart: 0, statut: 'Validé' },
-  ];
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ['audit_log', companyId],
+    enabled: !isDemo,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('audit_log').select('*').order('created_at', { ascending: false }).limit(500);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
 
-  // Handlers
-  const handleExport = (type: string) => {
-    toast({ title: 'Export', description: `Export du ${type} généré.` });
-  };
-  const handleImport = () => {
-    toast({ title: 'Import', description: 'Relevé importé avec succès.' });
-  };
-  const handleValidate = (id: number) => {
-    toast({ title: 'Validation', description: `Rapprochement ${id} validé.` });
-  };
+  const rows = useMemo(() => data.filter((r) =>
+    (table === 'all' || r.table_name === table) &&
+    (action === 'all' || r.action === action) &&
+    (!search || `${r.user_email ?? ''} ${r.record_id ?? ''} ${JSON.stringify(r.changed_fields ?? '')}`.toLowerCase().includes(search.toLowerCase()))
+  ), [data, table, action, search]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Shield className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-3xl font-bold">Rapprochement Bancaire</h1>
-          <p className="text-muted-foreground">Importez, rapprochez et validez vos opérations bancaires</p>
+          <h1 className="text-2xl font-bold">Journal d'audit</h1>
+          <p className="text-sm text-muted-foreground">Toutes les créations, modifications et suppressions de votre atelier.</p>
         </div>
       </div>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="reconciliations"><CheckCircle className="inline h-4 w-4 mr-1" />Rapprochements</TabsTrigger>
-          <TabsTrigger value="import"><Upload className="inline h-4 w-4 mr-1" />Import relevé</TabsTrigger>
-          <TabsTrigger value="auto"><RefreshCw className="inline h-4 w-4 mr-1" />Rapprochement auto</TabsTrigger>
-          <TabsTrigger value="history"><History className="inline h-4 w-4 mr-1" />Historique</TabsTrigger>
-        </TabsList>
 
-        {/* Onglet Rapprochements */}
-        <TabsContent value="reconciliations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rapprochements en cours</CardTitle>
-              <CardDescription>Liste des rapprochements bancaires récents</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Compte</TableHead>
-                    <TableHead>Solde banque</TableHead>
-                    <TableHead>Solde comptable</TableHead>
-                    <TableHead>Écart</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reconciliations.map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.compte}</TableCell>
-                      <TableCell>{formatFCFA(row.soldeBanque)}</TableCell>
-                      <TableCell>{formatFCFA(row.soldeComptable)}</TableCell>
-                      <TableCell className={row.ecart === 0 ? 'text-green-600' : 'text-red-600'}>{formatFCFA(row.ecart)}</TableCell>
-                      <TableCell>{row.statut}</TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="outline" onClick={() => handleValidate(row.id)} disabled={row.statut === 'Validé'}>
-                          Valider
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" onClick={() => handleExport('rapprochements')}>
-                  <Download className="h-4 w-4 mr-2" />Exporter
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Filtres</CardTitle></CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <Input placeholder="Rechercher (utilisateur, contenu)…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Select value={table} onValueChange={setTable}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les données</SelectItem>
+              {Object.entries(TABLE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={action} onValueChange={setAction}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les actions</SelectItem>
+              {Object.entries(ACTION_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
-        {/* Onglet Import relevé */}
-        <TabsContent value="import" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Importer un relevé bancaire</CardTitle>
-              <CardDescription>Chargez un fichier CSV ou PDF pour démarrer le rapprochement</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 items-center mb-4">
-                <Input type="file" accept=".csv,.pdf" />
-                <Button onClick={handleImport}>
-                  <Upload className="h-4 w-4 mr-2" />Importer
-                </Button>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Libellé</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Sens</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {importPreview.map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.libelle}</TableCell>
-                      <TableCell>{formatFCFA(row.montant)}</TableCell>
-                      <TableCell>{row.sens}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Onglet Rapprochement automatique */}
-        <TabsContent value="auto" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Rapprochement automatique</CardTitle>
-              <CardDescription>Suggestions d’appariement entre relevé et comptabilité</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Libellé</TableHead>
-                    <TableHead>Montant</TableHead>
-                    <TableHead>Rapprochement</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {autoMatches.map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.libelle}</TableCell>
-                      <TableCell>{formatFCFA(row.montant)}</TableCell>
-                      <TableCell>{row.rapprochement}</TableCell>
-                      <TableCell>{row.statut}</TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="outline" onClick={() => handleValidate(row.id)} disabled={row.statut === 'Validé'}>
-                          Valider
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" onClick={() => handleExport('rapprochement-auto')}>
-                  <Download className="h-4 w-4 mr-2" />Exporter
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Onglet Historique */}
-        <TabsContent value="history" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Historique des rapprochements</CardTitle>
-              <CardDescription>Consultez l’historique des rapprochements validés</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Compte</TableHead>
-                    <TableHead>Solde banque</TableHead>
-                    <TableHead>Solde comptable</TableHead>
-                    <TableHead>Écart</TableHead>
-                    <TableHead>Statut</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {history.map(row => (
-                    <TableRow key={row.id}>
-                      <TableCell>{row.date}</TableCell>
-                      <TableCell>{row.compte}</TableCell>
-                      <TableCell>{formatFCFA(row.soldeBanque)}</TableCell>
-                      <TableCell>{formatFCFA(row.soldeComptable)}</TableCell>
-                      <TableCell className={row.ecart === 0 ? 'text-green-600' : 'text-red-600'}>{formatFCFA(row.ecart)}</TableCell>
-                      <TableCell>{row.statut}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" onClick={() => handleExport('historique')}>
-                  <Download className="h-4 w-4 mr-2" />Exporter
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardContent className="p-0">
+          {isDemo ? (
+            <p className="p-6 text-sm text-muted-foreground">Le journal d'audit est disponible avec un vrai compte (pas en mode démo).</p>
+          ) : isLoading ? (
+            <div className="space-y-2 p-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          ) : error ? (
+            <p className="p-6 text-sm text-destructive">Accès réservé au propriétaire et au gérant.</p>
+          ) : rows.length === 0 ? (
+            <p className="p-6 text-sm text-muted-foreground">Aucune activité enregistrée.</p>
+          ) : (
+            <div className="divide-y">
+              {rows.map((r) => {
+                const a = ACTION_LABELS[r.action] ?? { label: r.action, variant: 'secondary' as const };
+                const fields = r.changed_fields ? Object.keys(r.changed_fields) : [];
+                return (
+                  <div key={r.id} className="flex flex-col gap-1 p-4 md:flex-row md:items-center md:justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={a.variant}>{a.label}</Badge>
+                        <span className="font-medium">{TABLE_LABELS[r.table_name] ?? r.table_name}</span>
+                      </div>
+                      {r.action === 'UPDATE' && fields.length > 0 && (
+                        <p className="text-xs text-muted-foreground">Champs modifiés : {fields.slice(0, 8).join(', ')}</p>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground md:text-right">
+                      <div>{r.user_email ?? 'Système'}</div>
+                      <div>{new Date(r.created_at).toLocaleString('fr-FR')}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
