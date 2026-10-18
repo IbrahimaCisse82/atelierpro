@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { OnboardingChecklist } from './OnboardingChecklist';
 
 // Types pour les métriques
 interface DashboardMetric {
@@ -522,6 +523,7 @@ export function RoleSpecificDashboard() {
 
   return (
     <div className="space-y-6">
+      <OnboardingChecklist />
       {/* En-tête du tableau de bord */}
       <div className="flex items-center justify-between">
         <div>
