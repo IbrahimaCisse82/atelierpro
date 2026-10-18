@@ -36,6 +36,13 @@
       "when": 1792281674454,
       "tag": "0004_lot4_default_modules_signup",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792281702094,
+      "tag": "0005_lot4_attach_signup_trigger",
+      "breakpoints": true
     }
   ]
 }
