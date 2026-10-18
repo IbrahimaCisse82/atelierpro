@@ -29,6 +29,13 @@
       "when": 1792109603330,
       "tag": "0003_lot3_security_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792281674454,
+      "tag": "0004_lot4_default_modules_signup",
+      "breakpoints": true
     }
   ]
 }
