@@ -98,6 +98,10 @@ export function useDemoData<T>(table: string): T[] | null {
   return ((DEMO_DATA[table] || []).filter((r: any) => !r.deleted_at)) as T[];
 }
 
+export function getDemoRows<T>(table: string): T[] {
+  return ((DEMO_DATA[table] || []).filter((r: any) => !r.deleted_at)) as T[];
+}
+
 // Mode démo : modifications gardées en mémoire le temps de la session (jamais en base)
 export function demoInsert(table: string, data: Record<string, any>) {
   const now = new Date().toISOString();

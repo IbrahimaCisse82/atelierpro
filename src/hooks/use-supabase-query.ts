@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { isDemoMode, useDemoData, demoInsert, demoUpdate, demoRemove } from '@/contexts/DemoContext';
+import { isDemoMode, getDemoRows, demoInsert, demoUpdate, demoRemove } from '@/contexts/DemoContext';
 import { toast } from '@/hooks/use-toast';
 
 interface UseSupabaseQueryOptions<T> {
@@ -44,7 +44,6 @@ export function useSupabaseQuery<T = any>(
   const { user, userProfile } = useAuth();
 
   // Mode démo : retourner des données en mémoire
-  const demoData = useDemoData<T>(table);
   const isDemo = user ? isDemoMode(user.id) : false;
 
   const fetchData = useCallback(async () => {
@@ -55,8 +54,9 @@ export function useSupabaseQuery<T = any>(
 
     // Mode démo : pas de requête Supabase
     if (isDemo) {
-      setData(demoData);
-      onSuccess?.(demoData || []);
+      const fresh = getDemoRows<T>(table);
+      setData(fresh);
+      onSuccess?.(fresh);
       return;
     }
 
