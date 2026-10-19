@@ -88,7 +88,7 @@ interface MenuGroup {
 export const DashboardLayout = React.memo(function DashboardLayout({ children }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, company } = useAuth();
+  const { user, company, logout } = useAuth();
   const { open: sidebarOpen, toggleSidebar } = useSidebar();
   const { isModuleInstalled, installedModules, isRouteEnabled } = useCompanyModules();
 
@@ -405,6 +405,13 @@ export const DashboardLayout = React.memo(function DashboardLayout({ children }:
             <span className="text-sm font-semibold">AteliérPro</span>
             <div className="w-8" />
           </div>
+
+          {user?.id === 'demo-user-id' && (
+            <div role="status" className="flex flex-wrap items-center justify-between gap-2 border-b bg-accent/15 px-6 py-2 text-sm">
+              <span><strong>Mode démo</strong> — données d'exemple. Vos changements restent visibles jusqu'à la fermeture de la page, rien n'est enregistré.</span>
+              <Button size="sm" onClick={async () => { await logout(); navigate('/register'); }}>Créer mon atelier</Button>
+            </div>
+          )}
 
           <div className="p-6">
             {!canRoleAccess(location.pathname, user?.role) ? (
