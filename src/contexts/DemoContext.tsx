@@ -95,5 +95,30 @@ export const DEMO_DATA: Record<string, any[]> = {
 };
 
 export function useDemoData<T>(table: string): T[] | null {
-  return (DEMO_DATA[table] as T[]) || [];
+  return ((DEMO_DATA[table] || []).filter((r: any) => !r.deleted_at)) as T[];
+}
+
+export function getDemoRows<T>(table: string): T[] {
+  return ((DEMO_DATA[table] || []).filter((r: any) => !r.deleted_at)) as T[];
+}
+
+// Mode démo : modifications gardées en mémoire le temps de la session (jamais en base)
+export function demoInsert(table: string, data: Record<string, any>) {
+  const now = new Date().toISOString();
+  const row = { id: `demo-${table}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, company_id: 'demo-company-id', created_at: now, updated_at: now, deleted_at: null, ...data };
+  DEMO_DATA[table] = [row, ...(DEMO_DATA[table] || [])];
+  return row;
+}
+
+export function demoUpdate(table: string, id: string, data: Record<string, any>) {
+  const rows = DEMO_DATA[table] || [];
+  const i = rows.findIndex((r: any) => r.id === id);
+  if (i === -1) throw new Error('Élément introuvable');
+  rows[i] = { ...rows[i], ...data, updated_at: new Date().toISOString() };
+  DEMO_DATA[table] = [...rows];
+  return rows[i];
+}
+
+export function demoRemove(table: string, id: string) {
+  DEMO_DATA[table] = (DEMO_DATA[table] || []).filter((r: any) => r.id !== id);
 }
