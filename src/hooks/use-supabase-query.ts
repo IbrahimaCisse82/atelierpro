@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { isDemoMode, useDemoData } from '@/contexts/DemoContext';
+import { isDemoMode, useDemoData, demoInsert, demoUpdate, demoRemove } from '@/contexts/DemoContext';
 import { toast } from '@/hooks/use-toast';
 
 interface UseSupabaseQueryOptions<T> {
@@ -155,8 +155,7 @@ export function useSupabaseMutation<T = any>(table: string) {
     }
 
     if (isDemo) {
-      toast({ title: "Mode démo", description: "Les modifications ne sont pas sauvegardées en mode démo.", variant: "default" });
-      return { ...data, id: `demo-${Date.now()}` };
+      return demoInsert(table, data as any) as T;
     }
 
     setLoading(true);
@@ -185,8 +184,7 @@ export function useSupabaseMutation<T = any>(table: string) {
     }
 
     if (isDemo) {
-      toast({ title: "Mode démo", description: "Les modifications ne sont pas sauvegardées en mode démo.", variant: "default" });
-      return { ...data, id };
+      return demoUpdate(table, id, data as any) as T;
     }
 
     setLoading(true);
@@ -216,7 +214,7 @@ export function useSupabaseMutation<T = any>(table: string) {
     }
 
     if (isDemo) {
-      toast({ title: "Mode démo", description: "Les modifications ne sont pas sauvegardées en mode démo.", variant: "default" });
+      demoRemove(table, id);
       return;
     }
 
