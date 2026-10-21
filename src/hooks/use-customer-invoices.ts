@@ -1,3 +1,5 @@
+import { isDemoActive } from '@/lib/demo-flag';
+import { getDemoRows } from '@/contexts/DemoContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -38,6 +40,7 @@ export const useCustomerInvoices = () => {
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['customer_invoices'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('customer_invoices');
       const { data, error } = await supabase
         .from('customer_invoices')
         .select(`
@@ -57,6 +60,7 @@ export const useCustomerInvoices = () => {
   const { data: reminders = [] } = useQuery({
     queryKey: ['payment_reminders'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('payment_reminders');
       const { data, error } = await supabase
         .from('payment_reminders')
         .select(`

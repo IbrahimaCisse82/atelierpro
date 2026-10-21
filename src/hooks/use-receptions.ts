@@ -1,3 +1,5 @@
+import { isDemoActive } from '@/lib/demo-flag';
+import { getDemoRows } from '@/contexts/DemoContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -45,6 +47,7 @@ export const useReceptions = () => {
   const { data: receptions = [], isLoading } = useQuery({
     queryKey: ['receptions'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('receptions');
       const { data, error } = await supabase
         .from('receptions')
         .select(`

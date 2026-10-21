@@ -1,3 +1,5 @@
+import { isDemoActive } from '@/lib/demo-flag';
+import { getDemoRows } from '@/contexts/DemoContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -43,6 +45,7 @@ export const useTreasury = () => {
   const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
     queryKey: ['treasury_accounts'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('treasury_accounts');
       const { data, error } = await supabase
         .from('treasury_accounts')
         .select('*')
@@ -56,6 +59,7 @@ export const useTreasury = () => {
   const { data: movements = [], isLoading: loadingMovements } = useQuery({
     queryKey: ['treasury_movements'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('treasury_movements');
       const { data, error } = await supabase
         .from('treasury_movements')
         .select(`
