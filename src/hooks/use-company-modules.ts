@@ -346,7 +346,7 @@ function getModuleRoutes(key: string): string[] {
     patterns: ['/dashboard/patterns'],
     production: ['/dashboard/production'],
     stocks: ['/dashboard/stocks'],
-    customer_invoices: ['/dashboard/customer-invoices'],
+    customer_invoices: ['/dashboard/customer-invoices', '/dashboard/invoices'],
     suppliers: ['/dashboard/suppliers'],
     purchases: ['/dashboard/purchases'],
     receptions: ['/dashboard/receptions'],
