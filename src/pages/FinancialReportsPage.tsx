@@ -234,7 +234,7 @@ export function FinancialReportsPage() {
                         <TableCell className="font-mono">{a.account_number}</TableCell>
                         <TableCell>{a.account_name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{a.account_type}</Badge>
+                          <Badge variant="outline">{a.account_type?.replace('classe_', 'Classe ')}</Badge>
                         </TableCell>
                         <TableCell>{a.account_category || '-'}</TableCell>
                         <TableCell>

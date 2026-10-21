@@ -26,7 +26,7 @@ export function SyscohadaSettingsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [accountForm, setAccountForm] = useState({
-    account_number: '', account_name: '', account_type: 'asset', account_category: '', is_active: true
+    account_number: '', account_name: '', account_type: 'classe_1', account_category: '', is_active: true
   });
   const [journalForm, setJournalForm] = useState({
     journal_code: '', journal_name: '', journal_type: 'general', is_active: true
@@ -61,7 +61,7 @@ export function SyscohadaSettingsPage() {
       await createAccount(accountForm);
       toast({ title: "Compte créé", description: `Compte ${accountForm.account_number} ajouté.` });
       setShowAddAccountDialog(false);
-      setAccountForm({ account_number: '', account_name: '', account_type: 'asset', account_category: '', is_active: true });
+      setAccountForm({ account_number: '', account_name: '', account_type: 'classe_1', account_category: '', is_active: true });
       refetchAccounts();
     } catch { toast({ title: "Erreur", description: "Impossible de créer le compte.", variant: "destructive" }); }
   };
@@ -90,7 +90,7 @@ export function SyscohadaSettingsPage() {
   };
 
   const typeLabels: Record<string, string> = {
-    asset: 'Actif', liability: 'Passif', equity: 'Capitaux', revenue: 'Produit', expense: 'Charge'
+    classe_1: 'Classe 1 · Ressources durables', classe_2: 'Classe 2 · Actif immobilisé', classe_3: 'Classe 3 · Stocks', classe_4: 'Classe 4 · Tiers', classe_5: 'Classe 5 · Trésorerie', classe_6: 'Classe 6 · Charges', classe_7: 'Classe 7 · Produits', classe_8: 'Classe 8 · HAO', classe_9: 'Classe 9 · Analytique'
   };
   const journalTypeLabels: Record<string, string> = {
     sales: 'Ventes', treasury: 'Trésorerie', payroll: 'Paie', stock: 'Stocks',
@@ -147,11 +147,7 @@ export function SyscohadaSettingsPage() {
                   <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="asset">Actifs</SelectItem>
-                    <SelectItem value="liability">Passifs</SelectItem>
-                    <SelectItem value="equity">Capitaux</SelectItem>
-                    <SelectItem value="revenue">Produits</SelectItem>
-                    <SelectItem value="expense">Charges</SelectItem>
+                    {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
