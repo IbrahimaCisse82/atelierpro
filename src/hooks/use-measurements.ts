@@ -1,3 +1,5 @@
+import { isDemoActive } from '@/lib/demo-flag';
+import { getDemoRows } from '@/contexts/DemoContext';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +14,7 @@ export const useMeasurements = () => {
   const queryClient = useQueryClient();
 
   const getMeasurements = async (): Promise<ClientMeasurement[]> => {
+    if (isDemoActive()) return getDemoRows<any>('client_measurements');
     const { data, error } = await supabase
       .from('client_measurements')
       .select(`

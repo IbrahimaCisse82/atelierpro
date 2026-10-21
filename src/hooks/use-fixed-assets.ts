@@ -1,3 +1,5 @@
+import { isDemoActive } from '@/lib/demo-flag';
+import { getDemoRows } from '@/contexts/DemoContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -28,6 +30,7 @@ export const useFixedAssets = () => {
   const { data: assets = [], isLoading } = useQuery({
     queryKey: ['fixed_assets'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('fixed_assets');
       const { data, error } = await supabase
         .from('fixed_assets')
         .select('*')
@@ -41,6 +44,7 @@ export const useFixedAssets = () => {
   const { data: depreciations = [] } = useQuery({
     queryKey: ['depreciations'],
     queryFn: async () => {
+      if (isDemoActive()) return getDemoRows<any>('depreciations');
       const { data, error } = await supabase
         .from('depreciations')
         .select('*')

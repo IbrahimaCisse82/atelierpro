@@ -1,3 +1,4 @@
+import { setDemoActive } from '@/lib/demo-flag';
 import React, { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react';
 import { AuthState, User, Company, CompanyRegistrationData, UserRole } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -293,6 +294,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearError = () => {
     dispatch({ type: 'SET_ERROR', payload: '' });
   };
+
+  setDemoActive(state.user?.id === 'demo-user-id');
 
   return (
     <AuthContext.Provider value={{
