@@ -2,6 +2,8 @@
 
 Source : MAJ ATELIERPRO.pdf (collection MAJ). Exécution dans l'ordre, critères d'acceptation vérifiés par lot.
 
+- [ ] Demande actuelle — tester avec un vrai compte : client, commande, facture, validation, encaissement, relecture après rechargement ; corriger les bugs reproduits.
+
 - [x] LOT 1 — Intégrité des paiements (critique)
 - [x] LOT 2 — Comptabilité SYSCOHADA et facturation (critique) — reste : test concurrence, contrôle bilan Actif=Passif
 - [x] LOT 3 — Sécurité multi-tenant (critique)
